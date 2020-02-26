@@ -1,0 +1,136 @@
+import AssetManager from './../core/assetmanager.js';
+import Assets from './../game/assettable.js';
+
+import Entity from './../ecs/entity.js';
+import Camera from './../systems/camera.js';
+import WorldPos from './../systems/worldpos.js';
+import SpriteRenderer from './../systems/spriterenderer.js';
+import TiledSpriteRenderer from './../systems/tiledspriterenderer.js';
+import SpriteAnimator from './../systems/spriteanimator.js';
+import BoxCollider from './../systems/boxcollider.js';
+import Rigidbody from './../systems/rigidbody.js';
+import PlayerInputReader from './../systems/playerinputreader.js';
+import CharacterController from './../systems/charactercontroller.js';
+import SmoothFollower from './../systems/smoothfollower.js';
+
+
+import Vector2 from './../core/vector2.js';
+import Rect from './../core/rect.js';
+
+
+
+const ppx = 1; // 0.0158;
+
+const Layers =
+{
+	Background: -1,
+	TilesBG0: 0,
+	TilesBG1: 1,
+	Enemy: 10,
+	Player: 20,
+	TilesFG0: 40,
+	TilesFG1: 41,
+}
+
+/// 
+/// Class for creating fully-formed entities with appropriate components attached.
+/// 
+export default class Factory
+{
+	static Init(canvas, assetManager, entityMan)
+	{
+		Factory.Canvas = canvas;
+		Factory.AssetManager = assetManager;
+		Factory.EntityManager = entityMan;
+	}
+	
+	/// 
+	/// 
+	/// 
+	static async CreateTestParticl(renderLayers, camera, spawnPosX, spawnPosY, imagePath)
+	{
+		let pos = new WorldPos(spawnPosX, spawnPosY);
+		let renderer = new SpriteRenderer(await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_R), Layers.Player, 0, 44)
+		renderer.enabled = false; //this is to stop the default render system from trying to draw it.
+		
+		let ent = new Entity("Particle", pos,
+			new ParticleSystem(),
+			renderer,
+			);
+		
+		EntityMan.RegisterEntity(ent);
+		console.log("--------------> ent.name");
+		return ent;
+	}
+	
+	/// 
+	/// 
+	/// 
+	static async CreatePlayer(spawnPosX = 0, spawnPosY = 0)
+	{
+		let pos = new WorldPos(spawnPosX, spawnPosY);
+		let ent = new Entity(
+			"Player 1", 
+			pos,
+			new SpriteRenderer(await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_R), Layers.Player, 0, 44),
+			new SpriteAnimator(await Factory.AssetManager.LoadAsset(Assets.Table.ANIM_ANA_R)),
+			new Rigidbody(pos),
+			new BoxCollider(Factory.CollisionSys, new Rect(0, 24, 20, 45)),
+			new PlayerInputReader(),
+			new CharacterController(
+									await Factory.AssetManager.LoadAsset(Assets.Table.JUMP_SFX_1),
+									await Factory.AssetManager.LoadAsset(Assets.Table.LAND_SFX_1),
+									await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_L),
+									await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_R),
+									await Factory.AssetManager.LoadAsset(Assets.Table.ANIM_ANA_L),
+									await Factory.AssetManager.LoadAsset(Assets.Table.ANIM_ANA_R))
+			);
+		
+		Factory.EntityManager.RegisterEntity(ent);
+		Factory.PlayerInst = ent;
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			name: "CreateWorldBlock",
+			params: Array.from(arguments),
+		}
+		
+		return ent;
+	}
+	
+	static CreateCamera(renderScale)
+	{
+		let trans = new WorldPos(0, 0);
+		let ent = new Entity("Main Camera",
+			trans,
+			new Camera(Factory.Canvas, Factory.Canvas.width / renderScale, Factory.Canvas.height / renderScale, trans),
+			new SmoothFollower(0.07, 0),
+			);
+		
+		ent.DoNotUnload = true;
+		return ent;
+	}
+	
+	static async CreateWorldBlock(xPos, yPos, width, height, tiledImage)
+	{
+		let colliderRect = new Rect(0, 0, width, height);
+		let trans = new WorldPos(xPos, yPos);
+		let col = new BoxCollider(Factory.CollisionSys, colliderRect, false, true);
+		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(tiledImage), 
+										       colliderRect, Layers.TilesBG0);
+		
+		let ent = new Entity("Block", trans, col, renderer);
+		Factory.EntityManager.RegisterEntity(ent);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			name: "CreateWorldBlock",
+			params: Array.from(arguments),
+		}
+		
+		return ent;	
+	}
+}
+
