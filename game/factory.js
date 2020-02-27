@@ -47,14 +47,11 @@ export default class Factory
 		Factory.EntityManager = entityMan;
 	}
 	
-	static async CreateTestParticle(spawnPosX, spawnPosY, renderSys, renderLayer, imagePath)
+	static async CreateParticleSystem(spawnPosX, spawnPosY, renderSys, renderLayer, spritePath, ...params)
 	{
 		let pos = new WorldPos(spawnPosX, spawnPosY);
-		let partSys = new ParticleSystem("testparticlepool", new Vector2(), renderSys, renderLayer, Factory.AssetManager.LoadAsset(imagePath));
-		partSys.EmitRate = 25;
-		partSys.MinLifetime = 1;
-		partSys.MaxLifetime = 1;
-		
+		let partSys = new ParticleSystem("testparticlepool", new Vector2(), renderSys, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
+		partSys.ApplyEmitConfiguration(...params);
 		
 		let ent = new Entity("Particle", 
 			pos,

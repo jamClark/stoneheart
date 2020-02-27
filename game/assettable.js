@@ -16,10 +16,10 @@ export default class Assets
 		ANIM_ANA_R:		"./assets/sprites/ana_right.anim",
 		ANIM_ANA_L:		"./assets/sprites/ana_left.anim",
 		
-		TILESET_1:		"./assets/sprites/tileset1.png",
-		
 		JUMP_SFX_1:		"./assets/sfx/jump1.wav",
 		LAND_SFX_1:		"./assets/sfx/thud1.wav",
+		
+		TILESET1:"./assets/sprites/tileset1.png",
 	}
 	
 	static get Table() { return this.#Table; }

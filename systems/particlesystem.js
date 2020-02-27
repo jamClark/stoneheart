@@ -2,7 +2,7 @@ import BaseComponent from './../ecs/basecomponent.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
 import CollisionSystem from './collisionsystem.js'
-import Lazarus from './../core/pool.js'; //HACK ALERT! Yikes! We are making potential cross dependencies here!!!
+import Lazarus from './../core/pool.js';
 import Time from './../core/time.js';
 import Entity from './../ecs/entity.js';
 import WorldPos from './worldpos.js';
@@ -53,6 +53,27 @@ export default class ParticleSystem extends BaseComponent
 		this.MaxStartVelX = 200;
 		this.MinStartVelY = 500;
 		this.MaxStartVelY = 500;
+		
+		//There has GOT to be a better way of iterating over
+		//a specific set of fields in an object!
+		this.ConfigSequence = function* ()
+		{
+			this.GravityScale = yield 0;
+			this.LoopTime = yield 0;
+			this.MaxParticles = yield 0;
+			this.EmitRate = yield 0;
+			this.MinLifetime = yield 0;
+			this.MaxLifetime = yield 0;
+			this.MinPosX = yield 0;
+			this.MaxPosX = yield 0;
+			this.MinPosY = yield 0;
+			this.MaxPosY = yield 0;
+			this.MinStartVelX = yield 0;
+			this.MaxStartVelX = yield 0;
+			this.MinStartVelY = yield 0;
+			this.MaxStartVelY = yield 1;
+			return 1;
+		}
 	}
 	
 	OnEnable()
@@ -70,6 +91,21 @@ export default class ParticleSystem extends BaseComponent
 		for(let part of this.#ActiveParticles)
 			Lazarus.Relenquish(part.Entity);
 		this.#ActiveParticles = [];
+	}
+	
+	/// 
+	/// Increments down the list of parans and applies them to
+	/// this particle system's configurable emittance options.
+	/// 
+	ApplyEmitConfiguration(...params)
+	{
+		let s = Array.from(arguments);
+		
+		//HACK ALERT: Not ensuring that we don't overflow our generator!
+		let seq = this.ConfigSequence();
+		seq.next();
+		for(let i = 0; i < s.length; i++)
+			seq.next(s[i]);
 	}
 	
 	Pause()
