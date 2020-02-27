@@ -37,19 +37,20 @@ export default class ParticleSystem extends BaseComponent
 		//system configuration
 		this.Space = SpaceMode.World;
 		this.StartingVel = new Vector2(0, 100);
-		this.StartingLifeTime = 4;
 		this.RenderLayer = renderLayer;
 		this.GravityScale = 1;
 		this.LoopTime = 5;
-		this.MaxParticles = 10;
+		this.MaxParticles = 1000;
 		this.EmitRate = 1; //particles per second
 		
+		this.MinLifetime = 0;
+		this.MaxLifetime = 4;
 		this.MinPosX = 0;
 		this.MaxPosX = 0;
 		this.MinPosY = 0;
 		this.MaxPosY = 0;
-		this.MinStartVelX = 0;
-		this.MaxStartVelX = 0;
+		this.MinStartVelX = -200;
+		this.MaxStartVelX = 200;
 		this.MinStartVelY = 500;
 		this.MaxStartVelY = 500;
 	}
@@ -100,7 +101,7 @@ export default class ParticleSystem extends BaseComponent
 		particle.Velocity = new Vector2(
 									(Math.random() * (this.MaxStartVelX - this.MinStartVelX)) + this.MinStartVelX,
 									(Math.random() * (this.MaxStartVelY - this.MinStartVelY)) + this.MinStartVelY);
-		particle.Life = this.StartingLife;
+		particle.Lifetime = (Math.random() * (this.MaxLifetime - this.MinLifetime)) + this.MinLifetime;
 		trans.position = systemTrans.position;
 		this.#ActiveParticles.push(particle);
 	}

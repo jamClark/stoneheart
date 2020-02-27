@@ -51,6 +51,10 @@ export default class Factory
 	{
 		let pos = new WorldPos(spawnPosX, spawnPosY);
 		let partSys = new ParticleSystem("testparticlepool", new Vector2(), renderSys, renderLayer, Factory.AssetManager.LoadAsset(imagePath));
+		partSys.EmitRate = 25;
+		partSys.MinLifetime = 1;
+		partSys.MaxLifetime = 1;
+		
 		
 		let ent = new Entity("Particle", 
 			pos,
