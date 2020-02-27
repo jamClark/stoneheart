@@ -22,7 +22,7 @@ export default class SpriteRendererSystem extends BaseComponentSystem
 	{
 		//if null, this likely means we're still
 		//pending on a load operation. Just early-out
-		if(spriteComp.Sprite == null)
+		if(spriteComp.Sprite === null)
 			return;
 		
 		let xScale = this.#RenderLayer.Width / this.Camera.VirtualX;

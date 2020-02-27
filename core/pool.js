@@ -195,6 +195,7 @@ class ObjPool
 			//TODO: promisify this so that we don't block here!
 			for(let i = 0; i < this.#ChunkSize; i++)
 			{
+				//TODO: We need to bind 'this' to the factory method!!!!!!!!!!!!!!!!!!!!!!!!!
 				let thing = this.#Factory(...this.#FactoryParams);
 				if(thing instanceof Promise)
 				{

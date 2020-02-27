@@ -21,7 +21,7 @@ export default class ParticleSystemSystem extends BaseComponentSystem
 	
 	Process(entity, pos, particleSystem)
 	{
-		particleSystem.Update(entity, pos, particleSystem); 
+		particleSystem.Update(entity, pos, particleSystem, this.#Renderer); 
 	}
 }
 

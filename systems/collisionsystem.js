@@ -15,6 +15,9 @@ const ItemsPerNode = 6;
 
 /// 
 /// Stores the contact information between two colliders.
+///
+/// HACK ALERT:
+///		Grounded state for Rigibodies is being set based on an assumed 'down' vector for gravity in CreateContactManifold().
 /// 
 class ContactManifold
 {

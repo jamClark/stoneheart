@@ -12,6 +12,7 @@ import Rigidbody from './../systems/rigidbody.js';
 import PlayerInputReader from './../systems/playerinputreader.js';
 import CharacterController from './../systems/charactercontroller.js';
 import SmoothFollower from './../systems/smoothfollower.js';
+import ParticleSystem from './../systems/particlesystem.js';
 
 
 import Vector2 from './../core/vector2.js';
@@ -27,7 +28,9 @@ const Layers =
 	TilesBG0: 0,
 	TilesBG1: 1,
 	Enemy: 10,
+	PrePlayer: 19,
 	Player: 20,
+	PostPlayer: 30,
 	TilesFG0: 40,
 	TilesFG1: 41,
 }
@@ -44,22 +47,17 @@ export default class Factory
 		Factory.EntityManager = entityMan;
 	}
 	
-	/// 
-	/// 
-	/// 
-	static async CreateTestParticl(renderLayers, camera, spawnPosX, spawnPosY, imagePath)
+	static async CreateTestParticle(spawnPosX, spawnPosY, renderSys, renderLayer, imagePath)
 	{
 		let pos = new WorldPos(spawnPosX, spawnPosY);
-		let renderer = new SpriteRenderer(await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_R), Layers.Player, 0, 44)
-		renderer.enabled = false; //this is to stop the default render system from trying to draw it.
-		
-		let ent = new Entity("Particle", pos,
-			new ParticleSystem(),
-			renderer,
+		let partSys = new ParticleSystem("testparticlepool", new Vector2(), renderSys, renderLayer, Factory.AssetManager.LoadAsset(imagePath));
+		partSys.StartingVel = new Vector2(0, 100);
+		let ent = new Entity("Particle", 
+			pos,
+			partSys,
 			);
 		
-		EntityMan.RegisterEntity(ent);
-		console.log("--------------> ent.name");
+		Factory.EntityManager.RegisterEntity(ent);
 		return ent;
 	}
 	

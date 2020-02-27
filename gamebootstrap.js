@@ -33,7 +33,6 @@ import ParticleSystemSystem from './systems/particlesystemsystem.js';
 //components
 import WorldPos from './systems/worldpos.js';
 import SmoothFollower from './systems/smoothfollower.js';
-import ParticleSystem from './systems/particlesystem.js';
 import SpriteRenderer from './systems/spriterenderer.js';
 
 let EntMan, SysMan, AssetMan, SceneMan, RenderLayers;
@@ -58,7 +57,7 @@ export function AppStart(canvas)
 	let MainCamera = Factory.CreateCamera(RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
 	
-	
+	//create and register global systems
 	let AnimSys = new SpriteAnimatorSystem();
 	let RenderSys = new SpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
 	let TiledRenderSys = new TiledSpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
@@ -71,8 +70,6 @@ export function AppStart(canvas)
 	let ParticleSystemSys = new ParticleSystemSystem(RenderSys);
 	AppFSM.PushState(AppStateMachine.EmptyLoopState);
 	Factory.CollisionSys = CollisionSys; //this is used internally when creating colliders but it doesn't exist at the time we call Init() above!!
-	
-	//register global systems
 	Input.Init(window);
 	EntMan.RegisterEntity(MainCamera);
 	
@@ -87,6 +84,7 @@ export function AppStart(canvas)
 	SysMan.RegisterSystem(AnimSys);
 	SysMan.RegisterSystem(RenderSys);
 	SysMan.RegisterSystem(TiledRenderSys);
+	SysMan.RegisterSystem(ParticleSystemSys);
 	
 	//define a 'normal update' state for the FSM. This is where the bulk of our ECS updates will be processed
 	AppFSM.MainGameLoopState = new AppState(
@@ -116,7 +114,6 @@ export function AppStart(canvas)
 	
 	//helper for loading/refreshing scenes
 	let loadLevel = async function(path) {
-		
 		AppFSM.PushState(AppFSM.LoadingState);
 		SceneMan.UnloadCurrentScene();
 		await SceneMan.LoadScene(path);
@@ -129,26 +126,10 @@ export function AppStart(canvas)
 	Assets.PreloadAllAssets(AssetMan).then( async () =>
 	{
 		await loadLevel('./assets/scene1.txt');
-		let particleEnt = await CreateTestParticle(RenderLayers, MainCamera.GetComponent(Camera), 0, 0, './assets/sprites/poop.png');
+		let particleEnt = await Factory.CreateTestParticle(500, 0, RenderSys, RenderLayers, './assets/sprites/alert.png');
 		AppFSM.PushState(AppFSM.MainGameLoopState);
 	});
 	
-}
-
-let CreateTestParticle = async function(renderLayers, camera, spawnPosX, spawnPosY, imagePath)
-{
-	let pos = new WorldPos(spawnPosX, spawnPosY);
-	let renderer = new SpriteRenderer(await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_R), Layers.Player, 0, 44)
-	renderer.enabled = false; //this is to stop the default render system from trying to draw it.
-	
-	let ent = new Entity("Particle", pos,
-		new ParticleSystem(),
-		renderer,
-		);
-	
-	EntityMan.RegisterEntity(ent);
-	console.log("--------------> ent.name");
-	return ent;
 }
 
 let TogglePhysicsDebugDrawing = function()

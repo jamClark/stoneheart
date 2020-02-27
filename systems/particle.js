@@ -1,4 +1,7 @@
 import BaseComponent from './../ecs/basecomponent.js';
+import Vector2 from './../core/vector2.js';
+import Time from './../core/time.js';
+
 
 /// 
 /// State information for a single particle of a particle system.
@@ -10,6 +13,22 @@ export default class Particle extends BaseComponent
 		super();
 		this.Scale = new Vector2(1, 1);
 		this.Velocity = new Vector2(0, 0);
+		this.LifeStart = 0;
+		this.Lifetime = 5;
+	}
+	
+	LifeIsOver(time)
+	{
+		return time - this.LifeStart > this.Lifetime;
+	}
+	
+	/// 
+	/// Invoked by the particle entity when it is relenquished to a pool.
+	/// 
+	OnSummonedFromPool()
+	{
+		//reset stuff here
+		this.LifeStart = Time.time;
 	}
 }
 
