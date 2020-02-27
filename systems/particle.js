@@ -11,7 +11,7 @@ export default class Particle extends BaseComponent
 	constructor()
 	{
 		super();
-		this.Scale = new Vector2(1, 1);
+		//this.Scale = new Vector2(1, 1); //not currently used
 		this.Velocity = new Vector2(0, 0);
 		this.LifeStart = 0;
 		this.Lifetime = 5;

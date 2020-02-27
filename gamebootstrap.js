@@ -126,7 +126,7 @@ export function AppStart(canvas)
 	Assets.PreloadAllAssets(AssetMan).then( async () =>
 	{
 		await loadLevel('./assets/scene1.txt');
-		let particleEnt = await Factory.CreateTestParticle(500, 0, RenderSys, RenderLayers, './assets/sprites/alert.png');
+		let particleEnt = await Factory.CreateTestParticle(100, 0, RenderSys, RenderLayers, './assets/sprites/alert.png');
 		AppFSM.PushState(AppFSM.MainGameLoopState);
 	});
 	

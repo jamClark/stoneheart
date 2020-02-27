@@ -50,6 +50,14 @@ export default class Lazarus
 	}
 	
 	/// 
+	/// Returns true if a pool is already defined for the given id.
+	/// 
+	static IsDefined(id)
+	{
+		return Lazarus.#Pools.get(id) != null;
+	}
+	
+	/// 
 	/// Summons a pooled object from the given pool. If the pool does not exist and error will be thrown.
 	/// 
 	static Summon(id)
@@ -195,7 +203,6 @@ class ObjPool
 			//TODO: promisify this so that we don't block here!
 			for(let i = 0; i < this.#ChunkSize; i++)
 			{
-				//TODO: We need to bind 'this' to the factory method!!!!!!!!!!!!!!!!!!!!!!!!!
 				let thing = this.#Factory(...this.#FactoryParams);
 				if(thing instanceof Promise)
 				{
@@ -210,8 +217,14 @@ class ObjPool
 							throw new Error("Could not pre-allocated pool object from factory. " + error);
 						}
 					);
+					//BUG ALERT: I have no clue what this is supposed to accomplish or why I put it here!
 					if(i == this.#ChunkSize-1)
+					{
+						//this is not incrementing the active count, nor is it invoking 
+						//the OnSummonedFromPool() function on the object summoned.
+						throw new Error("I have no idea why I put this section of code here!");
 						return thing;
+					}
 				}
 				else
 				{

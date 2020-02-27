@@ -37,10 +37,10 @@ export default class PhysicsSystem extends BaseComponentSystem
 		else body.Velocity = Vector2.Zero;
 		
 		//now apply gravity accum for next frame
-		this.ApplyGravity(entity, body);
+		this.ApplyGravity(body);
 	}
 	
-	ApplyGravity(entity, body)
+	ApplyGravity(body)
 	{
 		if(body.GravityScale > 0)
 		{
