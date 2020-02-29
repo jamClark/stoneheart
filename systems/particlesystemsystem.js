@@ -21,6 +21,8 @@ export default class ParticleSystemSystem extends BaseComponentSystem
 		this.PixelsPerMeter = ppm;
 	}
 	
+	get RenderSystem() { return this.#Renderer; }
+	
 	Process(entity, pos, particleSystem)
 	{
 		particleSystem.Update(this, entity, pos, particleSystem, this.#Renderer); 

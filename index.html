@@ -6,15 +6,20 @@
 	
 </head>
 <body>
-
-<canvas id="View" width="640" height="480" style="border:1px solid #000000; padding: 0px; margin: auto; display: block;">
-<script type="module">
-	import {AppStart} from "/gamebootstrap.js";
-	AppStart(document.getElementById("View"));
-	
-</script>
-
-</canvas>
+<div id="RootContainer" style="width:640px; margin:auto; display:block;">
+	<canvas id="View" width="640" height="480" style="width:100%; border:1px solid #000000;">
+	<script type="module">
+		import {AppStart} from "/gamebootstrap.js";
+		AppStart(document.getElementById("View"));
+	</script>
+	</canvas>
+	<!-- This is where level-editor tools will be displayed -->
+</div>
+<!-- 
+This can be used for realtime debug display text. Useful for data that
+changes frequently and we don't want to spam the console with.
+-->
 <p id="debugText"></P>
+
 </body>
 </html>

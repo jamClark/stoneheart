@@ -17,27 +17,24 @@ import Particle from './particle.js';
 export default class ParticleSystem extends BaseComponent
 {
 	#ActiveParticles = [];
-	#RenderSystem;
 	#PoolId;
 	#LastEmitTime = -1000;
 	#Paused = false;
 	
-	constructor(poolId, localPos, renderSys, renderLayer, spriteAsset)
+	constructor(poolId, renderLayer, spriteAsset)
 	{
 		super(WorldPos, SpriteRenderer, Particle);
 		if(ParticleSystem.Systems == null) ParticleSystem.Systems = [];
-		this.LocalPos = localPos;
 		spriteAsset.then(result => { this.SpriteAsset = result; });
-		this.#RenderSystem = renderSys;
 		this.#PoolId = poolId;
 		
 		if(!Lazarus.IsDefined(poolId))
 			Lazarus.Define(poolId, 5, 1000, ParticleSystem.GenerateParticle, this);
 		
+		
 		//system configuration
-		this.Space = SpaceMode.World;
-		this.StartingVel = new Vector2(0, 100);
 		this.RenderLayer = renderLayer;
+		this.Space = SpaceMode.World;
 		this.GravityScale = 1;
 		this.LoopTime = 5;
 		this.MaxParticles = 1000;
@@ -213,7 +210,7 @@ export default class ParticleSystem extends BaseComponent
 						part.Entity.GetComponent(WorldPos), 
 						part.Entity.GetComponent(SpriteRenderer),
 						part,
-						this.#RenderSystem);
+						masterSystem.RenderSystem);
 		}
 		
 		//iterate through removal list and, uh, make it so
@@ -226,9 +223,10 @@ export default class ParticleSystem extends BaseComponent
 	}
 }
 
-
 const SpaceMode = 
 {
 	World : 1,
 	Local : 2,
 }
+
+export { SpaceMode }

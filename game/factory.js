@@ -47,10 +47,11 @@ export default class Factory
 		Factory.EntityManager = entityMan;
 	}
 	
-	static async CreateParticleSystem(spawnPosX, spawnPosY, renderSys, renderLayer, spritePath, ...params)
+	static async CreateParticleSystem(spawnPosX, spawnPosY, renderLayer, spaceMode, spritePath, ...params)
 	{
 		let pos = new WorldPos(spawnPosX, spawnPosY);
-		let partSys = new ParticleSystem("testparticlepool", new Vector2(), renderSys, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
+		let partSys = new ParticleSystem(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
+		partSys.SpaceMode = spaceMode;
 		partSys.ApplyEmitConfiguration(...params);
 		
 		let ent = new Entity("Particle", 
@@ -71,18 +72,18 @@ export default class Factory
 		let ent = new Entity(
 			"Player 1", 
 			pos,
-			new SpriteRenderer(await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_R), Layers.Player, 0, 44),
-			new SpriteAnimator(await Factory.AssetManager.LoadAsset(Assets.Table.ANIM_ANA_R)),
+			new SpriteRenderer(await Factory.AssetManager.LoadAsset(Assets.Sprites.ANA_R), Layers.Player, 0, 44),
+			new SpriteAnimator(await Factory.AssetManager.LoadAsset(Assets.Anims.ANA_R)),
 			new Rigidbody(pos),
 			new BoxCollider(Factory.CollisionSys, new Rect(0, 24, 20, 45)),
 			new PlayerInputReader(),
 			new CharacterController(
-									await Factory.AssetManager.LoadAsset(Assets.Table.JUMP_SFX_1),
-									await Factory.AssetManager.LoadAsset(Assets.Table.LAND_SFX_1),
-									await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_L),
-									await Factory.AssetManager.LoadAsset(Assets.Table.SPRITE_ANA_R),
-									await Factory.AssetManager.LoadAsset(Assets.Table.ANIM_ANA_L),
-									await Factory.AssetManager.LoadAsset(Assets.Table.ANIM_ANA_R))
+									await Factory.AssetManager.LoadAsset(Assets.Sounds.JUMP_1),
+									await Factory.AssetManager.LoadAsset(Assets.Sounds.LAND_1),
+									await Factory.AssetManager.LoadAsset(Assets.Sprites.ANA_L),
+									await Factory.AssetManager.LoadAsset(Assets.Sprites.ANA_R),
+									await Factory.AssetManager.LoadAsset(Assets.Anims.ANA_L),
+									await Factory.AssetManager.LoadAsset(Assets.Anims.ANA_R))
 			);
 		
 		Factory.EntityManager.RegisterEntity(ent);
@@ -111,13 +112,13 @@ export default class Factory
 		return ent;
 	}
 	
-	static async CreateWorldBlock(xPos, yPos, width, height, tiledImage)
+	static async CreateWorldBlock(xPos, yPos, width, height, renderLayer, spritePath)
 	{
 		let colliderRect = new Rect(0, 0, width, height);
 		let trans = new WorldPos(xPos, yPos);
 		let col = new BoxCollider(Factory.CollisionSys, colliderRect, false, true);
-		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(tiledImage), 
-										       colliderRect, Layers.TilesBG0);
+		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(spritePath), 
+										       colliderRect, renderLayer);
 		
 		let ent = new Entity("Block", trans, col, renderer);
 		Factory.EntityManager.RegisterEntity(ent);
