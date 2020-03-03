@@ -69,6 +69,5 @@ export default class RenderLayer
 }
 
 
-let c = null;
 
 

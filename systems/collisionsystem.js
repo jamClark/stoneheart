@@ -150,7 +150,7 @@ export default class CollisionSystem extends BaseComponentSystem
 			let trans = col.Entity.GetComponent(WorldPos);
 			bounds.Encapsulate(col.WorldRect(trans.position));
 		}
-		bounds.ExpandSize(1, 1); //to ensure everything will actually fit
+		bounds.ExpandSize(2, 2); //to ensure everything will actually fit
 		this.#StaticColliderTree = new QuadTree(bounds, ItemsPerNode);
 		for(let col of this.#StaticColliders)
 		{
@@ -165,7 +165,7 @@ export default class CollisionSystem extends BaseComponentSystem
 			let trans = col.Entity.GetComponent(WorldPos);
 			bounds.Encapsulate(col.WorldRect(trans.position));
 		}
-		bounds.ExpandSize(1, 1); //to ensure everything will actually fit
+		bounds.ExpandSize(2, 2); //to ensure everything will actually fit
 		this.#StaticTriggerTree = new QuadTree(bounds, ItemsPerNode);
 		for(let col of this.#StaticTriggers)
 		{

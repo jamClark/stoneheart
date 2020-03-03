@@ -5,6 +5,7 @@ import AppState from './core/appstate.js';
 import AppStateMachine from './core/appstatemachine.js';
 import DebugTools from './core/debugtools.js';
 import AssetManager from './core/assetmanager.js';
+import {LoadFileSync} from './core/filereader.js';
 import Entity from './ecs/entity.js';
 import EntityManager from './ecs/entitymanager.js';
 import SystemManager from './ecs/systemsmanager.js';
@@ -38,6 +39,7 @@ import SpriteRenderer from './systems/spriterenderer.js';
 import {SpaceMode} from './systems/particlesystem.js';
 
 let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, ToolPallet, AppFSM;
+let LoadedTools;
 const RenderScale = 2;
 const AllowLiveSceneEditing = true;
 
@@ -57,10 +59,11 @@ export function AppStart(canvas)
 	AssetMan = new AssetManager(canvasContext);
 	SceneMan = new SceneManager(AssetMan, EntMan, SysMan);
 	
+	LoadedTools = DeserializePalletTools('./assets/pallettools.txt');
 	Factory.Init(canvas, AssetMan, EntMan);
-	ToolPallet = new Pallet(document.getElementById("RootContainer"), canvas, Factory);
-	let MainCamera = Factory.CreateCamera(RenderScale);
+	let MainCamera = Factory.CreateCamera(0, 0, RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
+	ToolPallet = new Pallet(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
 	
 	
 	//create and register global systems
@@ -129,7 +132,7 @@ export function AppStart(canvas)
 			if(Input.GetKeyDown("KeyK"))
 				console.log(SceneMan.SaveScene());
 			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
-				DisableToolPallet();
+				DisableToolPallet(CollisionSys);
 		},
 		() => { RenderLayers.ClearLayers(); },
 		() => Input.BeginInputBlock(),
@@ -170,24 +173,65 @@ let TogglePhysicsDebugDrawing = function()
 	window.Debug.DebugDraw = !window.Debug.DebugDraw;
 }
 
+function DeserializePalletTools(path)
+{
+	let tools = [];
+	let lines = LoadFileSync(path).split('\n');
+	for(let line of lines)
+	{
+		line = line.trim();
+		if(line != null && line.length > 0 && !line.startsWith('//'))
+		{
+			let data = JSON.parse(line);
+			if(!Array.isArray(data))
+				throw new Error("Invalid formatting for tool definition file.");
+			switch(data[0])
+			{
+				case "TOOL":
+				{
+					tools.push(CreateTool(data.slice(1, data.length)));
+					break;
+				}
+				case "ENUM":
+				{
+					console.log("ENUM definitions not currently supported. Skipping.");
+					break;
+				}
+				case "INSPECTOR":
+				{
+					console.log("INSPECTOR definitions not currently supported. Skipping.");
+					break;
+				}
+				default:
+				{
+					throw new Error("Unknow definition type: " + data[0]);
+				}
+			}
+		}
+	}
+	
+	return tools;
+}
+
+function CreateTool(args)
+{
+	return new PalletTool(AssetMan, ...args);
+}
+
 function EnableToolPallet()
 {
 	window.Debug.DebugDraw = true;
 	AppFSM.PushState(AppFSM.SceneEditorState);
 	ToolPallet.Enable();
-	
-	ToolPallet.InstallTool(new PalletTool());
+	for(let tool of LoadedTools)
+		ToolPallet.InstallTool(tool);
 }
 
-function DisableToolPallet()
+function DisableToolPallet(collisionSystem)
 {
 	window.Debug.DebugDraw = false;
 	AppFSM.PopState();
 	ToolPallet.Disable();
-	
 	ToolPallet.UninstallAllTools();
+	collisionSystem.RebuildSpacialTree();
 }
-
-
-
-

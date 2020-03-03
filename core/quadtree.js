@@ -22,10 +22,13 @@ const CullDuplicateRetreival = false;
 ///
 /// TODO: Need a way to move items around in tree (currently requires rebuilding the entire tree)
 ///
-/// IMPORTANT: Currently, any items that are not fully contained in a Node are stored in the parent instead.
+/// IMPORTANT (OUTDATED): Currently, any items that are not fully contained in a Node are stored in the parent instead.
 ///            This can massively reduce the efficency of checking for AABB collisions due to the fact that
 ///			   these items in the parent have no upper limit to storage count and must all be checked even
 ///			   when we are only interested in a particular child quadrant.
+/// UPDATE: The above note has been changed so that items that overlap multiple nodes will now have a reference
+///			stored in each node they overlap. This functionality can be toggled between the old and new using the
+///			'ParentIfUnbound' constant at the top of this file.
 /// 
 export class QuadTree
 {
@@ -142,6 +145,8 @@ export class QuadTree
 		else
 		{
 			console.log("Storing item in root due to exceeding current boundary limits.");
+			console.log("BOUNDS: " + bounds.toString);
+			console.log("ROOT BOUNDS: " + this.#Bounds.toString);
 			//TODO: update max bound space and rebuild the tree.
 			let result = this.Root.Store(bounds, item);
 			if(result == null)
@@ -406,7 +411,8 @@ export class QuadNode
 					return container;
 			}
 		}
-		else if(this.Bounds.FullyContains(bounds))
+		
+		if(this.Bounds.FullyContains(bounds))
 			return this;
 				
 		return null;

@@ -30,6 +30,11 @@ export default class Rect
 		else throw new Error("Invalid param type");
 	}
 	
+	get toString()
+	{
+		return "Rect ("+this.Top+","+this.Left+","+this.Bottom+","+this.Right+")";
+	}
+	
 	///
 	/// Creates and returns a new Rect with the given bounds.
 	/// 

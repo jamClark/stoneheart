@@ -1,0 +1,3 @@
+["ENUM","RenderLayer",["Background",0],["TilesBG0",1],["TilesBG1",2],["Enemy",3],["PrePlayer",4],["Player",5],["PostPlayer",6],["TilesFG0",7],["TilesFG1",8]]
+["INSPECTOR",["function","CreateWorldBlock"],["float","Width"],["float","Height"], ["LayerEnum", "Render Layer"], ["string", "Asset Path"]]
+["TOOL","CreateWorldBlock", 64, 64, 1, "./assets/sprites/tileset1.png"]

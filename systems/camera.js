@@ -43,6 +43,8 @@ export default class Camera extends BaseComponent
 	
 	ViewToWorld(pos)
 	{
-		throw new Error("ViewToWorld() Not yet implemented.");
+		let x = pos.x - (this.#Canvas.width * 0.5) + this.#WorldPosComp.position.x;
+		let y = -(pos.y - (this.#Canvas.height * 0.5) - this.#WorldPosComp.position.y);
+		return new Vector2(x, y);
 	}
 }

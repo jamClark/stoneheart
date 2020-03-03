@@ -1,4 +1,5 @@
 import Factory from './factory.js';
+import {LoadFileSync} from './../core/filereader.js';
 
 /// 
 /// This is used to handle serializing and desieralizeing all objects within a scene.
@@ -24,34 +25,14 @@ export default class SceneManager
 	}
 	
 	async LoadScene(path)
-	{
-		let data = this.GetLevelStream(path);		
-		let lines = data.split('\n');
+	{	
+		let lines = LoadFileSync(path).split('\n');
 		for(let line of lines)
 		{
 			let ent = JSON.parse(line);
 			if(ent != null && ent.length != 0)
 				await Factory[ent.name].apply(Factory, ent.params);
 		}
-	}
-	
-	/// 
-	/// Helper method for syncronously loading text files. This will 
-	/// generate warning due to its snychronous nature.
-	/// 
-	LoadFile(filePath) 
-	{
-		var xmlhttp = new XMLHttpRequest();
-		xmlhttp.open("GET", filePath, false);
-		xmlhttp.send();
-		if (xmlhttp.status!=200) 
-			throw new Error(xmlhttp.responseText);
-		return xmlhttp.responseText;
-	}
-	
-	GetLevelStream(path)
-	{
-		return this.LoadFile(path);
 	}
 	
 	UnloadCurrentScene()

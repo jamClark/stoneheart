@@ -24,9 +24,9 @@ const ppx = 1; // 0.0158;
 
 const Layers =
 {
-	Background: -1,
-	TilesBG0: 0,
-	TilesBG1: 1,
+	Background: 0,
+	TilesBG0: 1,
+	TilesBG1: 2,
 	Enemy: 10,
 	PrePlayer: 19,
 	Player: 20,
@@ -99,9 +99,9 @@ export default class Factory
 		return ent;
 	}
 	
-	static CreateCamera(renderScale)
+	static CreateCamera(spawnPosX, spawnPosY, renderScale)
 	{
-		let trans = new WorldPos(0, 0);
+		let trans = new WorldPos(spawnPosX, spawnPosY);
 		let ent = new Entity("Main Camera",
 			trans,
 			new Camera(Factory.Canvas, Factory.Canvas.width / renderScale, Factory.Canvas.height / renderScale, trans),

@@ -1,5 +1,6 @@
 import Factory from './factory.js';
-
+import Vector2 from './../core/vector2.js';
+import AssetManager from './../core/assetmanager.js';
 
 /// 
 /// Provides an HTML-based editor tool for generating entities using the Factory singleton.
@@ -8,8 +9,7 @@ export class FactoryEditor
 {
 	#FactoryMethod;
 	
-	
-	constructor(factoryMethod)
+	constructor(factoryMethod, camera)
 	{
 		this.#FactoryMethod = factoryMethod;
 	}
@@ -46,19 +46,22 @@ export class Pallet
 	#Factory;
 	#Root;
 	#Canvas;
+	#Camera;
 	#Enabled;
 	#Div;
 	#Selected;
+	#Dragging;
 	
 	#Tools = [];
 	#ToolDivs = [];
 	
 	
-	constructor(rootDiv, canvas, factory)
+	constructor(rootDiv, canvas, factory, camera)
 	{
 		this.#Factory = factory;
 		this.#Root = rootDiv;
 		this.#Canvas = canvas;
+		this.#Camera = camera;
 		this.ToolWidgetWidth = 64;
 		this.ToolWidgetHeight = 64;
 	}
@@ -73,10 +76,10 @@ export class Pallet
 		this.#Div = document.createElement('div');
 		this.#Root.appendChild(this.#Div);
 		this.#Div.id = "EditorPallet"
-		this.#Div.style = "background-color:black; padding:10px; padding-left:20px; padding-right:20px; color:white;";
+		this.#Div.style = "background-color:#442244; padding:0px; padding-left:0px; padding-right:0px; color:white;";
 		
-		this.#Canvas.ondrop = this.OnToolDropped;
-		this.#Canvas.ondragover = this.OnValidateDrop;;
+		this.#Canvas.ondrop = this.OnToolDropped.bind(this);
+		this.#Canvas.ondragover = this.OnValidateDrop.bind(this);
 	}
 	
 	OnValidateDrop(evt)
@@ -86,7 +89,14 @@ export class Pallet
 	
 	OnToolDropped(evt)
 	{
-		console.log("A tool was dropped into the root div!");
+		//data transfer format is: [xoffset, yoffset, pallettool jason]
+		let rawData = JSON.parse(evt.dataTransfer.getData("text"));
+		let toolInfo = PalletTool.Generate(null, rawData[4]);
+		let pos = new Vector2(evt.offsetX, evt.offsetY);
+		pos = this.#Camera.ViewToWorld(pos);
+		toolInfo.Params[0] = pos.x + rawData[0] - rawData[2];
+		toolInfo.Params[1] = pos.y - rawData[1] + rawData[3];
+		this.#Factory[toolInfo.FunctionName](...toolInfo.Params );
 	}
 	
 	Disable()
@@ -105,14 +115,14 @@ export class Pallet
 		if(index < 0)
 		{
 			this.#Tools.push(tool);
-			let div = document.createElement('div');
-			this.#ToolDivs.push(div);
-			this.#Div.appendChild(div);
+			let toolDiv = document.createElement('div');
+			this.#ToolDivs.push(toolDiv);
+			this.#Div.appendChild(toolDiv);
 			
-			div.draggable = true;
-			div.style = "width:64px; height:64px; background-color:grey; color:white";
-			div.ondragstart = tool.OnDragStart;
-			div.dragend = tool.OnDragEnd;
+			toolDiv.draggable = true;
+			toolDiv.style = "width:64px; height:64px; background-color:red; color:white; background-size:100%; 100%; background-image:url('" + tool.IconFile + "');";
+			toolDiv.ondragstart = tool.OnDragStart.bind(tool);
+			toolDiv.dragend = tool.OnDragEnd.bind(tool);
 		}
 	}
 	
@@ -155,13 +165,34 @@ export class Pallet
 /// Represents a tool that is dispalyed on the tool pallet
 /// along with all of the information needed to store, retreive,
 /// and edit factory info used for object generation in the scene.
+///
+/// Parameters are stored as arrays with the format of ["TYPE", "DISPLAY NAME", Default Value]
 /// 
 export class PalletTool
 {
-	constructor(functionName, ...params)
+	#AssetManager;
+	
+	constructor(assetManager, functionName, ...params)
 	{
 		this.FunctionName = functionName;
-		this.Params = [];//Array.from(...params);
+		this.Params = [0,0].concat(Array.from(params));
+		this.AssetManager = assetManager;
+	}
+	
+	set AssetManager(assetMan)
+	{
+		this.#AssetManager = assetMan;
+		let outterThis = this;
+		if(this.#AssetManager != null)
+		{
+			this.#AssetManager.LoadAsset(outterThis.IconFile).then(resolve =>
+				{	outterThis.Icon = resolve;	});
+		}
+	}
+	
+	get IconFile()
+	{
+		return this.Params[this.Params.length-1];
 	}
 	
 	Save()
@@ -169,11 +200,26 @@ export class PalletTool
 		return JSON.stringify(this);
 	}
 	
-	Restore(json)
+	Restore(assetManager, json)
 	{
 		let temp = JSON.parse(json);
 		this.FunctionName = temp.FunctionName;
 		this.Params = temp.Params;
+		
+		this.#AssetManager = assetManager;
+		let outterThis = this;
+		if(this.#AssetManager != null)
+		{
+			this.#AssetManager.LoadAsset(outterThis.IconFile).then(resolve =>
+				{	outterThis.Icon = resolve;	});
+		}
+	}
+	
+	static Generate(assetManager, json)
+	{
+		let tool = new PalletTool(assetManager, "", []);
+		tool.Restore(assetManager, json);
+		return tool;
 	}
 	
 	DrawTool(pallet)
@@ -186,6 +232,9 @@ export class PalletTool
 	
 	OnDragStart(evt)
 	{
+		//the default icon will be the size of the image! That's not gonna work!
+		//evt.dataTransfer.setDragImage(this.Icon, this.Icon.width/2, this.Icon.height/2);
+		evt.dataTransfer.setData("text", JSON.stringify([this.Icon.width, this.Icon.height, evt.offsetX, evt.offsetY, this.Save()]));
 	}
 	
 	OnDragEnd(evt)
