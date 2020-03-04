@@ -135,6 +135,35 @@ export default class CollisionSystem extends BaseComponentSystem
 	}
 	
 	/// 
+	/// Returns a list of all colliders that overlap with the given point or
+	/// an empty array if none are found.
+	/// 
+	/// NOTE: This performs a simple iteration through *all* colliders and does
+	/// 	  not utilize the internal broadphase for quickly filtering potential results.
+	///		  This means the operation can be significantly slower in complex scenes but it
+	///		  will also work even if the spacial tree hasn't been rebuilt (as long as all
+	///		  colliders have been registered).
+	/// 
+	GetAllColliders(point)
+	{
+		if(!(point instanceof Vector2) && !(point instanceof Rect))
+			throw new Error("Input must be either a Vector2 or Rect.");
+		
+		let result = [];
+		let allColliders = this.#StaticColliders.concat(this.#StaticTriggers);
+		for(let col of allColliders)
+		{
+			if(!(col instanceof BoxCollider))
+				console.log("COl is: " + col);
+			let trans = col.Entity.GetComponent(WorldPos);
+			if(col.WorldRect(trans.position).IsOverlapping(point))
+				result.push(col);
+		}
+		
+		return result;
+	}
+	
+	/// 
 	/// Re-creates the QuadTree spacial partiion used internally by this system. This should be done after
 	/// adding or removing any static colliders used by the system and before updating it for the next simulation.
 	/// 

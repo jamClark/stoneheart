@@ -12,8 +12,8 @@ import Rigidbody from './../systems/rigidbody.js';
 import PlayerInputReader from './../systems/playerinputreader.js';
 import CharacterController from './../systems/charactercontroller.js';
 import SmoothFollower from './../systems/smoothfollower.js';
-import ParticleSystem from './../systems/particlesystem.js';
-
+import ParticleEmitter from './../systems/particleemitter.js';
+import SelectionBox from './../systems/selectionbox.js';
 
 import Vector2 from './../core/vector2.js';
 import Rect from './../core/rect.js';
@@ -47,16 +47,17 @@ export default class Factory
 		Factory.EntityManager = entityMan;
 	}
 	
-	static async CreateParticleSystem(spawnPosX, spawnPosY, renderLayer, spaceMode, spritePath, ...params)
+	static async CreateParticleEmitter(spawnPosX, spawnPosY, renderLayer, spaceMode, spritePath, ...params)
 	{
 		let pos = new WorldPos(spawnPosX, spawnPosY);
-		let partSys = new ParticleSystem(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
+		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
 		partSys.SpaceMode = spaceMode;
 		partSys.ApplyEmitConfiguration(...params);
 		
 		let ent = new Entity("Particle", 
 			pos,
 			partSys,
+			new SelectionBox(),
 			);
 		
 		Factory.EntityManager.RegisterEntity(ent);
@@ -120,7 +121,7 @@ export default class Factory
 		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(spritePath), 
 										       colliderRect, renderLayer);
 		
-		let ent = new Entity("Block", trans, col, renderer);
+		let ent = new Entity("Block", trans, col, renderer, new SelectionBox());
 		Factory.EntityManager.RegisterEntity(ent);
 		
 		//needed for serialization

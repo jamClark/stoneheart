@@ -1,4 +1,5 @@
 import Time from './time.js';
+import Vector2 from './vector2.js';
 
 /// 
 /// A universal keyboard input system that provides consitent
@@ -11,6 +12,7 @@ export default class Input
 	static #KeyHeld = new Map();
 	static #PendingKeyUp = new Map();
 	static #KeyUp = new Map();
+	
 	static #Blocking = false;
 	static #Inited = false;
 	
@@ -20,19 +22,60 @@ export default class Input
 	static #GamepadButtonDown = [];
 	static #GamepadButtonUp = [];
 	
+	static #Canvas;
+	
 	/// 
 	/// Initializes the input system and begins listening for key events from the 
 	/// given global source. For a browser app, 'window' will usually be passed
 	/// as the 'global' parameter.
 	/// 
-	static Init(global)
+	static Init(global, canvas)
 	{
+		Input.#Canvas = canvas;
+		Input.MousePosX = 0;
+		Input.MousePosY = 0;
 		if(Input.#Inited) return;
 		Input.#Inited = true;
 		global.addEventListener("keydown", (evt) => Input.InjectKeyDown(evt.code), false);
 		global.addEventListener("keyup", (evt) => Input.InjectKeyUp(evt.code), false);
 		global.addEventListener("gamepadconnected", Input.GamepadConnected);
 		global.addEventListener("gamepaddisconnected", Input.GamepadDisconnected);
+		canvas.onmousemove = (evt) =>
+		{
+			let rect = canvas.getBoundingClientRect();
+			Input.MousePosX = evt.clientX - rect.left;
+			Input.MousePosY = evt.clientY - rect.top;
+		}
+		global.document.onmousedown = (evt) => Input.InjectKeyDown("MOUSE0_"+evt.button);
+		global.document.onmouseup = (evt) => Input.InjectKeyUp("MOUSE0_"+evt.button);
+	}
+	
+	static GetMouse(button)
+	{
+		return Input.GetKey("MOUSE0_"+ button);
+	}
+	
+	static GetMouseDown(button)
+	{
+		return Input.GetKeyDown("MOUSE0_"+button);
+	}
+	
+	static GetMouseUp(button)
+	{
+		return Input.GetKeyUp("MOUSE0_"+button);
+	}
+	
+	static get MousePosition()
+	{
+		return new Vector2(this.MousePosX, this.MousePosY);
+	}
+	
+	static GetMouseDown(button)
+	{
+	}
+	
+	static GetMouseUp(button)
+	{
 	}
 	
 	static GamepadConnected(evt, connecting)

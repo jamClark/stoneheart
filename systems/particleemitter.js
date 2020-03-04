@@ -9,12 +9,11 @@ import WorldPos from './worldpos.js';
 import SpriteRenderer from './spriterenderer.js';
 import Particle from './particle.js';
 
-
 /// 
 /// An entity component that manages its own internal system for handling the spawning,
 /// lifetime, motion, and rendering of particles.
 /// 
-export default class ParticleSystem extends BaseComponent
+export default class ParticleEmitter extends BaseComponent
 {
 	#ActiveParticles = [];
 	#PoolId;
@@ -24,12 +23,12 @@ export default class ParticleSystem extends BaseComponent
 	constructor(poolId, renderLayer, spriteAsset)
 	{
 		super(WorldPos, SpriteRenderer, Particle);
-		if(ParticleSystem.Systems == null) ParticleSystem.Systems = [];
+		if(ParticleEmitter.Systems == null) ParticleEmitter.Systems = [];
 		spriteAsset.then(result => { this.SpriteAsset = result; });
 		this.#PoolId = poolId;
 		
 		if(!Lazarus.IsDefined(poolId))
-			Lazarus.Define(poolId, 5, 1000, ParticleSystem.GenerateParticle, this);
+			Lazarus.Define(poolId, 5, 1000, ParticleEmitter.GenerateParticle, this);
 		
 		
 		//system configuration
@@ -75,14 +74,14 @@ export default class ParticleSystem extends BaseComponent
 	
 	OnEnable()
 	{
-		ParticleSystem.Systems.push(this);
+		ParticleEmitter.Systems.push(this);
 	}
 	
 	OnDisable()
 	{
-		let index = ParticleSystem.Systems.indexOf(this);
+		let index = ParticleEmitter.Systems.indexOf(this);
 		if(index >= 0)
-			ParticleSystem.Systems.splice(index, 1);
+			ParticleEmitter.Systems.splice(index, 1);
 		
 		//TODO: kill all particles here
 		for(let part of this.#ActiveParticles)
@@ -170,7 +169,7 @@ export default class ParticleSystem extends BaseComponent
 	/// 
 	/// Here is where we internally process each individual particle entity. This functions
 	/// just like a normal ComponentSystem.Process() function but will only be iterated
-	/// for particles the are owned by this ParticleSystem.
+	/// for particles the are owned by this ParticleEmitter.
 	/// 
 	Process(masterSystem, ent, worldPos, renderer, particle, renderSystem)
 	{
@@ -184,7 +183,7 @@ export default class ParticleSystem extends BaseComponent
 	}
 	
 	/// 
-	/// This will be invoked by the ParticleSystemSystem each update tick.
+	/// This will be invoked by the ParticleEmitterSystem each update tick.
 	/// 
 	Update(masterSystem, entity, worldPos, particleSystem, rendererSystem)
 	{

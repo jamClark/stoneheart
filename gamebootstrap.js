@@ -30,13 +30,13 @@ import CollisionSystem from './systems/collisionsystem.js';
 import PlayerInputSystem from './systems/playerinputsystem.js';
 import CharacterControllerSystem from './systems/charactercontrollersystem.js'
 import SmoothFollowerSystem from './systems/smoothfollowersystem.js';
-import ParticleSystemSystem from './systems/particlesystemsystem.js';
+import ParticleEmitterSystem from './systems/particleemittersystem.js';
 
 //components
 import WorldPos from './systems/worldpos.js';
 import SmoothFollower from './systems/smoothfollower.js';
 import SpriteRenderer from './systems/spriterenderer.js';
-import {SpaceMode} from './systems/particlesystem.js';
+import {SpaceMode} from './systems/particleemitter.js';
 
 let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, ToolPallet, AppFSM;
 let LoadedTools;
@@ -75,13 +75,13 @@ export function AppStart(canvas)
 	let PlayerInputSys = new PlayerInputSystem();
 	let CharacterControllerSys = new CharacterControllerSystem();
 	let SmoothFollowerSys = new SmoothFollowerSystem();
-	let ParticleSystemSys = new ParticleSystemSystem(RenderSys);
+	let ParticleEmitterSys = new ParticleEmitterSystem(RenderSys);
 	
 	
 	AppFSM = new AppStateMachine();
 	AppFSM.PushState(AppStateMachine.EmptyLoopState);
 	Factory.CollisionSys = CollisionSys; //this is used internally when creating colliders but it doesn't exist at the time we call Init() above!!
-	Input.Init(window);
+	Input.Init(window, canvas);
 	EntMan.RegisterEntity(MainCamera);
 	
 	//register the systems that we will tick for each update/fixed update cycle
@@ -95,17 +95,19 @@ export function AppStart(canvas)
 	SysMan.RegisterSystem(AnimSys);
 	SysMan.RegisterSystem(RenderSys);
 	SysMan.RegisterSystem(TiledRenderSys);
-	SysMan.RegisterSystem(ParticleSystemSys);
+	SysMan.RegisterSystem(ParticleEmitterSys);
 	
 	EditorSysMan.RegisterSystem(CollisionSys); //this is simply for debug rendering
 	EditorSysMan.RegisterSystem(RenderSys);
 	EditorSysMan.RegisterSystem(TiledRenderSys);
-	EditorSysMan.RegisterSystem(ParticleSystemSys);
+	EditorSysMan.RegisterSystem(ParticleEmitterSys);
 	
 	
 	//define a 'normal update' state for the FSM. This is where the bulk of our ECS updates will be processed
 	AppFSM.MainGameLoopState = new AppState(
 		[
+			() => { RenderLayers.ClearLayers(); },
+			() => Input.BeginInputBlock(),
 			() =>
 			{
 				//debugging and utility stuff
@@ -114,8 +116,6 @@ export function AppStart(canvas)
 				if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
 					EnableToolPallet();
 			},
-			() => { RenderLayers.ClearLayers(); },
-			() => Input.BeginInputBlock(),
 			SysMan.Update.bind(SysMan),
 			() => Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan)),
 			() => Input.EndInputBlock(),
@@ -125,6 +125,8 @@ export function AppStart(canvas)
 	AppFSM.LoadingState = new AppState([]); //TODO: Some kind of universal 'loading' system that ticks when loading
 	AppFSM.SceneEditorState = new AppState(
 		[
+		() => { RenderLayers.ClearLayers(); },
+		() => Input.BeginInputBlock(),
 		() =>
 		{
 			if(Input.GetKeyDown("KeyL"))
@@ -134,12 +136,12 @@ export function AppStart(canvas)
 			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
 				DisableToolPallet(CollisionSys);
 		},
-		() => { RenderLayers.ClearLayers(); },
-		() => Input.BeginInputBlock(),
+		() => HandleSelection(CollisionSys, MainCamera.GetComponent(Camera)),
 		EditorSysMan.Update.bind(EditorSysMan),
 		() => Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan)),
 		() => Input.EndInputBlock(),
 		() => RenderLayers.CompositeLayers(),
+		() => RenderSelection(),
 		]
 	);
 	
@@ -161,14 +163,45 @@ export function AppStart(canvas)
 	Assets.PreloadAllAssets(AssetMan).then( async () =>
 	{
 		await loadLevel('./assets/scene1.txt');
-		let particleEnt = await Factory.CreateParticleSystem(100, 0, RenderLayers, SpaceMode.World, './assets/sprites/alert.png',
-			1, 5, 1000, 7, 1, 2);
+		//let particleEnt = await Factory.CreateParticleEmitter(100, 0, RenderLayers, SpaceMode.World, './assets/sprites/alert.png',
+		//	1, 5, 1000, 7, 1, 2);
 		AppFSM.PushState(AppFSM.MainGameLoopState);
 	});
 	
 }
 
-let TogglePhysicsDebugDrawing = function()
+let SelectionInc = 0;
+let CurrentSelection = null;
+function HandleSelection(collisionSys, camera)
+{
+	if(Input.GetMouse(0))
+	{
+		let pos = camera.ViewToWorld(Input.MousePosition);
+		//console.log("POS: " + pos.x);
+		let cols = collisionSys.GetAllColliders(pos);
+		if(cols.length > 0)
+		{
+			console.log("We found " + cols.length + " motha fuckas!");
+		}
+		else
+		{
+			//console.log("Nada");
+		}
+		//console.log("Hello?");
+	}
+}
+
+function RenderSelection()
+{
+	if(CurrentSelection == null)
+		return;
+	
+	//first, draw a worldspace grid
+	
+	//now draw a highlight for the currently selected object, if any
+}
+
+function TogglePhysicsDebugDrawing()
 {
 	window.Debug.DebugDraw = !window.Debug.DebugDraw;
 }

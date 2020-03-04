@@ -2,20 +2,20 @@ import BaseComponentSystem from './../ecs/basecomponentsystem.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
 import WorldPos from './worldpos.js';
-import ParticleSystem from './particlesystem.js';
+import ParticleEmitter from './particleemitter.js';
 import Time from './../core/time.js';
 
 /// 
 /// A system for updating all active particle systems in the scene.
 /// 
-export default class ParticleSystemSystem extends BaseComponentSystem
+export default class ParticleEmitterSystem extends BaseComponentSystem
 {
 	//an external SpriteRenderSystem that this will piggy-back onto for rendering sprites.
 	#Renderer;
 	
 	constructor(spriteRenderSystem, ppm = 1)
 	{
-		super(WorldPos, ParticleSystem);
+		super(WorldPos, ParticleEmitter);
 		this.#Renderer = spriteRenderSystem;
 		this.Gravity = new Vector2(0, -20 * (1/Time.fixedDeltaTime));
 		this.PixelsPerMeter = ppm;
