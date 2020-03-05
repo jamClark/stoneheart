@@ -1,5 +1,6 @@
 import BaseComponent from './../ecs/basecomponent.js'
 import WorldPos from './worldpos.js';
+import BoxCollider from './boxcollider.js';
 
 /// 
 /// Provides a means of selecting an Entity using a mouse during edit-mode.
@@ -13,13 +14,13 @@ export default class SelectionBox extends BaseComponent
 		super();
 	}
 	
-	get Rect()
+	get WorldRect()
 	{
 		let trans = this.Entity.GetComponent(WorldPos);
 		if(trans == null)
 			throw new Error("Missing WorldPos component!");
 		
-		let col = this.Entity.GetComponent(WorldPos);
+		let col = this.Entity.GetComponent(BoxCollider);
 		return (col != null) ? col.WorldRect(trans.position) : this.TranslatedWorldRect(trans.position);
 	}
 	

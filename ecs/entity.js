@@ -200,6 +200,11 @@ export default class Entity
 		return this.#Components.filter(comp => required.map(req => req.name).includes(comp.type)).length == required.length;
 	}
 	
+	HasAnyComponents(...required)
+	{
+		return this.#Components.filter(comp => required.map(req => req.name).includes(comp.type)).length > 0;
+	}
+	
 	QueryForComponentsByNamedArray(required)
 	{
 		let list = this.#Components.filter(comp => required.includes(comp.type) );

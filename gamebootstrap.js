@@ -37,6 +37,8 @@ import WorldPos from './systems/worldpos.js';
 import SmoothFollower from './systems/smoothfollower.js';
 import SpriteRenderer from './systems/spriterenderer.js';
 import {SpaceMode} from './systems/particleemitter.js';
+import SelectionBox from './systems/selectionbox.js';
+
 
 let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, ToolPallet, AppFSM;
 let LoadedTools;
@@ -136,7 +138,7 @@ export function AppStart(canvas)
 			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
 				DisableToolPallet(CollisionSys);
 		},
-		() => HandleSelection(CollisionSys, MainCamera.GetComponent(Camera)),
+		() => HandleSelection(EntMan, MainCamera.GetComponent(Camera)),
 		EditorSysMan.Update.bind(EditorSysMan),
 		() => Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan)),
 		() => Input.EndInputBlock(),
@@ -170,24 +172,33 @@ export function AppStart(canvas)
 	
 }
 
+function GetSelectionAtMouse(entityMan, camera)
+{
+	let list = [];
+	let pos = camera.ViewToWorld(Input.MousePosition);
+	let cols = entityMan.QueryForEntities(SelectionBox).map( x => x.GetComponent(SelectionBox));
+	for(let col of cols)
+	{
+		let trans = col.Entity.GetComponent(WorldPos);
+		if(col.WorldRect.IsOverlapping(pos))
+			list.push(col);
+	}
+	return list;
+}
 let SelectionInc = 0;
 let CurrentSelection = null;
-function HandleSelection(collisionSys, camera)
+function HandleSelection(entityMan, camera)
 {
 	if(Input.GetMouse(0))
 	{
-		let pos = camera.ViewToWorld(Input.MousePosition);
-		//console.log("POS: " + pos.x);
-		let cols = collisionSys.GetAllColliders(pos);
-		if(cols.length > 0)
+		let list = GetSelectionAtMouse(entityMan, camera);
+		if(list.length > 0)
 		{
-			console.log("We found " + cols.length + " motha fuckas!");
+			console.log("We found " + list.length + " motha fuckas!");
 		}
 		else
 		{
-			//console.log("Nada");
 		}
-		//console.log("Hello?");
 	}
 }
 

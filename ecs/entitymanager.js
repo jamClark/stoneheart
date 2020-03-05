@@ -35,12 +35,37 @@ export default class EntityManager
 		entity._Manager = null;
 	}
 	
-	QueryForEntity(... desiredTypes)
+	/// 
+	/// Returns a list of all entities registered with this manager that have all of the given cmponents attached.
+	/// 
+	QueryForEntities(... desiredTypes)
 	{
 		//TODO: go through all registered entities and get all that have the given components
-		throw new Error("Not yet implemented");
+		//throw new Error("Not yet implemented");
+		let list = [];
+		for(let ent of this._entities)
+		{
+			if(ent.HasComponents(...desiredTypes))
+				list.push(ent);
+		}
+		
+		return list;
 	}
 	
+	/// 
+	/// Filters a list of entities and only returns the ones that do not have any of the given components attached.
+	/// 
+	FilterEntities(entities, ...undesiredTypes)
+	{
+		let list = [];
+		for(let ent of entities)
+		{
+			if(!ent.HasAnyCompoments(...undesiredTypes))
+				list.push(ent);
+		}
+		
+		return list;
+	}	
 	
 	/// 
 	/// Registers an entity as being a global listener for a given message type.
