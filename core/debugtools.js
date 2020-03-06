@@ -21,7 +21,6 @@ export default class DebugTools
 		if(this.DebugDraw && this.#Context != null && this.debugCamera != null)
 		{
 			r.Center = this.debugCamera.WorldToView(r.Center);
-			
 			this.#Context.beginPath();
 			this.#Context.rect(r.Left, r.Top, r.Width, -r.Height);
 			this.#Context.strokeStyle = color;

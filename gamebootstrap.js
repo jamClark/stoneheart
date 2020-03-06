@@ -11,6 +11,9 @@ import EntityManager from './ecs/entitymanager.js';
 import SystemManager from './ecs/systemsmanager.js';
 import Input from './core/input.js';
 import RenderLayer from './core/renderlayer.js';
+import Vector2 from './core/vector2.js';
+import Rect from './core/rect.js';
+
 
 //game project imports
 import Assets from './game/assettable.js';
@@ -142,8 +145,8 @@ export function AppStart(canvas)
 		EditorSysMan.Update.bind(EditorSysMan),
 		() => Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan)),
 		() => Input.EndInputBlock(),
+		() => RenderSelection(EntMan, MainCamera.GetComponent(Camera)),
 		() => RenderLayers.CompositeLayers(),
-		() => RenderSelection(),
 		]
 	);
 	
@@ -187,29 +190,57 @@ function GetSelectionAtMouse(entityMan, camera)
 }
 let SelectionInc = 0;
 let CurrentSelection = null;
+let LastSelected = null;
+let SelectionOffset = new Vector2();
 function HandleSelection(entityMan, camera)
 {
-	if(Input.GetMouse(0))
+	if(CurrentSelection != null)
+	{
+		if(Input.GetMouseUp(0) || Input.GetMouseDown(0))
+		{
+			//drop
+			CurrentSelection = null;
+		}
+		else
+		{
+			//drag
+			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
+			trans.position = camera.ViewToWorld(Input.MousePosition.Add(SelectionOffset));
+		}
+	}
+	if(Input.GetMouseDown(0))
 	{
 		let list = GetSelectionAtMouse(entityMan, camera);
 		if(list.length > 0)
 		{
-			console.log("We found " + list.length + " motha fuckas!");
+			//selectand begin dragging
+			if(SelectionInc >= list.length)
+				SelectionInc = 0;
+			CurrentSelection = list[SelectionInc];
+			LastSelected = CurrentSelection;
+			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
+			SelectionOffset = camera.WorldToView(trans.position).Sub(Input.MousePosition);
+			SelectionInc++;
 		}
 		else
 		{
+			SelectionInc = 0;
+			CurrentSelection = null;
+			LastSelected = null;
 		}
 	}
 }
 
-function RenderSelection()
+function RenderSelection(entityMan, camera)
 {
-	if(CurrentSelection == null)
+	if(LastSelected == null)
 		return;
 	
 	//first, draw a worldspace grid
 	
-	//now draw a highlight for the currently selected object, if any
+	//now draw hilighted selection box
+	let worldRect = LastSelected.WorldRect;
+	Debug.DrawRect(worldRect, "yellow");
 }
 
 function TogglePhysicsDebugDrawing()

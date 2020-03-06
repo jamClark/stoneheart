@@ -46,8 +46,8 @@ export default class Input
 			Input.MousePosX = evt.clientX - rect.left;
 			Input.MousePosY = evt.clientY - rect.top;
 		}
-		global.document.onmousedown = (evt) => Input.InjectKeyDown("MOUSE0_"+evt.button);
-		global.document.onmouseup = (evt) => Input.InjectKeyUp("MOUSE0_"+evt.button);
+		canvas.onmousedown = (evt) => Input.InjectKeyDown("MOUSE0_"+evt.button);
+		canvas.onmouseup = (evt) => Input.InjectKeyUp("MOUSE0_"+evt.button);
 	}
 	
 	static GetMouse(button)
@@ -69,15 +69,7 @@ export default class Input
 	{
 		return new Vector2(this.MousePosX, this.MousePosY);
 	}
-	
-	static GetMouseDown(button)
-	{
-	}
-	
-	static GetMouseUp(button)
-	{
-	}
-	
+		
 	static GamepadConnected(evt, connecting)
 	{
 		Input.#GamepadDetected = true;
@@ -107,7 +99,6 @@ export default class Input
 	{
 		//don't process a key down event if the key is already being held
 		if(this.#KeyHeld.has(code)) return;
-		
 		if(Input.#Blocking)
 			Input.#PendingKeyDown.set(code, Time.time);
 		else
