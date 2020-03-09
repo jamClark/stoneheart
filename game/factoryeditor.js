@@ -1,6 +1,8 @@
 import Factory from './factory.js';
 import Vector2 from './../core/vector2.js';
 import AssetManager from './../core/assetmanager.js';
+import * as Editor from './sceneeditor.js';
+
 
 /// 
 /// Provides an HTML-based editor tool for generating entities using the Factory singleton.
@@ -41,6 +43,129 @@ export class FactoryEditor
 /// 
 /// 
 /// 
+export class Inspector
+{
+	#Factory;
+	#Root;
+	#Canvas;
+	#Camera;
+	#Enabled;
+	
+	#InspectorDiv;
+	
+	constructor(rootDiv, canvas, factory, camera)
+	{
+		this.#Factory = factory;
+		this.#Root = rootDiv;
+		this.#Canvas = canvas;
+		this.#Camera = camera;
+	}
+	
+	get Factory() { return this.#Factory; }
+	
+	Enable()
+	{
+		if(this.#Enabled) return;
+		this.#Enabled = true;
+		
+		let canvasDiv = document.getElementById("CanvasArea");
+		canvasDiv.style="position:relative; left:-100px";
+		this.#InspectorDiv = document.createElement('div');
+		canvasDiv.appendChild(this.#InspectorDiv);
+		this.#InspectorDiv.id = "Inspector"
+		this.#InspectorDiv.class = "Inspector";
+		
+		Editor.AddSelectedListener(this, this.HandleSelection);
+		Editor.AddDeselectedListener(this, this.HandleDeselection);
+	}
+	
+	Disable()
+	{
+		if(!this.#Enabled) return;
+		
+		let canvasDiv = document.getElementById("CanvasArea");
+		canvasDiv.style="left=0px";
+		this.#Enabled = false;
+		this.#InspectorDiv.remove();
+		this.ClearInspector();
+		
+		Editor.RemoveSelectedListener(this.HandleSelection);
+		Editor.RemoveDeselectedListener(this.HandleDeselection);
+	}
+	
+	#Inputs = [];
+	DrawInspector(obj)
+	{
+		if(obj == null)
+			throw new Error("Null object passed to DrawInspector.");
+		
+		this.DrawHeader(obj, this.#InspectorDiv, obj.Entity._factoryInfo.type);
+		this.DrawFloatField(obj, this.#InspectorDiv, "Flerp", 5);
+		this.DrawFloatField(obj, this.#InspectorDiv, "Poink", 77);
+		this.DrawFloatField(obj, this.#InspectorDiv, "Narf", 1);
+	}
+	
+	ClearInspector()
+	{
+		for(let input of this.#Inputs)
+			input.remove();
+		
+		this.#Inputs = [];
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawHeader(obj, parentDiv, text)
+	{
+		let titleElm = document.createElement('label');
+		titleElm.innerHTML = "<b>"+text+"</b>";
+		titleElm.style = "margin:8px; font-size: 1.2rem; padding-bottom: 5px; display:block;";
+		parentDiv.appendChild(titleElm);
+		this.#Inputs.push(titleElm);
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawFloatField(obj, parentDiv, title, defaultValue)
+	{
+		let inputDiv = document.createElement('div');
+		let titleElm = document.createElement('label');
+		let inputElm = document.createElement('input');
+		let lineBreakDiv = document.createElement('div');
+		inputDiv.appendChild(titleElm);
+		inputDiv.appendChild(inputElm);
+		parentDiv.appendChild(inputDiv);
+		parentDiv.appendChild(lineBreakDiv);
+		
+		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		
+		titleElm.innerHTML = title + ":";
+		titleElm.style = "padding-right: 5px";
+		
+		inputElm.type = "number";
+		inputElm.value = defaultValue;
+		inputElm.style = "width:100px;"
+		
+		this.#Inputs.push(inputDiv);
+	}
+	
+	HandleSelection(obj)
+	{
+		this.DrawInspector(obj);
+	}
+	
+	HandleDeselection(obj)
+	{
+		this.ClearInspector();
+	}
+}
+
+
+/// 
+/// 
+/// 
 export class Pallet
 {
 	#Factory;
@@ -48,7 +173,7 @@ export class Pallet
 	#Canvas;
 	#Camera;
 	#Enabled;
-	#Div;
+	#PalletDiv;
 	#Selected;
 	#Dragging;
 	
@@ -73,13 +198,20 @@ export class Pallet
 		if(this.#Enabled) return;
 		this.#Enabled = true;
 		
-		this.#Div = document.createElement('div');
-		this.#Root.appendChild(this.#Div);
-		this.#Div.id = "EditorPallet"
-		this.#Div.style = "background-color:#442244; padding:0px; padding-left:0px; padding-right:0px; color:white;";
+		this.#PalletDiv = document.createElement('div');
+		this.#Root.appendChild(this.#PalletDiv);
+		this.#PalletDiv.id = "ToolPallet"
+		this.#PalletDiv.class = "ToolPallet";
 		
 		this.#Canvas.ondrop = this.OnToolDropped.bind(this);
 		this.#Canvas.ondragover = this.OnValidateDrop.bind(this);
+	}
+	
+	Disable()
+	{
+		if(!this.#Enabled) return;
+		this.#Enabled = false;
+		this.#PalletDiv.remove();
 	}
 	
 	OnValidateDrop(evt)
@@ -99,13 +231,6 @@ export class Pallet
 		this.#Factory[toolInfo.FunctionName](...toolInfo.Params );
 	}
 	
-	Disable()
-	{
-		if(!this.#Enabled) return;
-		this.#Enabled = false;
-		this.#Div.remove();
-	}
-	
 	InstallTool(tool)
 	{
 		if(!(tool instanceof PalletTool))
@@ -117,7 +242,7 @@ export class Pallet
 			this.#Tools.push(tool);
 			let toolDiv = document.createElement('div');
 			this.#ToolDivs.push(toolDiv);
-			this.#Div.appendChild(toolDiv);
+			this.#PalletDiv.appendChild(toolDiv);
 			
 			toolDiv.draggable = true;
 			toolDiv.style = "width:64px; height:64px; background-color:red; color:white; background-size:100%; 100%; background-image:url('" + tool.IconFile + "');";
@@ -152,12 +277,6 @@ export class Pallet
 			tool.DrawTool(this);
 	}
 	
-	DrawSelectedInspector()
-	{
-		if(this.Selected == null) return;
-		
-		//TODO: draw the inspector for the currently selected object.
-	}
 }
 
 

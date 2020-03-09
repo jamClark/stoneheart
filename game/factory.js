@@ -61,6 +61,14 @@ export default class Factory
 			);
 		
 		Factory.EntityManager.RegisterEntity(ent);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			type: "Particle Emitter",
+			name: "CreateParticleEmitter",
+			params: Array.from(arguments),
+		}
 		return ent;
 	}
 	
@@ -84,7 +92,8 @@ export default class Factory
 									await Factory.AssetManager.LoadAsset(Assets.Sprites.ANA_L),
 									await Factory.AssetManager.LoadAsset(Assets.Sprites.ANA_R),
 									await Factory.AssetManager.LoadAsset(Assets.Anims.ANA_L),
-									await Factory.AssetManager.LoadAsset(Assets.Anims.ANA_R))
+									await Factory.AssetManager.LoadAsset(Assets.Anims.ANA_R)),
+			new SelectionBox(),
 			);
 		
 		Factory.EntityManager.RegisterEntity(ent);
@@ -93,7 +102,8 @@ export default class Factory
 		//needed for serialization
 		ent._factoryInfo =
 		{
-			name: "CreateWorldBlock",
+			type: "Player",
+			name: "CreatePlayer",
 			params: Array.from(arguments),
 		}
 		
@@ -127,6 +137,7 @@ export default class Factory
 		//needed for serialization
 		ent._factoryInfo =
 		{
+			type: "World Block",
 			name: "CreateWorldBlock",
 			params: Array.from(arguments),
 		}

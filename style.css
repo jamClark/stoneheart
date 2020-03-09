@@ -1,0 +1,72 @@
+body
+{
+	background-color: black;
+}
+
+/*Container DIV of all elements*/
+#RootContainer
+{
+	width:640px; 
+	padding:0px; 
+	margin:auto; 
+	display:block;
+}
+
+/*The DIV containing the canvas*/
+#CanvasArea
+{
+	width: 100%;
+	position:relative;
+	left:0px;
+}
+
+/*The canvas*/
+#View
+{
+	float:left;
+	width:100%;
+	border: 1px solid #000000;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+/*Containing DIV for inspector when active.*/
+#Inspector
+{ 
+	position:fixed;
+	right:0%;
+	top:0%;
+	width:15rem;
+	height:100%;
+	overflow:auto;
+	
+	border: 1px solid #000000;
+	background-color:#442244; 
+	padding:0px;
+	color:white;
+}
+
+/*Containing DIV for ToolPallet when active.*/
+#ToolPallet
+{
+	position: fixed;
+	left:0;
+	bottom:0;
+	right: 15.5rem;
+	height:100px;
+	overflow:auto;
+	
+	background-color:#442244; 
+	padding:5px; 
+	padding-left:10px; 
+	padding-right:10px; 
+	color:white;
+}
+
+/*Removes floating states.*/
+.clearfix::after
+{
+	content: "";
+	clear: both;
+	display: table;
+}

@@ -14,12 +14,12 @@ import RenderLayer from './core/renderlayer.js';
 import Vector2 from './core/vector2.js';
 import Rect from './core/rect.js';
 
-
 //game project imports
 import Assets from './game/assettable.js';
 import Factory from './game/factory.js';
-import {FactoryEditor, Pallet, PalletTool} from './game/factoryeditor.js';
+import {FactoryEditor, Pallet, Inspector, PalletTool} from './game/factoryeditor.js';
 import SceneManager from './game/scene.js';
+import * as Editor from './game/sceneeditor.js';
 
 //ecs components
 import Camera from './systems/camera.js';
@@ -43,7 +43,7 @@ import {SpaceMode} from './systems/particleemitter.js';
 import SelectionBox from './systems/selectionbox.js';
 
 
-let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, ToolPallet, AppFSM;
+let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, ToolPallet, InspectorPallet, AppFSM;
 let LoadedTools;
 const RenderScale = 2;
 const AllowLiveSceneEditing = true;
@@ -64,12 +64,12 @@ export function AppStart(canvas)
 	AssetMan = new AssetManager(canvasContext);
 	SceneMan = new SceneManager(AssetMan, EntMan, SysMan);
 	
-	LoadedTools = DeserializePalletTools('./assets/pallettools.txt');
+	LoadedTools = Editor.DeserializePalletTools(AssetMan, './assets/pallettools.txt');
 	Factory.Init(canvas, AssetMan, EntMan);
 	let MainCamera = Factory.CreateCamera(0, 0, RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
 	ToolPallet = new Pallet(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
-	
+	InspectorPallet = new Inspector(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
 	
 	//create and register global systems
 	let AnimSys = new SpriteAnimatorSystem();
@@ -119,7 +119,7 @@ export function AppStart(canvas)
 				if(Input.GetKeyDown("KeyL"))
 					TogglePhysicsDebugDrawing();
 				if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
-					EnableToolPallet();
+					EnableEditMode();
 			},
 			SysMan.Update.bind(SysMan),
 			() => Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan)),
@@ -139,13 +139,13 @@ export function AppStart(canvas)
 			if(Input.GetKeyDown("KeyK"))
 				console.log(SceneMan.SaveScene());
 			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
-				DisableToolPallet(CollisionSys);
+				DisableEditMode(CollisionSys);
 		},
-		() => HandleSelection(EntMan, MainCamera.GetComponent(Camera)),
+		() => Editor.HandleSelection(EntMan, MainCamera.GetComponent(Camera)),
 		EditorSysMan.Update.bind(EditorSysMan),
 		() => Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan)),
 		() => Input.EndInputBlock(),
-		() => RenderSelection(EntMan, MainCamera.GetComponent(Camera)),
+		() => Editor.RenderSelection(EntMan, MainCamera.GetComponent(Camera)),
 		() => RenderLayers.CompositeLayers(),
 		]
 	);
@@ -175,138 +175,29 @@ export function AppStart(canvas)
 	
 }
 
-function GetSelectionAtMouse(entityMan, camera)
-{
-	let list = [];
-	let pos = camera.ViewToWorld(Input.MousePosition);
-	let cols = entityMan.QueryForEntities(SelectionBox).map( x => x.GetComponent(SelectionBox));
-	for(let col of cols)
-	{
-		let trans = col.Entity.GetComponent(WorldPos);
-		if(col.WorldRect.IsOverlapping(pos))
-			list.push(col);
-	}
-	return list;
-}
-let SelectionInc = 0;
-let CurrentSelection = null;
-let LastSelected = null;
-let SelectionOffset = new Vector2();
-function HandleSelection(entityMan, camera)
-{
-	if(CurrentSelection != null)
-	{
-		if(Input.GetMouseUp(0) || Input.GetMouseDown(0))
-		{
-			//drop
-			CurrentSelection = null;
-		}
-		else
-		{
-			//drag
-			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
-			trans.position = camera.ViewToWorld(Input.MousePosition.Add(SelectionOffset));
-		}
-	}
-	if(Input.GetMouseDown(0))
-	{
-		let list = GetSelectionAtMouse(entityMan, camera);
-		if(list.length > 0)
-		{
-			//selectand begin dragging
-			if(SelectionInc >= list.length)
-				SelectionInc = 0;
-			CurrentSelection = list[SelectionInc];
-			LastSelected = CurrentSelection;
-			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
-			SelectionOffset = camera.WorldToView(trans.position).Sub(Input.MousePosition);
-			SelectionInc++;
-		}
-		else
-		{
-			SelectionInc = 0;
-			CurrentSelection = null;
-			LastSelected = null;
-		}
-	}
-}
-
-function RenderSelection(entityMan, camera)
-{
-	if(LastSelected == null)
-		return;
-	
-	//first, draw a worldspace grid
-	
-	//now draw hilighted selection box
-	let worldRect = LastSelected.WorldRect;
-	Debug.DrawRect(worldRect, "yellow");
-}
-
 function TogglePhysicsDebugDrawing()
 {
 	window.Debug.DebugDraw = !window.Debug.DebugDraw;
 }
 
-function DeserializePalletTools(path)
-{
-	let tools = [];
-	let lines = LoadFileSync(path).split('\n');
-	for(let line of lines)
-	{
-		line = line.trim();
-		if(line != null && line.length > 0 && !line.startsWith('//'))
-		{
-			let data = JSON.parse(line);
-			if(!Array.isArray(data))
-				throw new Error("Invalid formatting for tool definition file.");
-			switch(data[0])
-			{
-				case "TOOL":
-				{
-					tools.push(CreateTool(data.slice(1, data.length)));
-					break;
-				}
-				case "ENUM":
-				{
-					console.log("ENUM definitions not currently supported. Skipping.");
-					break;
-				}
-				case "INSPECTOR":
-				{
-					console.log("INSPECTOR definitions not currently supported. Skipping.");
-					break;
-				}
-				default:
-				{
-					throw new Error("Unknow definition type: " + data[0]);
-				}
-			}
-		}
-	}
-	
-	return tools;
-}
 
-function CreateTool(args)
-{
-	return new PalletTool(AssetMan, ...args);
-}
-
-function EnableToolPallet()
+function EnableEditMode()
 {
 	window.Debug.DebugDraw = true;
 	AppFSM.PushState(AppFSM.SceneEditorState);
 	ToolPallet.Enable();
+	InspectorPallet.Enable();
 	for(let tool of LoadedTools)
 		ToolPallet.InstallTool(tool);
+	
 }
 
-function DisableToolPallet(collisionSystem)
+function DisableEditMode(collisionSystem)
 {
 	window.Debug.DebugDraw = false;
 	AppFSM.PopState();
 	ToolPallet.Disable();
+	InspectorPallet.Disable();
 	ToolPallet.UninstallAllTools();
 	collisionSystem.RebuildSpacialTree();
 }
