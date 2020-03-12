@@ -27,11 +27,19 @@ export default class SceneManager
 	async LoadScene(path)
 	{	
 		let lines = LoadFileSync(path).split('\n');
+		let lineCount = 1;
 		for(let line of lines)
 		{
-			let ent = JSON.parse(line);
+			let ent = null;
+			try { ent = JSON.parse(line); }
+			catch(e)
+			{
+				console.log("Failed parsing on line: " + lineCount);
+				throw e;
+			}
 			if(ent != null && ent.length != 0)
 				await Factory[ent.name].apply(Factory, ent.params);
+			lineCount++;
 		}
 	}
 	

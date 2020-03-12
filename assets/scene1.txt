@@ -1,6 +1,6 @@
 {"name":"CreatePlayer","params":[0,0]}
-{"name":"CreateWorldBlock","params":[0,-200,2000,16,0,"./assets/sprites/tileset1.png"]}
-{"name":"CreateWorldBlock","params":[-1000,0,64,400,0,"./assets/sprites/tileset1.png"]}
-{"name":"CreateWorldBlock","params":[1000,0,64,400,0,"./assets/sprites/tileset1.png"]}
-{"name":"CreateWorldBlock","params":[0,0,64,64,0,"./assets/sprites/tileset1.png"]}
-{"name":"CreateWorldBlock","params":[-32,-96,64,64,0,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":0,"y":-200},2000,16,0,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":-1000,"y":0},64,400,0,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":1000,"y":0},64,400,0,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":0,"y":0},64,64,0,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":-32,"y":-96},64,64,0,"./assets/sprites/tileset1.png"]}

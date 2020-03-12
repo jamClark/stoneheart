@@ -15,7 +15,7 @@ export default class TiledSpriteRenderer extends BaseComponent
 		super();
 		this.Sprite = sprite;
 		this.FrameRect = [0, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height];
-		this.Rect = new Rect(rect);
+		this.Rect = rect;
 		this.Layer = layer;
 	}
 	

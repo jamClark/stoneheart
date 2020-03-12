@@ -6,7 +6,7 @@ export default class Vector2
 {
 	constructor(x = 0, y = 0)
 	{
-		if(x instanceof Vector2)
+		if(x instanceof Vector2 || typeof x === 'object')
 		{
 			this.x = x.x;
 			this.y = x.y;

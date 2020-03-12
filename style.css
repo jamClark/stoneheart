@@ -63,6 +63,11 @@ body
 	color:white;
 }
 
+#DebugText
+{
+	color:white;
+}
+
 /*Removes floating states.*/
 .clearfix::after
 {

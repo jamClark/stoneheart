@@ -17,7 +17,7 @@ import SelectionBox from './../systems/selectionbox.js';
 
 import Vector2 from './../core/vector2.js';
 import Rect from './../core/rect.js';
-
+import {ShadowMember} from './../core/utility.js';
 
 
 const ppx = 1; // 0.0158;
@@ -123,10 +123,11 @@ export default class Factory
 		return ent;
 	}
 	
-	static async CreateWorldBlock(xPos, yPos, width, height, renderLayer, spritePath)
+	static async CreateWorldBlock(position, width, height, renderLayer, spritePath)
 	{
-		let colliderRect = new Rect(0, 0, width, height);
-		let trans = new WorldPos(xPos, yPos);
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let trans = new WorldPos(position);
+		let colliderRect = new Rect(position.x, position.y, width, height);
 		let col = new BoxCollider(Factory.CollisionSys, colliderRect, false, true);
 		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(spritePath), 
 										       colliderRect, renderLayer);
@@ -134,12 +135,24 @@ export default class Factory
 		let ent = new Entity("Block", trans, col, renderer, new SelectionBox());
 		Factory.EntityManager.RegisterEntity(ent);
 		
+		ShadowMember(col, 'Width', (value) => renderer.Rect.Width = value);
+		ShadowMember(col, 'Height', (value) => renderer.Rect.Height = value);
+		
+		//BUG ALERT!!! Shadowing twice just overwrites the old shadow!!
+		//ShadowMember(col, 'Width', (value) => console.log("WIDTH: " + value));
+		
 		//needed for serialization
 		ent._factoryInfo =
 		{
 			type: "World Block",
 			name: "CreateWorldBlock",
-			params: Array.from(arguments),
+			params: [
+				"WorldPosition-position",
+				"BoxCollider-Width",
+				"BoxCollider-Height",
+				"TiledSpriteRenderer-Layer",
+				"TiledSpriteRenderer-Sprite",
+				],
 		}
 		
 		return ent;	

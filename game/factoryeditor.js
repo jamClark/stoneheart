@@ -1,11 +1,13 @@
+import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../core/utility.js'
 import Factory from './factory.js';
 import Vector2 from './../core/vector2.js';
 import AssetManager from './../core/assetmanager.js';
 import * as Editor from './sceneeditor.js';
 
-
 /// 
 /// Provides an HTML-based editor tool for generating entities using the Factory singleton.
+///
+/// TODO: We need to remove the binding to properties when we disable an inspector!!
 /// 
 export class FactoryEditor
 {
@@ -99,10 +101,9 @@ export class Inspector
 		if(obj == null)
 			throw new Error("Null object passed to DrawInspector.");
 		
-		this.DrawHeader(obj, this.#InspectorDiv, obj.Entity._factoryInfo.type);
-		this.DrawFloatField(obj, this.#InspectorDiv, "Flerp", 5);
-		this.DrawFloatField(obj, this.#InspectorDiv, "Poink", 77);
-		this.DrawFloatField(obj, this.#InspectorDiv, "Narf", 1);
+		this.DrawHeader(this.#InspectorDiv, obj, obj.Entity._factoryInfo.type);
+		let def = this.GetInspectorDef(obj);
+		this.DrawInputs(def, this.#InspectorDiv, obj);
 	}
 	
 	ClearInspector()
@@ -116,10 +117,55 @@ export class Inspector
 	/// 
 	/// 
 	/// 
-	DrawHeader(obj, parentDiv, text)
+	GetInspectorDef(obj)
+	{
+		for(let def of Editor.GetInspectorDefs())
+		{
+			if(def.FunctionName == obj.Entity._factoryInfo.name)
+				return def;
+		}
+		
+		return null;
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawInputs(inspectorDef, parentDiv, obj)
+	{
+		if(inspectorDef == null)
+			throw new Error(`Missing inspector definition for factory ${obj.Entity._factoryInfo.name}.`);
+		
+		//for(let params of inspectorDef.Fields)
+		for(let i = 0; i < inspectorDef.Fields.length; i++)
+		{
+			let param = inspectorDef.Fields[i];
+			switch(param[0])
+			{
+				case "float":
+				{
+					let prop = obj.Entity._factoryInfo.params[i];
+					this.DrawFloatField(parentDiv, obj, prop, param[1]);
+					break;
+				}
+				case "vector2":
+				{
+					let prop = obj.Entity._factoryInfo.params[i];
+					this.DrawVector2Field(parentDiv, obj, prop, param[1]);
+					break;
+				}
+			}
+		}
+		
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawHeader(parentDiv, obj, text)
 	{
 		let titleElm = document.createElement('label');
-		titleElm.innerHTML = "<b>"+text+"</b>";
+		titleElm.innerHTML = `<b>${text}</b>`;
 		titleElm.style = "margin:8px; font-size: 1.2rem; padding-bottom: 5px; display:block;";
 		parentDiv.appendChild(titleElm);
 		this.#Inputs.push(titleElm);
@@ -128,7 +174,60 @@ export class Inspector
 	/// 
 	/// 
 	/// 
-	DrawFloatField(obj, parentDiv, title, defaultValue)
+	DrawVector2Field(parentDiv, obj, property, label)
+	{
+		let inputDiv = document.createElement('div');
+		let titleElm = document.createElement('label');
+		let xElm = document.createElement('input');
+		let yElm = document.createElement('input');
+		let lineBreakDiv = document.createElement('div');
+		inputDiv.appendChild(titleElm);
+		inputDiv.appendChild(xElm);
+		inputDiv.appendChild(yElm);
+		parentDiv.appendChild(inputDiv);
+		parentDiv.appendChild(lineBreakDiv);
+		
+		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		
+		titleElm.innerHTML = `${label}:`;
+		titleElm.style = "padding-right: 5px";
+		
+		xElm.type = "number";
+		xElm.value = obj.Entity.GetProperty(property).x;
+		xElm.style = "width:50px; margin-right: 5px"
+		xElm.name = `${property}.x`;
+		
+		yElm.type = "number";
+		yElm.value = obj.Entity.GetProperty(property).y;
+		yElm.style = "width:50px;"
+		yElm.name = `${property}.x`;
+		
+		let propPath = property.split("-");
+		let comp = obj.Entity.GetComponent(propPath[0]);
+		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
+		this.BindVector2(xElm, yElm, bindSrc[0], bindSrc[1]);
+		this.#Inputs.push(inputDiv);
+	}
+	
+	/// 
+	/// Specific binding helper for handling complext HTML element that represents a Vector2.
+	/// 
+	BindVector2(xElm, yElm, obj, property)
+	{
+		xElm["onchange"] = () => obj[property] = new Vector2(parseFloat(xElm["value"]), obj[property].y);
+		yElm["onchange"] = () => obj[property] = new Vector2(obj[property].x, parseFloat(yElm["value"]));
+		
+		ShadowMember(obj, property, (value) =>
+		{ 
+			xElm["value"] = value.x; 
+			yElm["value"] = value.y;
+		});
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawFloatField(parentDiv, obj, property, label)
 	{
 		let inputDiv = document.createElement('div');
 		let titleElm = document.createElement('label');
@@ -141,14 +240,27 @@ export class Inspector
 		
 		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
 		
-		titleElm.innerHTML = title + ":";
+		titleElm.innerHTML = `${label}:`;
 		titleElm.style = "padding-right: 5px";
 		
 		inputElm.type = "number";
-		inputElm.value = defaultValue;
+		inputElm.value = obj.Entity.GetProperty(property);
 		inputElm.style = "width:100px;"
 		
+		let propPath = property.split("-");
+		let comp = obj.Entity.GetComponent(propPath[0]);
+		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
+		this.Bind(inputElm, "onchange", "value", bindSrc[0], bindSrc[1]);
 		this.#Inputs.push(inputDiv);
+	}
+	
+	/// 
+	/// Sets up a two-way binding between the obj's property and an HTML element value.
+	/// 
+	Bind(element, eventName, elementValue, obj, property)
+	{
+		element[eventName] = () => obj[property] = element[elementValue];
+		//ShadowMember(obj, property, (value) => { element[elementValue] = value; });
 	}
 	
 	HandleSelection(obj)
@@ -159,6 +271,23 @@ export class Inspector
 	HandleDeselection(obj)
 	{
 		this.ClearInspector();
+	}
+}
+
+
+
+/// 
+/// 
+/// 
+export class InspectorDefinition
+{
+	#AssetManager;
+	
+	constructor(assetManager, functionName, ...params)
+	{
+		this.#AssetManager = assetManager;
+		this.FunctionName = functionName[1];
+		this.Fields = Array.from(params);
 	}
 }
 
@@ -281,7 +410,7 @@ export class Pallet
 
 
 /// 
-/// Represents a tool that is dispalyed on the tool pallet
+/// Represents a tool that is displayed on the tool pallet
 /// along with all of the information needed to store, retreive,
 /// and edit factory info used for object generation in the scene.
 ///
@@ -294,7 +423,7 @@ export class PalletTool
 	constructor(assetManager, functionName, ...params)
 	{
 		this.FunctionName = functionName;
-		this.Params = [0,0].concat(Array.from(params));
+		this.Params = Array.from(params);
 		this.AssetManager = assetManager;
 	}
 	

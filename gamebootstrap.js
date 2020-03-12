@@ -53,7 +53,7 @@ const AllowLiveSceneEditing = true;
 /// 
 export function AppStart(canvas)
 {
-	//globals
+	//global initialization
 	EntMan = new EntityManager();
 	SysMan = new SystemManager(EntMan);
 	EditorSysMan = new SystemManager(EntMan);
@@ -72,6 +72,7 @@ export function AppStart(canvas)
 	InspectorPallet = new Inspector(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
 	
 	//create and register global systems
+	//TODO: We need a more automated way of doing this... if only javascript had simple RTTI :(
 	let AnimSys = new SpriteAnimatorSystem();
 	let RenderSys = new SpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
 	let TiledRenderSys = new TiledSpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
@@ -90,6 +91,7 @@ export function AppStart(canvas)
 	EntMan.RegisterEntity(MainCamera);
 	
 	//register the systems that we will tick for each update/fixed update cycle
+	//Runtime Systems.
 	SysMan.RegisterSystem(PlayerInputSys);
 	SysMan.RegisterSystem(CharacterControllerSys);
 	SysMan.RegisterFixedSystem(CharacterControllerSys);
@@ -102,6 +104,11 @@ export function AppStart(canvas)
 	SysMan.RegisterSystem(TiledRenderSys);
 	SysMan.RegisterSystem(ParticleEmitterSys);
 	
+	//Pause Systems.
+	//PasuedSysMan.RegisterSystem(RenderSys);
+	//PausedSysMan.RegisterSystem(TiledRenderSys);
+	
+	//Editor-Only Systems.
 	EditorSysMan.RegisterSystem(CollisionSys); //this is simply for debug rendering
 	EditorSysMan.RegisterSystem(RenderSys);
 	EditorSysMan.RegisterSystem(TiledRenderSys);

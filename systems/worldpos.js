@@ -14,6 +14,8 @@ export default class WorldPosition extends BaseComponent
 		super();
 		if(x instanceof Vector2)
 			this.#LocalPos = new Vector2(x);
+		else if(typeof x === 'object')
+			this.#LocalPos = new Vector2(x.x, x.y);
 		else this.#LocalPos = new Vector2(x, y);
 	}
 	

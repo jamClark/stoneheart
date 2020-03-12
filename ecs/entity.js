@@ -254,13 +254,48 @@ export default class Entity
 	/// 
 	GetComponent(comp)
 	{
-		let name = comp.name.toString();
+		let name = (typeof comp === "string") ? comp : comp.name.toString();
 		for(let c of this.#Components)
 		{
 			if(c.type == name)
 				return c;
 		}
 		return null;
+	}
+	
+	/// 
+	/// Gets the value of a nested object property within a component on this entity.
+	/// 
+	GetProperty(path)
+	{
+		if(typeof path !== 'string')
+			throw new Error("Invalid argument type sent to Entity.GetProperty().");
+		
+		let s = path.split("-");
+		if(s.length != 2)
+			throw new Error("Invalid property path: " + path);
+		
+		let comp = this.GetComponent(s[0]);
+		return s[1].split('.').reduce((o,i)=>o[i], comp);
+	}
+	
+	/// 
+	/// Sets the value of a nested object property within a component on this entity.
+	/// 
+	SetProperty(path, value)
+	{
+		if(typeof path !== 'string')
+			throw new Error("Invalid argument type sent to Entity.SetProperty().");
+		
+		let s = path.split("-");
+		if(s.length != 2)
+			throw new Error("Invalid property path: " + path);
+		
+		let comp = this.GetComponent(s[0]);
+		
+		//HACK ALERT: This really should be replaced with a
+		//recursive method to avoid performance AND safety issues!
+		eval('comp.' + s[1] + " = value");
 	}
 	
 	/// 

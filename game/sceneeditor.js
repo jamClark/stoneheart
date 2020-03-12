@@ -7,7 +7,7 @@ import WorldPos from './../systems/worldpos.js';
 import SelectionBox from './../systems/selectionbox.js';
 
 import Factory from './../game/factory.js';
-import {FactoryEditor, Pallet, PalletTool} from './../game/factoryeditor.js';
+import {FactoryEditor, Pallet, PalletTool, Inspector, InspectorDefinition} from './../game/factoryeditor.js';
 
 
 /// 
@@ -17,9 +17,14 @@ let SelectionInc = 0;
 let CurrentSelection = null;
 let LastSelected = null;
 let SelectionOffset = new Vector2();
+let RegisteredEnums = [];
+let RegisteredInspectors = [];
 
 let SelectedListeners = [];
 let DeselectedListeners = [];
+
+export function GetInspectorDefs() { return RegisteredInspectors; }
+export function GetEnumDefs() { return RegisteredEnums; }
 
 export function AddSelectedListener(obj, handler)
 {
@@ -144,6 +149,9 @@ export function RenderSelection(entityMan, camera)
 export function DeserializePalletTools(assetMan, path)
 {
 	let tools = [];
+	let inspectors = [];
+	let enums = [];
+	
 	let lines = LoadFileSync(path).split('\n');
 	for(let line of lines)
 	{
@@ -157,28 +165,50 @@ export function DeserializePalletTools(assetMan, path)
 			{
 				case "TOOL":
 				{
-					tools.push(CreateTool(assetMan, data.slice(1, data.length)));
+					let temp = CreateTool(assetMan, data.slice(1, data.length));
+					if(temp != null) tools.push(temp);
 					break;
 				}
 				case "ENUM":
 				{
-					console.log("ENUM definitions not currently supported. Skipping.");
+					let temp = CreateEnum(data.slice(1, data.length));
+					if(temp != null) enums.push(temp);
+					else console.log("ENUM definition was invalid. Skipping.");
 					break;
 				}
 				case "INSPECTOR":
 				{
-					console.log("INSPECTOR definitions not currently supported. Skipping.");
+					let temp = CreateInspectorDef(assetMan, data.slice(1, data.length));
+					if(temp != null) inspectors.push(temp); 
+					else console.log("INSPECTOR definition was invalid. Skipping.");
 					break;
 				}
 				default:
 				{
-					throw new Error("Unknow definition type: " + data[0]);
+					throw new Error("Unknown definition type: " + data[0]);
 				}
 			}
 		}
 	}
 	
+	
+	//HACK ALERT: Side effects galore!
+	RegisteredEnums = enums;
+	RegisteredInspectors = inspectors;
 	return tools;
+}
+
+export function CreateEnum(args)
+{
+	let enumObj = {};
+	for(let arg of args)
+		enumObj[arg[0]] = arg[1];
+	return enumObj;
+}
+
+export function CreateInspectorDef(assetMan, args)
+{
+	return new InspectorDefinition(assetMan, ...args);
 }
 
 export function CreateTool(assetMan, args)

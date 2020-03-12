@@ -64,10 +64,14 @@ export default class Rect
 		return this.#width;
 	}
 	
+	set Width(value) { this.#width = value; }
+	
 	get Height()
 	{
 		return this.#height;
 	}
+	
+	set Height(value) { this.#height = value; }
 	
 	get Top()
 	{
