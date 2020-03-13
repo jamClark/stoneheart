@@ -47,8 +47,9 @@ export default class Factory
 		Factory.EntityManager = entityMan;
 	}
 	
-	static async CreateParticleEmitter(spawnPosX, spawnPosY, renderLayer, spaceMode, spritePath, ...params)
+	static async CreateParticleEmitter(position, renderLayer, spaceMode, spritePath, ...params)
 	{
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let pos = new WorldPos(spawnPosX, spawnPosY);
 		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
 		partSys.SpaceMode = spaceMode;
@@ -75,9 +76,10 @@ export default class Factory
 	/// 
 	/// 
 	/// 
-	static async CreatePlayer(spawnPosX = 0, spawnPosY = 0)
+	static async CreatePlayer(position)
 	{
-		let pos = new WorldPos(spawnPosX, spawnPosY);
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let pos = new WorldPos(position);
 		let ent = new Entity(
 			"Player 1", 
 			pos,
@@ -104,7 +106,10 @@ export default class Factory
 		{
 			type: "Player",
 			name: "CreatePlayer",
-			params: Array.from(arguments),
+			params: 
+			[
+				"WorldPosition-position",
+			],
 		}
 		
 		return ent;
@@ -135,11 +140,9 @@ export default class Factory
 		let ent = new Entity("Block", trans, col, renderer, new SelectionBox());
 		Factory.EntityManager.RegisterEntity(ent);
 		
+		//we are linking the tile renderer's width to the collider
 		ShadowMember(col, 'Width', (value) => renderer.Rect.Width = value);
 		ShadowMember(col, 'Height', (value) => renderer.Rect.Height = value);
-		
-		//BUG ALERT!!! Shadowing twice just overwrites the old shadow!!
-		//ShadowMember(col, 'Width', (value) => console.log("WIDTH: " + value));
 		
 		//needed for serialization
 		ent._factoryInfo =

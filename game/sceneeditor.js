@@ -17,7 +17,7 @@ let SelectionInc = 0;
 let CurrentSelection = null;
 let LastSelected = null;
 let SelectionOffset = new Vector2();
-let RegisteredEnums = [];
+let RegisteredEnums = new Map();
 let RegisteredInspectors = [];
 
 let SelectedListeners = [];
@@ -171,9 +171,9 @@ export function DeserializePalletTools(assetMan, path)
 				}
 				case "ENUM":
 				{
-					let temp = CreateEnum(data.slice(1, data.length));
-					if(temp != null) enums.push(temp);
-					else console.log("ENUM definition was invalid. Skipping.");
+					let temp = CreateEnum(RegisteredEnums, data.slice(1, data.length));
+					//if(temp != null) enums.push(temp);
+					//else console.log("ENUM definition was invalid. Skipping.");
 					break;
 				}
 				case "INSPECTOR":
@@ -193,17 +193,13 @@ export function DeserializePalletTools(assetMan, path)
 	
 	
 	//HACK ALERT: Side effects galore!
-	RegisteredEnums = enums;
 	RegisteredInspectors = inspectors;
 	return tools;
 }
 
-export function CreateEnum(args)
+export function CreateEnum(enumMap, args)
 {
-	let enumObj = {};
-	for(let arg of args)
-		enumObj[arg[0]] = arg[1];
-	return enumObj;
+	enumMap.set(args[0], args.splice(1,args.length-1));
 }
 
 export function CreateInspectorDef(assetMan, args)

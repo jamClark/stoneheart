@@ -136,12 +136,23 @@ export class Inspector
 	}
 	
 	/// 
-	/// Sets up a two-way binding between the obj's property and an HTML element value.
 	/// 
-	Bind(element, eventName, elementValue, obj, property)
+	/// 
+	PassThroughConverter(value)
 	{
-		element[eventName] = () => obj[property] = element[elementValue];
-		ShadowMember(obj, property, (value) => { element[elementValue] = value; });
+		return value;
+	}
+	
+	/// 
+	/// Sets up a two-way binding between the obj's property and an HTML element value.
+	/// Two optiomal converter functions may be passed to perform data conversion between
+	/// the linked HTML element and it's bound backing property. If one converter supplied,
+	/// both should be supplied. By default, no conversion takes place.
+	/// 
+	Bind(element, eventName, elementValue, obj, property, elmToPropConverter = this.PassThroughConverter, propToElmConverter = this.PassThroughConverter)
+	{
+		element[eventName] = () => obj[property] = elmToPropConverter(element[elementValue]);
+		ShadowMember(obj, property, (value) => { element[elementValue] = propToElmConverter(value); });
 		this.#Bindings.push([obj, property]);
 	}
 	
@@ -185,9 +196,71 @@ export class Inspector
 					this.DrawVector2Field(parentDiv, obj, prop, param[1]);
 					break;
 				}
+				default:
+				{
+					//let's see if we've defined an enum for this type
+					let enums = Editor.GetEnumDefs();
+					let enumSet = enums.get(param[0]);
+					if(enumSet != null)
+					{
+						let prop = obj.Entity._factoryInfo.params[i];
+						this.DrawEnumDropdown(parentDiv, obj, prop, param[0], enumSet);
+					}
+				}
 			}
 		}
 		
+	}
+		
+	/// 
+	/// 
+	/// 
+	DrawEnumDropdown(parentDiv, obj, property, label, enumSet)
+	{
+		let inputDiv = document.createElement('div');
+		let titleElm = document.createElement('label');
+		let inputElm = document.createElement('select');
+		let lineBreakDiv = document.createElement('div');
+		inputDiv.appendChild(titleElm);
+		inputDiv.appendChild(inputElm);
+		parentDiv.appendChild(inputDiv);
+		parentDiv.appendChild(lineBreakDiv);
+		
+		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		
+		titleElm.innerHTML = `${label}:`;
+		titleElm.style = "padding-right: 5px";
+		
+		
+		inputElm.style = "width:100px;"
+		for(let e of enumSet)
+		{
+			let option = document.createElement('option');
+			option.innerHTML = e[0];
+			option.value = e[1];
+			inputElm.appendChild(option);
+		}
+		
+		let propObj = obj.Entity.GetProperty(property);
+		let index = enumSet.map(x => x[1]).indexOf(propObj);
+		inputElm.selectedIndex = index > -1 ? index : 0;
+		
+		let propPath = property.split("-");
+		let comp = obj.Entity.GetComponent(propPath[0]);
+		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
+		this.Bind(inputElm, "oninput", "selectedIndex", bindSrc[0], bindSrc[1], 
+				(value) => 
+				{
+					//ELEMENT-TO-PROP
+					return enumSet[value][1];
+				},
+				(value) =>
+				{
+					//PROP-TO-ELEMENT
+					let index = enumSet.map(x => x[1]).indexOf(value);
+					return index > -1 ? index : 0;
+				});
+		this.#Inputs.push(inputDiv);
 	}
 	
 	/// 
@@ -236,7 +309,7 @@ export class Inspector
 		let propPath = property.split("-");
 		let comp = obj.Entity.GetComponent(propPath[0]);
 		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
-		this.BindVector2(xElm, yElm, "onchange", "value", bindSrc[0], bindSrc[1]);
+		this.BindVector2(xElm, yElm, "oninput", "value", bindSrc[0], bindSrc[1]);
 		this.#Inputs.push(inputDiv);
 	}
 	
@@ -266,7 +339,7 @@ export class Inspector
 		let propPath = property.split("-");
 		let comp = obj.Entity.GetComponent(propPath[0]);
 		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
-		this.Bind(inputElm, "onchange", "value", bindSrc[0], bindSrc[1]);
+		this.Bind(inputElm, "oninput", "value", bindSrc[0], bindSrc[1]);
 		this.#Inputs.push(inputDiv);
 	}
 	

@@ -1,3 +1,4 @@
-["ENUM","RenderLayerEnum",["Background",0],["TilesBG0",1],["TilesBG1",2],["Enemy",3],["PrePlayer",4],["Player",5],["PostPlayer",6],["TilesFG0",7],["TilesFG1",8]]
-["INSPECTOR",["function","CreateWorldBlock"],["vector2","Pos"],["float","Width"],["float","Height"], ["RenderLayerEnum", "Render Layer"], ["string", "Asset Path"]]
+["ENUM","Render Layer",["Background",0],["TilesBG0",1],["TilesBG1",2],["Enemy",10],["PrePlayer",19],["Player",20],["PostPlayer",30],["TilesFG0",40],["TilesFG1",41]]
+["INSPECTOR",["function","CreatePlayer"],["vector2","Pos"]]
+["INSPECTOR",["function","CreateWorldBlock"],["vector2","Pos"],["float","Width"],["float","Height"], ["Render Layer", "Render Layer"], ["string", "Asset Path"]]
 ["TOOL","CreateWorldBlock", {"x":0,"y":0}, 64, 64, 1, "./assets/sprites/tileset1.png"]
