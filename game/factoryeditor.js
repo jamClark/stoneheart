@@ -54,6 +54,7 @@ export class Inspector
 	#Enabled;
 	
 	#InspectorDiv;
+	#Bindings = [];
 	
 	constructor(rootDiv, canvas, factory, camera)
 	{
@@ -111,7 +112,37 @@ export class Inspector
 		for(let input of this.#Inputs)
 			input.remove();
 		
+		for(let binding of this.#Bindings)
+			RemoveMemberShadow(binding[0], binding[1]);
+		
+		this.#Bindings = [];
 		this.#Inputs = [];
+	}
+	
+	/// 
+	/// Specific binding helper for handling complext HTML element that represents a Vector2.
+	/// 
+	BindVector2(xElm, yElm, eventName, elementValue, obj, property)
+	{
+		xElm[eventName] = () => obj[property] = new Vector2(parseFloat(xElm[elementValue]), obj[property].y);
+		yElm[eventName] = () => obj[property] = new Vector2(obj[property].x, parseFloat(yElm[elementValue]));
+		
+		ShadowMember(obj, property, (value) =>
+		{ 
+			xElm[elementValue] = value.x; 
+			yElm[elementValue] = value.y;
+		});
+		this.#Bindings.push([obj, property]);
+	}
+	
+	/// 
+	/// Sets up a two-way binding between the obj's property and an HTML element value.
+	/// 
+	Bind(element, eventName, elementValue, obj, property)
+	{
+		element[eventName] = () => obj[property] = element[elementValue];
+		ShadowMember(obj, property, (value) => { element[elementValue] = value; });
+		this.#Bindings.push([obj, property]);
 	}
 	
 	/// 
@@ -205,23 +236,8 @@ export class Inspector
 		let propPath = property.split("-");
 		let comp = obj.Entity.GetComponent(propPath[0]);
 		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
-		this.BindVector2(xElm, yElm, bindSrc[0], bindSrc[1]);
+		this.BindVector2(xElm, yElm, "onchange", "value", bindSrc[0], bindSrc[1]);
 		this.#Inputs.push(inputDiv);
-	}
-	
-	/// 
-	/// Specific binding helper for handling complext HTML element that represents a Vector2.
-	/// 
-	BindVector2(xElm, yElm, obj, property)
-	{
-		xElm["onchange"] = () => obj[property] = new Vector2(parseFloat(xElm["value"]), obj[property].y);
-		yElm["onchange"] = () => obj[property] = new Vector2(obj[property].x, parseFloat(yElm["value"]));
-		
-		ShadowMember(obj, property, (value) =>
-		{ 
-			xElm["value"] = value.x; 
-			yElm["value"] = value.y;
-		});
 	}
 	
 	/// 
@@ -252,15 +268,6 @@ export class Inspector
 		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
 		this.Bind(inputElm, "onchange", "value", bindSrc[0], bindSrc[1]);
 		this.#Inputs.push(inputDiv);
-	}
-	
-	/// 
-	/// Sets up a two-way binding between the obj's property and an HTML element value.
-	/// 
-	Bind(element, eventName, elementValue, obj, property)
-	{
-		element[eventName] = () => obj[property] = element[elementValue];
-		//ShadowMember(obj, property, (value) => { element[elementValue] = value; });
 	}
 	
 	HandleSelection(obj)
@@ -355,8 +362,13 @@ export class Pallet
 		let toolInfo = PalletTool.Generate(null, rawData[4]);
 		let pos = new Vector2(evt.offsetX, evt.offsetY);
 		pos = this.#Camera.ViewToWorld(pos);
-		toolInfo.Params[0] = pos.x + rawData[0] - rawData[2];
-		toolInfo.Params[1] = pos.y - rawData[1] + rawData[3];
+		//setting the positional data. we are assuming the position is always the first element and is
+		//represented as an object with the fields 'x' and 'y' (like a Vector2)
+		//NOTE: Something has changed due to using vectors instead of positions in the factory so now 
+		//we have to divide by two when positioning!
+		toolInfo.Params[0] = new Vector2((pos.x + rawData[0] - rawData[2])/2,
+										 (pos.y - rawData[1] + rawData[3])/2);
+		
 		this.#Factory[toolInfo.FunctionName](...toolInfo.Params );
 	}
 	

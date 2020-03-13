@@ -43,11 +43,22 @@ export function SearchPropertyContainer(obj, path)
 }
 
 /// 
+/// Returns true if the named property of a given object is 
+/// currently overriden by a shadow.
+/// 
+export function IsShadowed(foo, propName)
+{
+	return 	typeof foo[`_OVERRIDENFIELD_${propName}`] != 'undefined' ||
+			typeof foo[`_OVERRIDENPROP_${propName}`] != 'undefined';
+}
+
+/// 
 /// Creates a shadow of an object's member that invokes a specified callback
 /// each time its value is set.
 /// 
 export function ShadowMember(foo, propName, callback)
 {
+	//find out if we are shadowing a field or an accessor
 	let prop = Object.getOwnPropertyDescriptor(foo.__proto__, propName);
 	if(prop == null)
 	{
@@ -57,7 +68,12 @@ export function ShadowMember(foo, propName, callback)
 	}
 	else foo[`_OVERRIDENPROP_${propName}`] = prop;
 	
+	//init callback list if needed
+	if(foo[`_SHADOWCALLBACKS_${propName}`] == null)
+		foo[`_SHADOWCALLBACKS_${propName}`] = [];
+	foo[`_SHADOWCALLBACKS_${propName}`].push(callback);
 	
+	//create a new accessor that shadows the old property
 	Object.defineProperty(foo, propName, 
 	{
 		configurable: true,
@@ -71,11 +87,13 @@ export function ShadowMember(foo, propName, callback)
 			if(this[`_OVERRIDENPROP_${propName}`] == null)
 				this[`_OVERRIDENFIELD_${propName}`] = value;
 			else this[`_OVERRIDENPROP_${propName}`].set.call(foo, value);
-			callback(value);
+			
+			for(let cb of foo[`_SHADOWCALLBACKS_${propName}`])
+				cb(value);
 		}
 	});
 	
-	//this jumpstarts the link by ensuring the callback is invoked
+	//this jumpstarts the link by ensuring the callbacks are invoked
 	foo[propName] = foo[propName];
 }
 
@@ -103,5 +121,10 @@ export function RemoveMemberShadow(foo, propName)
 		foo[propName] = field;
 	}
 	else throw new Error(`This object has not had its '${propName}' member overriden.`);
+	
+	//remove the last stacked callback
+	foo[`_SHADOWCALLBACKS_${propName}`].pop();
+	if(foo[`_SHADOWCALLBACKS_${propName}`].length < 1)
+		delete foo[`_SHADOWCALLBACKS_${propName}`];
 }
 
