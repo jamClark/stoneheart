@@ -47,32 +47,6 @@ export default class Factory
 		Factory.EntityManager = entityMan;
 	}
 	
-	static async CreateParticleEmitter(position, renderLayer, spaceMode, spritePath, ...params)
-	{
-		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
-		let pos = new WorldPos(spawnPosX, spawnPosY);
-		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
-		partSys.SpaceMode = spaceMode;
-		partSys.ApplyEmitConfiguration(...params);
-		
-		let ent = new Entity("Particle", 
-			pos,
-			partSys,
-			new SelectionBox(),
-			);
-		
-		Factory.EntityManager.RegisterEntity(ent);
-		
-		//needed for serialization
-		ent._factoryInfo =
-		{
-			type: "Particle Emitter",
-			name: "CreateParticleEmitter",
-			params: Array.from(arguments),
-		}
-		return ent;
-	}
-	
 	/// 
 	/// 
 	/// 
@@ -150,15 +124,64 @@ export default class Factory
 			type: "World Block",
 			name: "CreateWorldBlock",
 			params: [
+				"Entity-Active",
 				"WorldPosition-position",
 				"BoxCollider-Width",
 				"BoxCollider-Height",
 				"TiledSpriteRenderer-Layer",
 				"TiledSpriteRenderer-Sprite",
-				],
+			],
 		}
 		
 		return ent;	
 	}
+	
+	static async CreateParticleEmitter(position, renderLayer, spaceMode, spritePath, ...params)
+	{
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let pos = new WorldPos(position.x, position.y);
+		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
+		partSys.SpaceMode = spaceMode;
+		partSys.ApplyEmitConfiguration(...params);
+		
+		let ent = new Entity("Particle", 
+			pos,
+			partSys,
+			new SelectionBox(),
+			);
+		
+		Factory.EntityManager.RegisterEntity(ent);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			type: "Particle Emitter",
+			name: "CreateParticleEmitter",
+			params:[
+				"Entity-Active",
+				"WorldPosition-position",
+				"ParticleEmitter-RenderLayer",
+				"ParticleEmitter-SpaceMode",
+				"ParticleEmitter-GravityScale",
+				"ParticleEmitter-LoopTime",
+				"ParticleEmitter-MaxParticles",
+				"ParticleEmitter-EmitRate",
+				"ParticleEmitter-MinLifetime",
+				"ParticleEmitter-MaxLifetime",
+				"ParticleEmitter-MinScale",
+				"ParticleEmitter-MaxScale",
+				"ParticleEmitter-MinPosX",
+				"ParticleEmitter-MaxPosX",
+				"ParticleEmitter-MinPosY",
+				"ParticleEmitter-MaxPosY",
+				"ParticleEmitter-MinStartVelX",
+				"ParticleEmitter-MaxStartVelX",
+				"ParticleEmitter-MinStartVelY",
+				"ParticleEmitter-MaxStartVelY",
+			],
+		}
+		return ent;
+	}
+	
 }
 

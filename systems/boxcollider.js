@@ -67,6 +67,9 @@ export default class BoxCollider extends BaseComponent
 	
 	WorldRect(worldPos)
 	{
+		if(!(worldPos instanceof Vector2))
+			throw new Error("Invalid arugement. Expected Vector2.");
+		
 		let r = new Rect(this.#Rect);
 		r.Center = r.Center.Add(worldPos);
 		return r;

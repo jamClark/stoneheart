@@ -196,20 +196,82 @@ export class Inspector
 					this.DrawVector2Field(parentDiv, obj, prop, param[1]);
 					break;
 				}
-				default:
+				case "enum":
 				{
 					//let's see if we've defined an enum for this type
 					let enums = Editor.GetEnumDefs();
-					let enumSet = enums.get(param[0]);
+					let enumSet = enums.get(param[1]);
 					if(enumSet != null)
 					{
 						let prop = obj.Entity._factoryInfo.params[i];
-						this.DrawEnumDropdown(parentDiv, obj, prop, param[0], enumSet);
+						this.DrawEnumDropdown(parentDiv, obj, prop, param[1], enumSet);
 					}
+					break;
+				}
+				case "bool":
+				{
+					let prop = obj.Entity._factoryInfo.params[i];
+					this.DrawBoolField(parentDiv, obj, prop, param[1]);
+					break;
 				}
 			}
 		}
 		
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawBoolField(parentDiv, obj, property, label)
+	{
+		let inputDiv = document.createElement('div');
+		let titleElm = document.createElement('label');
+		let inputElm = document.createElement('input');
+		let lineBreakDiv = document.createElement('div');
+		inputDiv.appendChild(titleElm);
+		inputDiv.appendChild(inputElm);
+		parentDiv.appendChild(inputDiv);
+		parentDiv.appendChild(lineBreakDiv);
+		
+		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		
+		titleElm.innerHTML = `${label}:`;
+		titleElm.style = "padding-right: 5px";
+		
+		inputElm.type = "checkbox";
+		inputElm.value = obj.Entity.GetProperty(property);
+		
+		let bindSrc = this.GetBindingSet(obj, property);
+		this.Bind(inputElm, "oninput", "checked", bindSrc[0], bindSrc[1]);
+		this.#Inputs.push(inputDiv);
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawFloatField(parentDiv, obj, property, label)
+	{
+		let inputDiv = document.createElement('div');
+		let titleElm = document.createElement('label');
+		let inputElm = document.createElement('input');
+		let lineBreakDiv = document.createElement('div');
+		inputDiv.appendChild(titleElm);
+		inputDiv.appendChild(inputElm);
+		parentDiv.appendChild(inputDiv);
+		parentDiv.appendChild(lineBreakDiv);
+		
+		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		
+		titleElm.innerHTML = `${label}:`;
+		titleElm.style = "padding-right: 5px";
+		
+		inputElm.type = "number";
+		inputElm.value = obj.Entity.GetProperty(property);
+		inputElm.style = "width:100px;"
+		
+		let bindSrc = this.GetBindingSet(obj, property);
+		this.Bind(inputElm, "oninput", "value", bindSrc[0], bindSrc[1]);
+		this.#Inputs.push(inputDiv);
 	}
 		
 	/// 
@@ -245,9 +307,7 @@ export class Inspector
 		let index = enumSet.map(x => x[1]).indexOf(propObj);
 		inputElm.selectedIndex = index > -1 ? index : 0;
 		
-		let propPath = property.split("-");
-		let comp = obj.Entity.GetComponent(propPath[0]);
-		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
+		let bindSrc = this.GetBindingSet(obj, property);
 		this.Bind(inputElm, "oninput", "selectedIndex", bindSrc[0], bindSrc[1], 
 				(value) => 
 				{
@@ -306,41 +366,28 @@ export class Inspector
 		yElm.style = "width:50px;"
 		yElm.name = `${property}.x`;
 		
-		let propPath = property.split("-");
-		let comp = obj.Entity.GetComponent(propPath[0]);
-		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
+		let bindSrc = this.GetBindingSet(obj, property);
 		this.BindVector2(xElm, yElm, "oninput", "value", bindSrc[0], bindSrc[1]);
 		this.#Inputs.push(inputDiv);
 	}
 	
 	/// 
+	/// Helper for getting the object and it's property within an Entity-component structure.
 	/// 
-	/// 
-	DrawFloatField(parentDiv, obj, property, label)
+	GetBindingSet(obj, property)
 	{
-		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
-		let inputElm = document.createElement('input');
-		let lineBreakDiv = document.createElement('div');
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
-		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
-		
-		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
-		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.style = "padding-right: 5px";
-		
-		inputElm.type = "number";
-		inputElm.value = obj.Entity.GetProperty(property);
-		inputElm.style = "width:100px;"
-		
 		let propPath = property.split("-");
-		let comp = obj.Entity.GetComponent(propPath[0]);
-		let bindSrc = SearchPropertyContainer(comp, propPath[1]);
-		this.Bind(inputElm, "oninput", "value", bindSrc[0], bindSrc[1]);
-		this.#Inputs.push(inputDiv);
+		if(propPath[0] == 'Entity')
+		{
+			//TODO: We aren't decomposing dot paths within the Entity itself!
+			//What if we wan't something like 'Entity-SomeVector.x'? We'll be fucked.
+			return [obj.Entity, propPath[1]];
+		}
+		else
+		{
+			let comp = obj.Entity.GetComponent(propPath[0]);
+			return SearchPropertyContainer(comp, propPath[1]);
+		}
 	}
 	
 	HandleSelection(obj)

@@ -1,4 +1,7 @@
 ["ENUM","Render Layer",["Background",0],["TilesBG0",1],["TilesBG1",2],["Enemy",10],["PrePlayer",19],["Player",20],["PostPlayer",30],["TilesFG0",40],["TilesFG1",41]]
+["ENUM","Space Mode",["World",1],["Local",2]]
 ["INSPECTOR",["function","CreatePlayer"],["vector2","Pos"]]
-["INSPECTOR",["function","CreateWorldBlock"],["vector2","Pos"],["float","Width"],["float","Height"], ["Render Layer", "Render Layer"], ["string", "Asset Path"]]
+["INSPECTOR",["function","CreateWorldBlock"],["bool", "Enabled"],["vector2","Pos"],["float","Width"],["float","Height"], ["enum", "Render Layer"], ["string", "Asset Path"]]
+["INSPECTOR",["function","CreateParticleEmitter"],["bool", "Enabled"],["vector2","Pos"],["enum","Render Layer"],["enum","Space Mode"],["float","Gravity"],["float","Loop Time"],["float","Max Particles"],["float","Emit Rate"],["float","Min Life"],["float","Max Life"],["float","Min Scale"],["float","Max Scale"]]
 ["TOOL","CreateWorldBlock", {"x":0,"y":0}, 64, 64, 1, "./assets/sprites/tileset1.png"]
+["TOOL","CreateParticleEmitter", {"x":0,"y":0}, 1, 1, "./assets/sprites/alert.png"]

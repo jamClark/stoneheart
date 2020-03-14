@@ -40,8 +40,6 @@ export default class EntityManager
 	/// 
 	QueryForEntities(... desiredTypes)
 	{
-		//TODO: go through all registered entities and get all that have the given components
-		//throw new Error("Not yet implemented");
 		let list = [];
 		for(let ent of this._entities)
 		{
@@ -60,7 +58,7 @@ export default class EntityManager
 		let list = [];
 		for(let ent of entities)
 		{
-			if(!ent.HasAnyCompoments(...undesiredTypes))
+			if(!ent.HasAnyComponents(...undesiredTypes))
 				list.push(ent);
 		}
 		

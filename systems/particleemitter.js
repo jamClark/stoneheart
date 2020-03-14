@@ -41,6 +41,8 @@ export default class ParticleEmitter extends BaseComponent
 		
 		this.MinLifetime = 0;
 		this.MaxLifetime = 4;
+		this.MinScale = 1;
+		this.MaxScale = 1;
 		this.MinPosX = 0;
 		this.MaxPosX = 0;
 		this.MinPosY = 0;
@@ -60,6 +62,8 @@ export default class ParticleEmitter extends BaseComponent
 			this.EmitRate = yield 0;
 			this.MinLifetime = yield 0;
 			this.MaxLifetime = yield 0;
+			this.MinScale = yield 0;
+			this.MaxScale = yield 0;
 			this.MinPosX = yield 0;
 			this.MaxPosX = yield 0;
 			this.MinPosY = yield 0;

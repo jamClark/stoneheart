@@ -274,6 +274,9 @@ export default class Entity
 		let s = path.split("-");
 		if(s.length != 2)
 			throw new Error("Invalid property path: " + path);
+			
+		if(s[0] === 'Entity')
+			return this[s[1]];
 		
 		let comp = this.GetComponent(s[0]);
 		return s[1].split('.').reduce((o,i)=>o[i], comp);
@@ -290,6 +293,12 @@ export default class Entity
 		let s = path.split("-");
 		if(s.length != 2)
 			throw new Error("Invalid property path: " + path);
+			
+		if(s[0] === 'Entity')
+		{
+			this[s[1]] = value;
+			return;
+		}
 		
 		let comp = this.GetComponent(s[0]);
 		

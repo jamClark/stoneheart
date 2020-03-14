@@ -5,7 +5,7 @@ import {LoadFileSync} from './../core/filereader.js';
 
 import WorldPos from './../systems/worldpos.js';
 import SelectionBox from './../systems/selectionbox.js';
-
+import BoxCollider from './../systems/boxcollider.js';
 import Factory from './../game/factory.js';
 import {FactoryEditor, Pallet, PalletTool, Inspector, InspectorDefinition} from './../game/factoryeditor.js';
 
@@ -136,14 +136,28 @@ export function HandleSelection(entityMan, camera)
 
 export function RenderSelection(entityMan, camera)
 {
+	//TODO: draw a worldspace grid
+	
+	//draw anything with a SelectionBox and no BoxCollider attached to it
+	let ents = entityMan.QueryForEntities(SelectionBox);
+	ents = entityMan.FilterEntities(ents, BoxCollider);
+	for(let box of ents.map(x => x.GetComponent(SelectionBox)))
+		Debug.DrawRect(box.WorldRect, "blue");
+	
+	let cols = entityMan.QueryForEntities(BoxCollider).map(x => x.GetComponent(BoxCollider));
+	for(let col of cols)
+	{
+		if(!col.Entity.Active)
+			Debug.DrawRect(col.WorldRect(col.Entity.GetComponent(WorldPos).position), "white");
+	}
+	
 	if(LastSelected == null)
 		return;
-	
-	//TODO: draw a worldspace grid
 	
 	//draw hilighted selection box
 	let worldRect = LastSelected.WorldRect;
 	Debug.DrawRect(worldRect, "yellow");
+	
 }
 
 export function DeserializePalletTools(assetMan, path)

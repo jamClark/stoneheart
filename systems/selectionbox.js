@@ -1,6 +1,8 @@
 import BaseComponent from './../ecs/basecomponent.js'
 import WorldPos from './worldpos.js';
 import BoxCollider from './boxcollider.js';
+import Rect from './../core/rect.js';
+import Vector2 from './../core/vector2.js';
 
 /// 
 /// Provides a means of selecting an Entity using a mouse during edit-mode.
