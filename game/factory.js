@@ -138,8 +138,8 @@ export default class Factory
 	
 	static async CreateParticleEmitter(position, renderLayer, spaceMode, spritePath, ...params)
 	{
-		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
-		let pos = new WorldPos(position.x, position.y);
+		position = new Vector2(position.x*2, position.y*2);//this is because we may have just fed in a json deserialized object.
+		let pos = new WorldPos(position);
 		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
 		partSys.SpaceMode = spaceMode;
 		partSys.ApplyEmitConfiguration(...params);

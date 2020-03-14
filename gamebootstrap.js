@@ -17,7 +17,7 @@ import Rect from './core/rect.js';
 //game project imports
 import Assets from './game/assettable.js';
 import Factory from './game/factory.js';
-import {FactoryEditor, Pallet, Inspector, PalletTool} from './game/factoryeditor.js';
+import {Pallet, Inspector, PalletTool} from './game/factoryeditor.js';
 import SceneManager from './game/scene.js';
 import * as Editor from './game/sceneeditor.js';
 
@@ -126,7 +126,7 @@ export function AppStart(canvas)
 				if(Input.GetKeyDown("KeyL"))
 					TogglePhysicsDebugDrawing();
 				if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
-					EnableEditMode();
+					EnableEditMode(MainCamera.GetComponent(Camera));
 			},
 			SysMan.Update.bind(SysMan),
 			() => Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan)),
@@ -175,8 +175,6 @@ export function AppStart(canvas)
 	Assets.PreloadAllAssets(AssetMan).then( async () =>
 	{
 		await loadLevel('./assets/scene1.txt');
-		//let particleEnt = await Factory.CreateParticleEmitter(new Vector2(100, 0), RenderLayers, SpaceMode.World, './assets/sprites/alert.png',
-		//	1, 5, 1000, 7, 1, 2);
 		AppFSM.PushState(AppFSM.MainGameLoopState);
 	});
 	
@@ -187,9 +185,20 @@ function TogglePhysicsDebugDrawing()
 	window.Debug.DebugDraw = !window.Debug.DebugDraw;
 }
 
-
-function EnableEditMode()
+let EditorCamera;
+function MoveCamera(evt)
 {
+	if(Input.GetMouse(1) || Input.GetMouse(2))
+	{
+		let trans = EditorCamera.Entity.GetComponent(WorldPos);
+		trans.position = trans.position.Add(new Vector2(-evt.movementX, evt.movementY));
+	}
+}
+
+function EnableEditMode(camera)
+{
+	EditorCamera = camera;
+	document.addEventListener('mousemove', MoveCamera);
 	window.Debug.DebugDraw = true;
 	AppFSM.PushState(AppFSM.SceneEditorState);
 	ToolPallet.Enable();
@@ -201,7 +210,9 @@ function EnableEditMode()
 
 function DisableEditMode(collisionSystem)
 {
+	EditorCamera = null;
 	window.Debug.DebugDraw = false;
+	document.removeEventListener('mousemove', MoveCamera);
 	AppFSM.PopState();
 	ToolPallet.Disable();
 	InspectorPallet.Disable();

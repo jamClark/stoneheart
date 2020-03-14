@@ -7,7 +7,7 @@ import WorldPos from './../systems/worldpos.js';
 import SelectionBox from './../systems/selectionbox.js';
 import BoxCollider from './../systems/boxcollider.js';
 import Factory from './../game/factory.js';
-import {FactoryEditor, Pallet, PalletTool, Inspector, InspectorDefinition} from './../game/factoryeditor.js';
+import {Pallet, PalletTool, Inspector, InspectorDefinition} from './../game/factoryeditor.js';
 
 
 /// 
@@ -132,6 +132,39 @@ export function HandleSelection(entityMan, camera)
 		}
 	}
 	//TODO: Selection logic here using MouseUp instead of MouseDown
+}
+
+/// 
+/// 
+/// 
+export function ForceSelection(entity)
+{
+	if(entity == null)
+	{
+		if(LastSelected != null)
+			InvokeOnDeselectedListeners();
+		SelectionInc = 0;
+		CurrentSelection = null;
+		LastSelected = null;
+		return;
+	}
+	else
+	{
+		let box = entity.GetComponent(SelectionBox);
+		if(box != null)
+		{
+			CurrentSelection = box;
+			if(CurrentSelection !== LastSelected)
+			{
+				if(LastSelected != null)
+					InvokeOnDeselectedListeners();
+				InvokeOnSelectedListeners();
+			}
+			LastSelected = CurrentSelection;
+			SelectionInc = 0;
+			CurrentSelection = null;// this stops us from dragging
+		}
+	}
 }
 
 export function RenderSelection(entityMan, camera)

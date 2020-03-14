@@ -4,4 +4,5 @@
 ["INSPECTOR",["function","CreateWorldBlock"],["bool", "Enabled"],["vector2","Pos"],["float","Width"],["float","Height"], ["enum", "Render Layer"], ["string", "Asset Path"]]
 ["INSPECTOR",["function","CreateParticleEmitter"],["bool", "Enabled"],["vector2","Pos"],["bool", "Paused"],["enum","Render Layer"],["enum","Space Mode"],["float","Gravity"],["float","Loop Time"],["float","Max Particles"],["float","Emit Rate"],["float","Min Life"],["float","Max Life"],["float","Min Scale"],["float","Max Scale"],["float","Min PosX"],["float","Max PosX"],["float","Min PosY"],["float","Max PosY"],["float","Min VelX"],["float","Max VelX"],["float","Min VelY"],["float","Max VelY"]]
 ["TOOL","CreateWorldBlock", {"x":0,"y":0}, 64, 64, 1, "./assets/sprites/tileset1.png"]
+["TOOL","CreateWorldBlock", {"x":0,"y":0}, 64, 64, 1, "./assets/sprites/alert.png"]
 ["TOOL","CreateParticleEmitter", {"x":0,"y":0}, 1, 1, "./assets/sprites/spark_01.png"]

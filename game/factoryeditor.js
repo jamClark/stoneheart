@@ -4,43 +4,6 @@ import Vector2 from './../core/vector2.js';
 import AssetManager from './../core/assetmanager.js';
 import * as Editor from './sceneeditor.js';
 
-/// 
-/// Provides an HTML-based editor tool for generating entities using the Factory singleton.
-///
-/// TODO: We need to remove the binding to properties when we disable an inspector!!
-/// 
-export class FactoryEditor
-{
-	#FactoryMethod;
-	
-	constructor(factoryMethod, camera)
-	{
-		this.#FactoryMethod = factoryMethod;
-	}
-	
-	OnBeginDrag()
-	{
-	}
-	
-	OnEndDrag()
-	{
-	}
-	
-	/// 
-	/// Draws the controls for this object when represented on the tool pallet.
-	/// 
-	DrawPalletUI()
-	{
-	}
-	
-	/// 
-	/// Draws controls for the cusome inspector when this object is selected in the game world.
-	/// 
-	DrawInspectorUI()
-	{
-	}
-}
-
 
 /// 
 /// 
@@ -55,6 +18,7 @@ export class Inspector
 	
 	#InspectorDiv;
 	#Bindings = [];
+	#Inputs = [];
 	
 	constructor(rootDiv, canvas, factory, camera)
 	{
@@ -96,7 +60,67 @@ export class Inspector
 		Editor.RemoveDeselectedListener(this.HandleDeselection);
 	}
 	
-	#Inputs = [];
+	HandleSelection(obj)
+	{
+		this.DrawInspector(obj);
+	}
+	
+	HandleDeselection(obj)
+	{
+		this.ClearInspector();
+	}
+	
+	/// 
+	/// Sets up a two-way binding between the obj's property and an HTML element value.
+	/// Two optiomal converter functions may be passed to perform data conversion between
+	/// the linked HTML element and it's bound backing property. If one converter supplied,
+	/// both should be supplied. By default, no conversion takes place.
+	/// 
+	Bind(element, eventName, elementValue, obj, property, elmToPropConverter = this.PassThroughConverter, propToElmConverter = this.PassThroughConverter)
+	{
+		element[eventName] = () => obj[property] = elmToPropConverter(element[elementValue]);
+		ShadowMember(obj, property, (value) => { element[elementValue] = propToElmConverter(value); });
+		this.#Bindings.push([obj, property]);
+	}
+	
+	/// 
+	/// Specific binding helper for handling complext HTML element that represents a Vector2.
+	/// 
+	BindVector2(xElm, yElm, eventName, elementValue, obj, property)
+	{
+		xElm[eventName] = () => obj[property] = new Vector2(parseFloat(xElm[elementValue]), obj[property].y);
+		yElm[eventName] = () => obj[property] = new Vector2(obj[property].x, parseFloat(yElm[elementValue]));
+		
+		ShadowMember(obj, property, (value) =>
+		{ 
+			xElm[elementValue] = value.x; 
+			yElm[elementValue] = value.y;
+		});
+		this.#Bindings.push([obj, property]);
+	}
+	
+	/// 
+	/// Default binding converter. Simply returns the input value unchanged.
+	/// 
+	PassThroughConverter(value)
+	{
+		return value;
+	}
+	
+	/// 
+	/// 
+	/// 
+	GetInspectorDef(obj)
+	{
+		for(let def of Editor.GetInspectorDefs())
+		{
+			if(def.FunctionName == obj.Entity._factoryInfo.name)
+				return def;
+		}
+		
+		return null;
+	}
+	
 	DrawInspector(obj)
 	{
 		if(obj == null)
@@ -117,57 +141,6 @@ export class Inspector
 		
 		this.#Bindings = [];
 		this.#Inputs = [];
-	}
-	
-	/// 
-	/// Specific binding helper for handling complext HTML element that represents a Vector2.
-	/// 
-	BindVector2(xElm, yElm, eventName, elementValue, obj, property)
-	{
-		xElm[eventName] = () => obj[property] = new Vector2(parseFloat(xElm[elementValue]), obj[property].y);
-		yElm[eventName] = () => obj[property] = new Vector2(obj[property].x, parseFloat(yElm[elementValue]));
-		
-		ShadowMember(obj, property, (value) =>
-		{ 
-			xElm[elementValue] = value.x; 
-			yElm[elementValue] = value.y;
-		});
-		this.#Bindings.push([obj, property]);
-	}
-	
-	/// 
-	/// 
-	/// 
-	PassThroughConverter(value)
-	{
-		return value;
-	}
-	
-	/// 
-	/// Sets up a two-way binding between the obj's property and an HTML element value.
-	/// Two optiomal converter functions may be passed to perform data conversion between
-	/// the linked HTML element and it's bound backing property. If one converter supplied,
-	/// both should be supplied. By default, no conversion takes place.
-	/// 
-	Bind(element, eventName, elementValue, obj, property, elmToPropConverter = this.PassThroughConverter, propToElmConverter = this.PassThroughConverter)
-	{
-		element[eventName] = () => obj[property] = elmToPropConverter(element[elementValue]);
-		ShadowMember(obj, property, (value) => { element[elementValue] = propToElmConverter(value); });
-		this.#Bindings.push([obj, property]);
-	}
-	
-	/// 
-	/// 
-	/// 
-	GetInspectorDef(obj)
-	{
-		for(let def of Editor.GetInspectorDefs())
-		{
-			if(def.FunctionName == obj.Entity._factoryInfo.name)
-				return def;
-		}
-		
-		return null;
 	}
 	
 	/// 
@@ -389,16 +362,6 @@ export class Inspector
 			return SearchPropertyContainer(comp, propPath[1]);
 		}
 	}
-	
-	HandleSelection(obj)
-	{
-		this.DrawInspector(obj);
-	}
-	
-	HandleDeselection(obj)
-	{
-		this.ClearInspector();
-	}
 }
 
 
@@ -466,6 +429,7 @@ export class Pallet
 	Disable()
 	{
 		if(!this.#Enabled) return;
+		Editor.ForceSelection(null);
 		this.#Enabled = false;
 		this.#PalletDiv.remove();
 	}
@@ -489,7 +453,9 @@ export class Pallet
 		toolInfo.Params[0] = new Vector2((pos.x + rawData[0] - rawData[2])/2,
 										 (pos.y - rawData[1] + rawData[3])/2);
 		
-		this.#Factory[toolInfo.FunctionName](...toolInfo.Params );
+		this.#Factory[toolInfo.FunctionName](...toolInfo.Params ).then( (result) =>{
+			Editor.ForceSelection(result);
+		});
 	}
 	
 	InstallTool(tool)
@@ -506,7 +472,8 @@ export class Pallet
 			this.#PalletDiv.appendChild(toolDiv);
 			
 			toolDiv.draggable = true;
-			toolDiv.style = "width:64px; height:64px; background-color:red; color:white; background-size:100%; 100%; background-image:url('" + tool.IconFile + "');";
+			toolDiv.className = "ToolIcon";
+			toolDiv.style = "background-image:url('" + tool.IconFile + "');";
 			toolDiv.ondragstart = tool.OnDragStart.bind(tool);
 			toolDiv.dragend = tool.OnDragEnd.bind(tool);
 		}
@@ -524,12 +491,13 @@ export class Pallet
 			this.#ToolDivs[index].remove();
 			this.#ToolDivs.splice(index, 1);
 		}
+		else console.log("Warning! Missing tool index.");
 	}
 	
 	UninstallAllTools()
 	{
-		for(let tool of this.#Tools)
-			this.UninstallTool(tool);
+		while(this.#Tools.length > 0)
+			this.UninstallTool(this.#Tools[0]);
 	}
 	
 	DrawPallet()
@@ -614,7 +582,10 @@ export class PalletTool
 	{
 		//the default icon will be the size of the image! That's not gonna work!
 		//evt.dataTransfer.setDragImage(this.Icon, this.Icon.width/2, this.Icon.height/2);
-		evt.dataTransfer.setData("text", JSON.stringify([this.Icon.width, this.Icon.height, evt.offsetX, evt.offsetY, this.Save()]));
+		//evt.dataTransfer.setData("text", JSON.stringify([this.Icon.width, this.Icon.height, evt.offsetX, evt.offsetY, this.Save()]));
+		//HACK ALERT: Hard coding the width adn height here ton ensure dran n drop positionings things correctly.
+		evt.dataTransfer.setData("text", JSON.stringify([32, 32, evt.offsetX, evt.offsetY, this.Save()]));
+	
 	}
 	
 	OnDragEnd(evt)
