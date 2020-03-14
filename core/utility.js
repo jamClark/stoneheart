@@ -1,3 +1,14 @@
+
+/// 
+/// 
+/// 
+export function RandomRange(a, b)
+{
+	let min = Math.min(a, b);
+	let max = Math.max(a, b);
+	return (Math.random() * (max - min)) + min;
+}
+
 /// 
 /// 
 /// 

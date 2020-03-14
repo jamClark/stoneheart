@@ -8,6 +8,7 @@ import Entity from './../ecs/entity.js';
 import WorldPos from './worldpos.js';
 import SpriteRenderer from './spriterenderer.js';
 import Particle from './particle.js';
+import {RandomRange} from './../core/utility.js';
 
 /// 
 /// An entity component that manages its own internal system for handling the spawning,
@@ -108,6 +109,9 @@ export default class ParticleEmitter extends BaseComponent
 			seq.next(s[i]);
 	}
 	
+	set Paused(value) { this.#Paused = value; }
+	get Paused() { return this.#Paused; }
+	
 	Pause()
 	{
 		this.#Paused = true;
@@ -134,11 +138,14 @@ export default class ParticleEmitter extends BaseComponent
 		let trans = ent.GetComponent(WorldPos);
 		let particle = ent.GetComponent(Particle);
 		
-		particle.Velocity = new Vector2(
-									(Math.random() * (this.MaxStartVelX - this.MinStartVelX)) + this.MinStartVelX,
-									(Math.random() * (this.MaxStartVelY - this.MinStartVelY)) + this.MinStartVelY);
-		particle.Lifetime = (Math.random() * (this.MaxLifetime - this.MinLifetime)) + this.MinLifetime;
-		trans.position = systemTrans.position;
+		ent.GetComponent(SpriteRenderer).Layer = this.RenderLayer;
+		particle.Velocity = new Vector2(RandomRange(this.MinStartVelX, this.MaxStartVelX),
+										RandomRange(this.MinStartVelY, this.MaxStartVelY));
+		particle.Lifetime = RandomRange(this.MinLifetime, this.MaxLifetime);
+		
+		let localPos = new Vector2(	RandomRange(this.MinPosX, this.MaxPosX),
+									RandomRange(this.MinPosY, this.MaxPosY));
+		trans.position = systemTrans.position.Add(localPos);
 		this.#ActiveParticles.push(particle);
 	}
 	

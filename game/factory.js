@@ -143,7 +143,6 @@ export default class Factory
 		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
 		partSys.SpaceMode = spaceMode;
 		partSys.ApplyEmitConfiguration(...params);
-		
 		let ent = new Entity("Particle", 
 			pos,
 			partSys,
@@ -160,6 +159,7 @@ export default class Factory
 			params:[
 				"Entity-Active",
 				"WorldPosition-position",
+				"ParticleEmitter-Paused",
 				"ParticleEmitter-RenderLayer",
 				"ParticleEmitter-SpaceMode",
 				"ParticleEmitter-GravityScale",
