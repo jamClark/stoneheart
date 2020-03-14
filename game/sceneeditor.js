@@ -88,6 +88,13 @@ export function GetSelectionAtMouse(entityMan, camera)
 
 export function HandleSelection(entityMan, camera)
 {
+	if(LastSelected != null && (Input.GetKeyDown("Backspace") || Input.GetKeyDown("Delete")) )
+	{
+		LastSelected.Entity.Destroy();
+		this.ForceSelection(null);
+		return;
+	}
+	
 	if(CurrentSelection != null)
 	{
 		if(Input.GetMouseUp(0) || Input.GetMouseDown(0))

@@ -20,6 +20,7 @@ export default class ParticleEmitter extends BaseComponent
 	#PoolId;
 	#LastEmitTime = -1000;
 	#Paused = false;
+	#PauseStart;
 	
 	constructor(poolId, renderLayer, spriteAsset)
 	{
@@ -109,17 +110,33 @@ export default class ParticleEmitter extends BaseComponent
 			seq.next(s[i]);
 	}
 	
-	set Paused(value) { this.#Paused = value; }
-	get Paused() { return this.#Paused; }
+	set Paused(value)
+	{ 
+		this.#Paused = value;
+		if(value)
+			this.#PauseStart = Time.time;
+		else
+		{
+			//increase life of each live particle by the  time spent paused
+			let diff = Time.time - this.#PauseStart;
+			for(let p of this.#ActiveParticles)
+				p.LifeStart += diff;
+		}
+	}
+	
+	get Paused()
+	{ 
+		return this.#Paused; 
+	}
 	
 	Pause()
 	{
-		this.#Paused = true;
+		this.Paused(true);
 	}
 	
 	Play()
 	{
-		this.#Paused = false;
+		this.Paused(false);
 	}
 	
 	/// 
@@ -193,19 +210,21 @@ export default class ParticleEmitter extends BaseComponent
 		renderSystem.Process(ent, renderer, worldPos);
 	}
 	
+	#EmitAccum = 0;
 	/// 
 	/// This will be invoked by the ParticleEmitterSystem each update tick.
 	/// 
 	Update(masterSystem, entity, worldPos, particleSystem, rendererSystem)
 	{
 		//emit if needed
-		if(!this.#Paused && 
-			this.EmitRate > 0 && 
-			Time.time - this.#LastEmitTime > 1/this.EmitRate &&
-			this.#ActiveParticles.length < this.MaxParticles)
+		if(!this.#Paused && this.EmitRate > 0 && this.#ActiveParticles.length < this.MaxParticles)
 		{
-			this.#LastEmitTime = Time.time;
-			this.Emit();
+			this.#EmitAccum += (this.EmitRate*Time.deltaTime);
+			while(this.#EmitAccum > 1)
+			{
+				this.#EmitAccum -= 1;
+				this.Emit();
+			}
 		}
 		
 		//update all live particles

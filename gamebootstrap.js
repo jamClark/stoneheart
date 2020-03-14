@@ -118,7 +118,10 @@ export function AppStart(canvas)
 	//define a 'normal update' state for the FSM. This is where the bulk of our ECS updates will be processed
 	AppFSM.MainGameLoopState = new AppState(
 		[
-			() => { RenderLayers.ClearLayers(); },
+			() => { 
+				EntMan.RemoveDestroyedEntities();
+				RenderLayers.ClearLayers(); 
+				},
 			() => Input.BeginInputBlock(),
 			() =>
 			{
@@ -137,7 +140,10 @@ export function AppStart(canvas)
 	AppFSM.LoadingState = new AppState([]); //TODO: Some kind of universal 'loading' system that ticks when loading
 	AppFSM.SceneEditorState = new AppState(
 		[
-		() => { RenderLayers.ClearLayers(); },
+		() => { 
+			EntMan.RemoveDestroyedEntities();
+			RenderLayers.ClearLayers(); 
+			},
 		() => Input.BeginInputBlock(),
 		() =>
 		{

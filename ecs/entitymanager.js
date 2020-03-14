@@ -15,6 +15,25 @@ export default class EntityManager
 	
 	get Entities() { return [...this._entities]; }
 	
+	/// 
+	/// Iterates through all entities and removes any that have been marked for destruction.
+	/// 
+	RemoveDestroyedEntities()
+	{
+		let i = 0;
+		for(let i = 0; i < this._entities.length;)
+		{
+			let ent = this._entities[i];
+			
+			if(ent.DestroyPending)
+			{
+				ent.PostDestruction();
+				this._entities.splice(i, 1);
+			}
+			else i++;
+		}
+	}
+	
 	RegisterEntity(entity)
 	{
 		if(!(entity instanceof Entity))

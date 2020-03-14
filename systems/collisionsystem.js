@@ -18,7 +18,10 @@ const ItemsPerNode = 6;
 ///
 /// HACK ALERT:
 ///		Grounded state for Rigibodies is being set based on an assumed 'down' vector for gravity in CreateContactManifold().
-/// 
+/// BUG ALERT:
+///		Due to the fact that destroyed entities will be processed before this system updates there
+///		is no way to handle exit events for contacts in ResolveCollisionHistoryEvents properly.
+///		If we descover an invalid reference in there the event is simply skipped.
 class ContactManifold
 {
 	constructor(colA, colB)
@@ -129,6 +132,35 @@ export default class CollisionSystem extends BaseComponentSystem
 		}
 		//NOTE: there are no non-static triggers, everything non-static is just a 'dynamic object'
 		else this.#DynamicObjects.push(collider);
+		
+		if(rebuildTree)
+			RebuildSpacialTree();
+	}
+	
+	/// 
+	/// 
+	/// 
+	Unregister(collider, rebuildTree = false)
+	{
+		if(collider.IsStatic)
+		{
+			if(collider.IsTrigger)
+			{
+				let index = this.#StaticTriggers.indexOf(collider);
+				if(index > -1) this.#StaticTriggers.splice(index, 1);
+			}
+			else
+			{
+				let index = this.#StaticColliders.indexOf(collider);
+				if(index > -1) this.#StaticColliders.splice(index, 1);
+			}
+		}
+		//NOTE: there are no non-static triggers, everything non-static is just a 'dynamic object'
+		else
+		{
+			let index = this.#DynamicObjects.indexOf(collider);
+			if(index > -1) this.#DynamicObjects.splice(index, 1);
+		}
 		
 		if(rebuildTree)
 			RebuildSpacialTree();
@@ -451,10 +483,18 @@ export default class CollisionSystem extends BaseComponentSystem
 			let ci = this.FindCollisionInList(historic[i], current);
 			if(ci < 0)
 			{
+				//we have to check for invalid contacts due to objects being destroyed.
 				let c = historic[i];
-				let msg = new CollisionExitEvent(c);
-				c.ColA.Entity.SendMessage(c.ColB.Entity, msg);
-				c.ColB.Entity.SendMessage(c.ColA.Entity, msg);
+				
+				//BUG ALERT: If we destroy an object after contact starts we'll never receive
+				//and end-contact event!!
+				//HACK ALERT:checking for null due to posibility of destory entities
+				if(c.ColA.Entity != null && c.ColB.Entity != null)
+				{
+					let msg = new CollisionExitEvent(c);
+					c.ColA.Entity.SendMessage(c.ColB.Entity, msg);
+					c.ColB.Entity.SendMessage(c.ColA.Entity, msg);
+				}
 				historic.splice(i, 1);
 			}
 		}

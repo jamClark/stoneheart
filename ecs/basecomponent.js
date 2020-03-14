@@ -16,7 +16,7 @@ export default class BaseComponent
 	
 	OnAttached() {}
 	OnDetached() {}
-	
+	OnDestroy() {}
 	OnEnable() {}
 	OnDisable() {}
 	Awake() {}
@@ -31,6 +31,14 @@ export default class BaseComponent
 		this.OnEnable();
 	}
 	
+	/// 
+	/// Removes this component from it's entity and destroys it.
+	/// 
+	Destroy()
+	{
+		if(this.Entity.RemoveComponent(this) != null)
+			this.OnDestroy();
+	}
 	
 	GetComponent(comp) { return this._Entity.GetComponent(comp); }
 	HandleMessage(sender, msg) {}

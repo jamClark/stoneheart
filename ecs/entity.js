@@ -73,6 +73,27 @@ export default class Entity
 	}
 	
 	/// 
+	/// Marks this entity for destruction. The actual removal and cleanup will occur
+	/// during the next update cycle.
+	/// 
+	Destroy()
+	{
+		//let the manager know we can remove this entity on the next update
+		this.DestroyPending = true;
+	}
+	
+	/// 
+	/// Invoked by the owning EntityManger on the next update after calling this.Destroy().
+	/// 
+	PostDestruction()
+	{
+		//destroy all components
+		let comps = [...this.#Components];
+		for(let comp of comps)
+			comp.Destroy();
+	}
+	
+	/// 
 	/// Globally broadcasts a message that can be heard by any registered listener.
 	/// 
 	PostMessage(msg)

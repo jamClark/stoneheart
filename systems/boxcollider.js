@@ -56,6 +56,11 @@ export default class BoxCollider extends BaseComponent
 		this.#CollisionSystem.Register(this);
 	}
 	
+	OnDetached()
+	{
+		this.#CollisionSystem.Unregister(this);
+	}
+	
 	get Width() { return this.#Rect.Width; }
 	set Width(value) { this.#Rect.Width = value; }
 
