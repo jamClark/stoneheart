@@ -64,8 +64,9 @@ export function AppStart(canvas)
 	AssetMan = new AssetManager(canvasContext);
 	SceneMan = new SceneManager(AssetMan, EntMan, SysMan);
 	
+	let AnimSys = new SpriteAnimatorSystem();
 	LoadedTools = Editor.DeserializePalletTools(AssetMan, './assets/pallettools.txt');
-	Factory.Init(canvas, AssetMan, EntMan);
+	Factory.Init(canvas, AssetMan, EntMan, AnimSys);
 	let MainCamera = Factory.CreateCamera(0, 0, RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
 	ToolPallet = new Pallet(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
@@ -73,7 +74,6 @@ export function AppStart(canvas)
 	
 	//create and register global systems
 	//TODO: We need a more automated way of doing this... if only javascript had simple RTTI :(
-	let AnimSys = new SpriteAnimatorSystem();
 	let RenderSys = new SpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
 	let TiledRenderSys = new TiledSpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
 	let PhysicsSys = new PhysicsSystem();

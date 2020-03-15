@@ -40,11 +40,13 @@ const Layers =
 /// 
 export default class Factory
 {
-	static Init(canvas, assetManager, entityMan)
+	static Init(canvas, assetManager, entityMan, animatorSystem, editModeEnabled = true)
 	{
 		Factory.Canvas = canvas;
 		Factory.AssetManager = assetManager;
 		Factory.EntityManager = entityMan;
+		Factory.EditMode = true;
+		Factory.AnimatorSystem = animatorSystem;
 	}
 	
 	/// 
@@ -106,7 +108,7 @@ export default class Factory
 	{
 		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let trans = new WorldPos(position);
-		let colliderRect = new Rect(position.x, position.y, width, height);
+		let colliderRect = new Rect(0, 0, width, height);
 		let col = new BoxCollider(Factory.CollisionSys, colliderRect, false, true);
 		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(spritePath), 
 										       colliderRect, renderLayer);
@@ -126,9 +128,11 @@ export default class Factory
 			params: [
 				"Entity-Active",
 				"WorldPosition-position",
+				"TiledSpriteRenderer-enabled",
+				"TiledSpriteRenderer-Layer",
+				"BoxCollider-enabled",
 				"BoxCollider-Width",
 				"BoxCollider-Height",
-				"TiledSpriteRenderer-Layer",
 				"TiledSpriteRenderer-Sprite",
 			],
 		}
@@ -138,7 +142,7 @@ export default class Factory
 	
 	static async CreateParticleEmitter(position, renderLayer, spaceMode, spritePath, ...params)
 	{
-		position = new Vector2(position.x*2, position.y*2);//this is because we may have just fed in a json deserialized object.
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let pos = new WorldPos(position);
 		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
 		partSys.SpaceMode = spaceMode;
@@ -159,8 +163,9 @@ export default class Factory
 			params:[
 				"Entity-Active",
 				"WorldPosition-position",
-				"ParticleEmitter-Paused",
+				"ParticleEmitter-RenderEnabled",
 				"ParticleEmitter-RenderLayer",
+				"ParticleEmitter-Paused",
 				"ParticleEmitter-SpaceMode",
 				"ParticleEmitter-GravityScale",
 				"ParticleEmitter-LoopTime",
@@ -183,5 +188,75 @@ export default class Factory
 		return ent;
 	}
 	
+	static async CreateDecorativeTile(position, width, height, renderLayer, spritePath)
+	{
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let trans = new WorldPos(position);
+		let colliderRect = new Rect(0, 0, width, height);
+		let box = new SelectionBox(width, height);
+		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(spritePath), 
+										       colliderRect, renderLayer);
+		
+		let ent = new Entity("Decorative Tile", trans, renderer, box);
+		Factory.EntityManager.RegisterEntity(ent);
+		
+		//we are linking the tile renderer's width to the selection box
+		ShadowMember(box, 'Width', (value) => renderer.Rect.Width = value);
+		ShadowMember(box, 'Height', (value) => renderer.Rect.Height = value);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			type: "Decorative Tile",
+			name: "CreateDecorativeTile",
+			params: [
+				"Entity-Active",
+				"WorldPosition-position",
+				"TiledSpriteRenderer-Layer",
+				"SelectionBox-Width",
+				"SelectionBox-Height",
+				"TiledSpriteRenderer-Sprite",
+			],
+		}
+		
+		return ent;	
+	}
+	
+	/// 
+	/// Creates a simple entity that can be animated and has no collision or behavior.
+	/// 
+	static async CreateDecorativeEntity(position, renderLayer, animToPlay, animAsset, spriteAsset)
+	{
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let pos = new WorldPos(position);
+		let sprite = new SpriteRenderer(await Factory.AssetManager.LoadAsset(spriteAsset), renderLayer, 0, 0);
+		let animator = new SpriteAnimator(await Factory.AssetManager.LoadAsset(animAsset));
+		let ent = new Entity(
+			"Decorative Entity (Animated)", 
+			pos,
+			sprite,
+			animator,
+			new SelectionBox(),
+			);
+		
+		Factory.EntityManager.RegisterEntity(ent);
+		animator.PlayAnim(animToPlay);
+		Factory.AnimatorSystem.Process(ent, animator, sprite);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			type: "Decorative Entity (Animated)",
+			name: "CreateDecorativeEntity",
+			params: 
+			[
+				"Entity-Active",
+				"WorldPosition-position",
+				"SpriteRenderer-Layer",
+			],
+		}
+		
+		return ent;
+	}
 }
 

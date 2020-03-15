@@ -31,7 +31,8 @@ export default class BaseComponentSystem
 						continue;
 					}
 				}
-				this.Process(entities[i], ...matches); //spread the matches array back out to individual parameters
+				if(enabled)
+					this.Process(entities[i], ...matches); //spread the matches array back out to individual parameters
 			}
 		}
 		

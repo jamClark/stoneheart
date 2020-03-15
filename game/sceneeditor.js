@@ -19,12 +19,16 @@ let LastSelected = null;
 let SelectionOffset = new Vector2();
 let RegisteredEnums = new Map();
 let RegisteredInspectors = [];
-
 let SelectedListeners = [];
 let DeselectedListeners = [];
+let SnapSettings = {
+	x: 32,
+	y: 32,
+};
 
 export function GetInspectorDefs() { return RegisteredInspectors; }
 export function GetEnumDefs() { return RegisteredEnums; }
+export function GetSnapSettings() { return SnapSettings }
 
 export function AddSelectedListener(obj, handler)
 {
@@ -89,6 +93,14 @@ export function GetSelectionAtMouse(entityMan, camera)
 /// 
 /// 
 /// 
+export function SnapPosition(pos)
+{
+	return new Vector2(Math.round(pos.x / SnapSettings.x) * SnapSettings.x, Math.round(pos.y / SnapSettings.y) * SnapSettings.y);
+}
+
+/// 
+/// 
+/// 
 export function HandleSelection(entityMan, camera)
 {
 	if(document.activeElement.tagName == 'BODY' && LastSelected != null && (Input.GetKeyDown("Backspace") || Input.GetKeyDown("Delete")) )
@@ -109,7 +121,7 @@ export function HandleSelection(entityMan, camera)
 		{
 			//drag
 			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
-			trans.position = camera.ViewToWorld(Input.MousePosition.Add(SelectionOffset));
+			trans.position = SnapPosition(camera.ViewToWorld(Input.MousePosition.Add(SelectionOffset)));
 		}
 	}
 	if(Input.GetMouseDown(0))
@@ -230,8 +242,6 @@ export function DeserializePalletTools(assetMan, path)
 				case "ENUM":
 				{
 					let temp = CreateEnum(RegisteredEnums, data.slice(1, data.length));
-					//if(temp != null) enums.push(temp);
-					//else console.log("ENUM definition was invalid. Skipping.");
 					break;
 				}
 				case "INSPECTOR":

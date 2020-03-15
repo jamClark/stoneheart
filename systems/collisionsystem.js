@@ -176,7 +176,7 @@ export default class CollisionSystem extends BaseComponentSystem
 	///		  will also work even if the spacial tree hasn't been rebuilt (as long as all
 	///		  colliders have been registered).
 	/// 
-	GetAllColliders(point)
+	GetAllColliders(point, allowDisabledColliders = true)
 	{
 		if(!(point instanceof Vector2) && !(point instanceof Rect))
 			throw new Error("Input must be either a Vector2 or Rect.");
@@ -185,6 +185,7 @@ export default class CollisionSystem extends BaseComponentSystem
 		let allColliders = this.#StaticColliders.concat(this.#StaticTriggers);
 		for(let col of allColliders)
 		{
+			if(!allowDisabledColliders && !col.enabled) continue;
 			if(!(col instanceof BoxCollider))
 				console.log("COl is: " + col);
 			let trans = col.Entity.GetComponent(WorldPos);
@@ -243,11 +244,12 @@ export default class CollisionSystem extends BaseComponentSystem
 	/// 
 	FixedProcess(entity, pos, collider)
 	{
-		
 		//we aren't checking to see if static objects collide with anything
 		if(collider.IsStatic) return;
 		
-		entity.GetComponent(Rigidbody).IsGrounded = false;
+		let rb = entity.GetComponent(Rigidbody);
+		if(rb != null) rb.IsGrounded = false;
+		
 		//dynamic-static colliders
 		let myRect = collider.WorldRect(pos.position);
 		let localStaticColliders = this.#StaticColliderTree.RetrieveInBounds(myRect);// this.#StaticColliders; //TODO: Make this query for collisions based on entity collider
@@ -256,6 +258,7 @@ export default class CollisionSystem extends BaseComponentSystem
 			for(let c1 of localStaticColliders)
 			{
 				let c = c1[1];
+				if(!c.enabled) continue;
 				let otherRect = c.WorldRect(c.GetComponent(WorldPos).position);
 				if(myRect.IsOverlapping(otherRect) && (collider.LayerMask & c.LayerMask))
 				{
@@ -273,6 +276,7 @@ export default class CollisionSystem extends BaseComponentSystem
 			for(let t1 of this.#StaticTriggers)
 			{
 				let t = t1[1];
+				if(!t.enabled) continue;
 				let otherRect = t.WorldRect(t.GetComponent(WorldPos).position);
 				if(myRect.IsOverlapping(otherRect) && (collider.LayerMask & t.LayerMask))
 				{ 
@@ -287,6 +291,7 @@ export default class CollisionSystem extends BaseComponentSystem
 		for(let d of this.#DynamicObjects)
 		{
 			if(d == collider) continue; //don't check for self collisions, obviously
+			if(!d.enabled) continue;
 			let otherRect = d.WorldRect(d.GetComponent(WorldPos).position);
 			if(myRect.IsOverlapping(otherRect) && (collider.LayerMask & d.LayerMask))
 			{

@@ -34,6 +34,7 @@ export default class ParticleEmitter extends BaseComponent
 		
 		
 		//system configuration
+		this.RenderEnabled = true;
 		this.RenderLayer = renderLayer;
 		this.Space = SpaceMode.World;
 		this.GravityScale = 1;
@@ -41,7 +42,7 @@ export default class ParticleEmitter extends BaseComponent
 		this.MaxParticles = 1000;
 		this.EmitRate = 1; //particles per second
 		
-		this.MinLifetime = 0;
+		this.MinLifetime = 4;
 		this.MaxLifetime = 4;
 		this.MinScale = 1;
 		this.MaxScale = 1;
@@ -215,7 +216,8 @@ export default class ParticleEmitter extends BaseComponent
 			masterSystem.ApplyGravity(this.GravityScale, particle);
 		}
 		
-		renderSystem.Process(ent, renderer, worldPos);
+		if(this.RenderEnabled)
+			renderSystem.Process(ent, renderer, worldPos);
 	}
 	
 	#EmitAccum = 0;

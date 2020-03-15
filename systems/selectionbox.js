@@ -11,9 +11,12 @@ import Vector2 from './../core/vector2.js';
 /// 
 export default class SelectionBox extends BaseComponent
 {
-	constructor()
+	#Size;
+	
+	constructor(width, height)
 	{
 		super();
+		this.#Size = new Vector2(!width?32:width, !height?32:height);
 	}
 	
 	get WorldRect()
@@ -28,8 +31,11 @@ export default class SelectionBox extends BaseComponent
 	
 	TranslatedWorldRect(worldPos)
 	{
-		let r = new Rect(0, 0, 32, 32);
-		r.Center = r.Center.Add(worldPos);
-		return r;
+		return new Rect(worldPos.x, worldPos.y, this.#Size.x, this.#Size.y);
 	}
+	
+	get Width() { return this.#Size.x; }
+	set Width(value) { this.#Size.x = value; }
+	get Height() { return this.#Size.y; }
+	set Height(value) { this.#Size.y = value; }
 }

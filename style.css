@@ -46,6 +46,21 @@ body
 	color:white;
 }
 
+#AlternatePanel
+{
+	position:fixed;
+	left:0%;
+	top:0%;
+	width:8rem;
+	bottom: 120px;
+	overflow:auto;
+	
+	border: 1px solid #000000;
+	background-color:#442244; 
+	padding:0px;
+	color:white;
+}
+
 /*Containing DIV for ToolPallet when active.*/
 #ToolPallet
 {

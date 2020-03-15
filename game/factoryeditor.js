@@ -16,6 +16,7 @@ export class Inspector
 	#Camera;
 	#Enabled;
 	
+	#AltDiv;
 	#InspectorDiv;
 	#Bindings = [];
 	
@@ -25,6 +26,17 @@ export class Inspector
 		this.#Root = rootDiv;
 		this.#Canvas = canvas;
 		this.#Camera = camera;
+		
+		this.#InspectorDiv = document.createElement('div');
+		this.#InspectorDiv.id = "Inspector"
+		this.#InspectorDiv.class = "Inspector";
+		
+		//snap settings UI
+		this.#AltDiv = document.createElement('div');
+		this.#AltDiv.id = "AlternatePanel";
+		this.DrawHeader(this.#AltDiv, "Snap Settings");
+		this.DrawFloatField(this.#AltDiv, Editor.GetSnapSettings(), "x", "Snap X", 50);
+		this.DrawFloatField(this.#AltDiv, Editor.GetSnapSettings(), "y", "Snap Y", 50);
 	}
 	
 	get Factory() { return this.#Factory; }
@@ -36,10 +48,9 @@ export class Inspector
 		
 		let canvasDiv = document.getElementById("CanvasArea");
 		canvasDiv.style="position:relative; left:-100px";
-		this.#InspectorDiv = document.createElement('div');
-		canvasDiv.appendChild(this.#InspectorDiv);
-		this.#InspectorDiv.id = "Inspector"
-		this.#InspectorDiv.class = "Inspector";
+		
+		this.#Root.appendChild(this.#InspectorDiv);
+		this.#Root.appendChild(this.#AltDiv);
 		
 		Editor.AddSelectedListener(this, this.HandleSelection);
 		Editor.AddDeselectedListener(this, this.HandleDeselection);
@@ -48,12 +59,14 @@ export class Inspector
 	Disable()
 	{
 		if(!this.#Enabled) return;
+		this.#Enabled = false;
+		this.ClearInspector();
 		
 		let canvasDiv = document.getElementById("CanvasArea");
 		canvasDiv.style="left=0px";
-		this.#Enabled = false;
-		this.#InspectorDiv.remove();
-		this.ClearInspector();
+		
+		this.#Root.removeChild(this.#InspectorDiv);
+		this.#Root.removeChild(this.#AltDiv);
 		
 		Editor.RemoveSelectedListener(this.HandleSelection);
 		Editor.RemoveDeselectedListener(this.HandleDeselection);
@@ -125,7 +138,7 @@ export class Inspector
 		if(obj == null)
 			throw new Error("Null object passed to DrawInspector.");
 		
-		this.DrawHeader(this.#InspectorDiv, obj, obj.Entity._factoryInfo.type);
+		this.DrawHeader(this.#InspectorDiv, obj.Entity._factoryInfo.type);
 		let def = this.GetInspectorDef(obj);
 		this.DrawInputs(def, this.#InspectorDiv, obj);
 		
@@ -154,36 +167,34 @@ export class Inspector
 		for(let i = 0; i < inspectorDef.Fields.length; i++)
 		{
 			let param = inspectorDef.Fields[i];
+			let prop = obj.Entity._factoryInfo.params[i];
+			let fieldName = param[1];
+			let bindSrc = this.GetBindingSet(obj, prop);
+			
 			switch(param[0])
 			{
 				case "float":
 				{
-					let prop = obj.Entity._factoryInfo.params[i];
-					this.DrawFloatField(parentDiv, obj, prop, param[1]);
+					this.DrawFloatField(parentDiv, bindSrc[0], bindSrc[1], fieldName);
 					break;
 				}
 				case "vector2":
 				{
-					let prop = obj.Entity._factoryInfo.params[i];
-					this.DrawVector2Field(parentDiv, obj, prop, param[1]);
+					this.DrawVector2Field(parentDiv, bindSrc[0], bindSrc[1], fieldName);
 					break;
 				}
 				case "enum":
 				{
 					//let's see if we've defined an enum for this type
 					let enums = Editor.GetEnumDefs();
-					let enumSet = enums.get(param[1]);
+					let enumSet = enums.get(fieldName);
 					if(enumSet != null)
-					{
-						let prop = obj.Entity._factoryInfo.params[i];
-						this.DrawEnumDropdown(parentDiv, obj, prop, param[1], enumSet);
-					}
+						this.DrawEnumDropdown(parentDiv, bindSrc[0], bindSrc[1], fieldName, enumSet);
 					break;
 				}
 				case "bool":
 				{
-					let prop = obj.Entity._factoryInfo.params[i];
-					this.DrawBoolField(parentDiv, obj, prop, param[1]);
+					this.DrawBoolField(parentDiv, bindSrc[0], bindSrc[1], fieldName);
 					break;
 				}
 			}
@@ -211,21 +222,21 @@ export class Inspector
 		titleElm.style = "padding-right: 5px";
 		
 		inputElm.type = "checkbox";
-		inputElm.value = obj.Entity.GetProperty(property);
+		inputElm.value = obj[property];
 		
-		let bindSrc = this.GetBindingSet(obj, property);
-		this.Bind(inputElm, "oninput", "checked", bindSrc[0], bindSrc[1]);
+		this.Bind(inputElm, "oninput", "checked", obj, property);
 	}
 	
 	/// 
 	/// 
 	/// 
-	DrawFloatField(parentDiv, obj, property, label)
+	DrawFloatField(parentDiv, obj, property, label, inputWidth)
 	{
 		let inputDiv = document.createElement('div');
 		let titleElm = document.createElement('label');
 		let inputElm = document.createElement('input');
 		let lineBreakDiv = document.createElement('div');
+		
 		inputDiv.appendChild(titleElm);
 		inputDiv.appendChild(inputElm);
 		parentDiv.appendChild(inputDiv);
@@ -236,12 +247,11 @@ export class Inspector
 		titleElm.innerHTML = `${label}:`;
 		titleElm.style = "padding-right: 5px";
 		
-		inputElm.type = "number";
-		inputElm.value = obj.Entity.GetProperty(property);
-		inputElm.style = "width:100px;"
+		inputElm.style = `width:${inputWidth?inputWidth:100}px`;
+		inputElm.inputmode = "numeric";
+		inputElm.value = obj[property];
 		
-		let bindSrc = this.GetBindingSet(obj, property);
-		this.Bind(inputElm, "oninput", "value", bindSrc[0], bindSrc[1]);
+		this.Bind(inputElm, "oninput", "value", obj, property);
 	}
 		
 	/// 
@@ -273,12 +283,10 @@ export class Inspector
 			inputElm.appendChild(option);
 		}
 		
-		let propObj = obj.Entity.GetProperty(property);
-		let index = enumSet.map(x => x[1]).indexOf(propObj);
+		let index = enumSet.map(x => x[1]).indexOf(obj[property]);
 		inputElm.selectedIndex = index > -1 ? index : 0;
 		
-		let bindSrc = this.GetBindingSet(obj, property);
-		this.Bind(inputElm, "oninput", "selectedIndex", bindSrc[0], bindSrc[1], 
+		this.Bind(inputElm, "oninput", "selectedIndex", obj, property, 
 				(value) => 
 				{
 					//ELEMENT-TO-PROP
@@ -295,7 +303,7 @@ export class Inspector
 	/// 
 	/// 
 	/// 
-	DrawHeader(parentDiv, obj, text)
+	DrawHeader(parentDiv, text)
 	{
 		let titleElm = document.createElement('label');
 		titleElm.innerHTML = `<b>${text}</b>`;
@@ -324,18 +332,17 @@ export class Inspector
 		titleElm.innerHTML = `${label}:`;
 		titleElm.style = "padding-right: 5px";
 		
-		xElm.type = "number";
-		xElm.value = obj.Entity.GetProperty(property).x;
+		xElm.inputmode = "numeric";
+		xElm.value = obj[property].x;
 		xElm.style = "width:50px; margin-right: 5px"
 		xElm.name = `${property}.x`;
 		
-		yElm.type = "number";
-		yElm.value = obj.Entity.GetProperty(property).y;
+		yElm.inputmode = "numeric";
+		yElm.value = obj[property].y;
 		yElm.style = "width:50px;"
 		yElm.name = `${property}.x`;
 		
-		let bindSrc = this.GetBindingSet(obj, property);
-		this.BindVector2(xElm, yElm, "oninput", "value", bindSrc[0], bindSrc[1]);
+		this.BindVector2(xElm, yElm, "onchange", "value", obj, property);
 	}
 	
 	/// 
@@ -437,17 +444,15 @@ export class Pallet
 	{
 		//data transfer format is: [xoffset, yoffset, pallettool jason]
 		let rawData = JSON.parse(evt.dataTransfer.getData("text"));
-		let toolInfo = PalletTool.Generate(null, rawData[4]);
+		let toolInfo = PalletTool.Generate(null, rawData[4]);		
 		let pos = new Vector2(evt.offsetX, evt.offsetY);
 		pos = this.#Camera.ViewToWorld(pos);
 		//setting the positional data. we are assuming the position is always the first element and is
 		//represented as an object with the fields 'x' and 'y' (like a Vector2)
-		//NOTE: Something has changed due to using vectors instead of positions in the factory so now 
-		//we have to divide by two when positioning!
-		toolInfo.Params[0] = new Vector2((pos.x + rawData[0] - rawData[2])/2,
-										 (pos.y - rawData[1] + rawData[3])/2);
-		
-		this.#Factory[toolInfo.FunctionName](...toolInfo.Params ).then( (result) =>{
+		toolInfo.Params[0] = new Vector2((pos.x + rawData[0] - rawData[2]),
+										 (pos.y - rawData[1] + rawData[3]));
+		toolInfo.Params[0] = Editor.SnapPosition(toolInfo.Params[0]);
+		this.#Factory[toolInfo.FunctionName](...toolInfo.Params).then( (result) =>{
 			Editor.ForceSelection(result);
 		});
 	}
@@ -514,9 +519,10 @@ export class PalletTool
 {
 	#AssetManager;
 	
-	constructor(assetManager, functionName, ...params)
+	constructor(assetManager, functionName, iconPath, ...params)
 	{
 		this.FunctionName = functionName;
+		this.IconPath = iconPath;
 		this.Params = Array.from(params);
 		this.AssetManager = assetManager;
 	}
@@ -534,7 +540,7 @@ export class PalletTool
 	
 	get IconFile()
 	{
-		return this.Params[this.Params.length-1];
+		return this.IconPath;
 	}
 	
 	Save()
@@ -546,6 +552,7 @@ export class PalletTool
 	{
 		let temp = JSON.parse(json);
 		this.FunctionName = temp.FunctionName;
+		this.IconPath = temp.IconPath;
 		this.Params = temp.Params;
 		
 		this.#AssetManager = assetManager;
@@ -559,7 +566,7 @@ export class PalletTool
 	
 	static Generate(assetManager, json)
 	{
-		let tool = new PalletTool(assetManager, "", []);
+		let tool = new PalletTool(assetManager, "", "", []);
 		tool.Restore(assetManager, json);
 		return tool;
 	}
