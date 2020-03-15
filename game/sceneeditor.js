@@ -86,6 +86,9 @@ export function GetSelectionAtMouse(entityMan, camera)
 	return list;
 }
 
+/// 
+/// 
+/// 
 export function HandleSelection(entityMan, camera)
 {
 	if(LastSelected != null && (Input.GetKeyDown("Backspace") || Input.GetKeyDown("Delete")) )
@@ -123,8 +126,9 @@ export function HandleSelection(entityMan, camera)
 				if(LastSelected != null)
 					InvokeOnDeselectedListeners();
 				InvokeOnSelectedListeners();
+				LastSelected = CurrentSelection;
 			}
-			LastSelected = CurrentSelection;
+			
 			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
 			SelectionOffset = camera.WorldToView(trans.position).Sub(Input.MousePosition);
 			SelectionInc++;

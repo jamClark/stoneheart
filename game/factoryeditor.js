@@ -18,7 +18,6 @@ export class Inspector
 	
 	#InspectorDiv;
 	#Bindings = [];
-	#Inputs = [];
 	
 	constructor(rootDiv, canvas, factory, camera)
 	{
@@ -129,18 +128,18 @@ export class Inspector
 		this.DrawHeader(this.#InspectorDiv, obj, obj.Entity._factoryInfo.type);
 		let def = this.GetInspectorDef(obj);
 		this.DrawInputs(def, this.#InspectorDiv, obj);
+		
 	}
 	
 	ClearInspector()
 	{
-		for(let input of this.#Inputs)
-			input.remove();
+		while(this.#InspectorDiv.children.length > 0)
+			this.#InspectorDiv.removeChild(this.#InspectorDiv.children[0]);
 		
 		for(let binding of this.#Bindings)
 			RemoveMemberShadow(binding[0], binding[1]);
 		
 		this.#Bindings = [];
-		this.#Inputs = [];
 	}
 	
 	/// 
@@ -216,7 +215,6 @@ export class Inspector
 		
 		let bindSrc = this.GetBindingSet(obj, property);
 		this.Bind(inputElm, "oninput", "checked", bindSrc[0], bindSrc[1]);
-		this.#Inputs.push(inputDiv);
 	}
 	
 	/// 
@@ -244,7 +242,6 @@ export class Inspector
 		
 		let bindSrc = this.GetBindingSet(obj, property);
 		this.Bind(inputElm, "oninput", "value", bindSrc[0], bindSrc[1]);
-		this.#Inputs.push(inputDiv);
 	}
 		
 	/// 
@@ -293,7 +290,6 @@ export class Inspector
 					let index = enumSet.map(x => x[1]).indexOf(value);
 					return index > -1 ? index : 0;
 				});
-		this.#Inputs.push(inputDiv);
 	}
 	
 	/// 
@@ -305,7 +301,6 @@ export class Inspector
 		titleElm.innerHTML = `<b>${text}</b>`;
 		titleElm.style = "margin:8px; font-size: 1.2rem; padding-bottom: 5px; display:block;";
 		parentDiv.appendChild(titleElm);
-		this.#Inputs.push(titleElm);
 	}
 	
 	/// 
@@ -341,7 +336,6 @@ export class Inspector
 		
 		let bindSrc = this.GetBindingSet(obj, property);
 		this.BindVector2(xElm, yElm, "oninput", "value", bindSrc[0], bindSrc[1]);
-		this.#Inputs.push(inputDiv);
 	}
 	
 	/// 

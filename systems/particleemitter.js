@@ -113,14 +113,22 @@ export default class ParticleEmitter extends BaseComponent
 	set Paused(value)
 	{ 
 		this.#Paused = value;
+		
 		if(value)
+		{
 			this.#PauseStart = Time.time;
-		else
+		}
+		else if(this.#PauseStart > 0)
 		{
 			//increase life of each live particle by the  time spent paused
 			let diff = Time.time - this.#PauseStart;
 			for(let p of this.#ActiveParticles)
 				p.LifeStart += diff;
+			
+			//this is to guard against accidentally resetting lifetimes
+			//after particle emtitance - which can happen or when the editor
+			//inspector updates binding info
+			this.#PauseStart = -1;
 		}
 	}
 	

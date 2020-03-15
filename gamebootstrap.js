@@ -120,21 +120,21 @@ export function AppStart(canvas)
 		[
 			() => { 
 				EntMan.RemoveDestroyedEntities();
-				RenderLayers.ClearLayers(); 
-				},
-			() => Input.BeginInputBlock(),
-			() =>
-			{
+				RenderLayers.ClearLayers();
+				Input.BeginInputBlock();
+
 				//debugging and utility stuff
 				if(Input.GetKeyDown("KeyL"))
 					TogglePhysicsDebugDrawing();
 				if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
-					EnableEditMode(MainCamera.GetComponent(Camera));
-			},
+					EnableEditMode(MainCamera.GetComponent(Camera));				
+				},
 			SysMan.Update.bind(SysMan),
-			() => Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan)),
-			() => Input.EndInputBlock(),
-			() => RenderLayers.CompositeLayers(),
+			() => {
+				Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan));
+				Input.EndInputBlock();
+				RenderLayers.CompositeLayers();
+			},
 		]
 	);
 	AppFSM.LoadingState = new AppState([]); //TODO: Some kind of universal 'loading' system that ticks when loading
@@ -142,24 +142,25 @@ export function AppStart(canvas)
 		[
 		() => { 
 			EntMan.RemoveDestroyedEntities();
-			RenderLayers.ClearLayers(); 
-			},
-		() => Input.BeginInputBlock(),
-		() =>
-		{
+			RenderLayers.ClearLayers();
+			Input.BeginInputBlock();
+			
 			if(Input.GetKeyDown("KeyL"))
 				TogglePhysicsDebugDrawing();
 			if(Input.GetKeyDown("KeyK"))
 				console.log(SceneMan.SaveScene());
 			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
 				DisableEditMode(CollisionSys);
-		},
-		() => Editor.HandleSelection(EntMan, MainCamera.GetComponent(Camera)),
+			
+			Editor.HandleSelection(EntMan, MainCamera.GetComponent(Camera));
+			},
 		EditorSysMan.Update.bind(EditorSysMan),
-		() => Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan)),
-		() => Input.EndInputBlock(),
-		() => Editor.RenderSelection(EntMan, MainCamera.GetComponent(Camera)),
-		() => RenderLayers.CompositeLayers(),
+		() => {
+			Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan));
+			Input.EndInputBlock();
+			Editor.RenderSelection(EntMan, MainCamera.GetComponent(Camera));
+			RenderLayers.CompositeLayers();
+			},
 		]
 	);
 	
