@@ -144,7 +144,7 @@ export default class Factory
 	{
 		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let pos = new WorldPos(position);
-		let partSys = new ParticleEmitter(spritePath, renderLayer, Factory.AssetManager.LoadAsset(spritePath));
+		let partSys = new ParticleEmitter(renderLayer, Factory.AssetManager.LoadAsset(spritePath));
 		partSys.SpaceMode = spaceMode;
 		partSys.ApplyEmitConfiguration(...params);
 		let ent = new Entity("Particle", 
@@ -165,6 +165,7 @@ export default class Factory
 				"WorldPosition-position",
 				"ParticleEmitter-RenderEnabled",
 				"ParticleEmitter-RenderLayer",
+				"ParticleEmitter-SpriteAsset",
 				"ParticleEmitter-Paused",
 				"ParticleEmitter-SpaceMode",
 				"ParticleEmitter-GravityScale",

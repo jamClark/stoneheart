@@ -54,6 +54,7 @@ export default class AssetManager
 		return false;
 	}
 	
+	
 	/// 
 	/// Returns a pattern object given a previously loaded sprite and a pattern type.
 	/// 
@@ -94,6 +95,29 @@ export default class AssetManager
 		}
 		
 		return new Promise((resolve, fail) => { fail("Could not determine file extension");});
+	}
+	
+	
+	/// 
+	/// 
+	/// 
+	GetDirectResource(path)
+	{
+		let extPattern = /\.[0-9a-z]+$/i;
+		let i = path.search(extPattern);
+		if(i > 0)
+		{
+			let ext = path.slice(i, path.length);
+			if(ext == ".jpg" || ext == ".png")
+				return this.#Images.get(path);
+			else if(ext == ".mp3" || ext == ".wav")
+				return this.#AudioClips.get(path);
+			else if(ext == ".anim")
+				return this.#Anims.get(path);
+			throw new Error("Invalid asset type passed to AssetManager.LoadAsset(): " + ext);
+		}
+		
+		throw new Error("Could not determine file extension");
 	}
 	
 	/// 

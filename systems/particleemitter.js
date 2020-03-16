@@ -22,15 +22,13 @@ export default class ParticleEmitter extends BaseComponent
 	#Paused = false;
 	#PauseStart;
 	
-	constructor(poolId, renderLayer, spriteAsset)
+	constructor(renderLayer, spriteAsset)
 	{
 		super(WorldPos, SpriteRenderer, Particle);
+		
+		this.SpriteAsset = null;
 		if(ParticleEmitter.Systems == null) ParticleEmitter.Systems = [];
 		spriteAsset.then(result => { this.SpriteAsset = result; });
-		this.#PoolId = poolId;
-		
-		if(!Lazarus.IsDefined(poolId))
-			Lazarus.Define(poolId, 5, 1000, ParticleEmitter.GenerateParticle, this);
 		
 		
 		//system configuration
@@ -77,6 +75,17 @@ export default class ParticleEmitter extends BaseComponent
 			this.MaxStartVelY = yield 1;
 			return 1;
 		}
+	}
+	
+	get PoolId()
+	{
+		if(this.SpriteAsset == null)
+			throw new Error("Sprite asset not ready. Cannot obtain a pool id for this particle emitter.");
+		
+		if(!Lazarus.IsDefined(this.SpriteAsset.src))
+			Lazarus.Define(this.SpriteAsset.src, 5, 1000, ParticleEmitter.GenerateParticle, this);
+		
+		return this.SpriteAsset.src;
 	}
 	
 	OnEnable()
@@ -157,7 +166,7 @@ export default class ParticleEmitter extends BaseComponent
 		if(this.SpriteAsset == null)
 			return;
 		
-		let ent = Lazarus.Summon(this.#PoolId);
+		let ent = Lazarus.Summon(this.PoolId);
 		
 		//reset state
 		let systemTrans = this.Entity.GetComponent(WorldPos);

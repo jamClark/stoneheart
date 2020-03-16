@@ -3,6 +3,7 @@ import Factory from './factory.js';
 import Vector2 from './../core/vector2.js';
 import AssetManager from './../core/assetmanager.js';
 import * as Editor from './sceneeditor.js';
+import Assets from './assettable.js';
 
 
 /// 
@@ -16,16 +17,18 @@ export class Inspector
 	#Camera;
 	#Enabled;
 	
+	#AssetManager;
 	#AltDiv;
 	#InspectorDiv;
 	#Bindings = [];
 	
-	constructor(rootDiv, canvas, factory, camera)
+	constructor(rootDiv, canvas, factory, camera, assetManager)
 	{
 		this.#Factory = factory;
 		this.#Root = rootDiv;
 		this.#Canvas = canvas;
 		this.#Camera = camera;
+		this.#AssetManager = assetManager;
 		
 		this.#InspectorDiv = document.createElement('div');
 		this.#InspectorDiv.id = "Inspector"
@@ -197,6 +200,18 @@ export class Inspector
 					this.DrawBoolField(parentDiv, bindSrc[0], bindSrc[1], fieldName);
 					break;
 				}
+				default:
+				{
+					let s = param[0].split(".");
+					if(s.length > 1 && s[0] == 'Assets')
+					{
+						//we want to display a list of asset strings in a dropdown
+						let assetSet = Object.values(Assets.GetAssetsOfType(s[1]));
+						if(assetSet != null)
+							this.DrawAssetDropdown(parentDiv, bindSrc[0], bindSrc[1], fieldName, assetSet, 150);
+					}
+					break;
+				}
 			}
 		}
 		
@@ -211,12 +226,13 @@ export class Inspector
 		let titleElm = document.createElement('label');
 		let inputElm = document.createElement('input');
 		let lineBreakDiv = document.createElement('div');
+		lineBreakDiv.class = "InspectorLineBreak";
 		inputDiv.appendChild(titleElm);
 		inputDiv.appendChild(inputElm);
 		parentDiv.appendChild(inputDiv);
 		parentDiv.appendChild(lineBreakDiv);
 		
-		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
 		titleElm.style = "padding-right: 5px";
@@ -236,45 +252,152 @@ export class Inspector
 		let titleElm = document.createElement('label');
 		let inputElm = document.createElement('input');
 		let lineBreakDiv = document.createElement('div');
+		lineBreakDiv.class = "InspectorLineBreak";
 		
 		inputDiv.appendChild(titleElm);
 		inputDiv.appendChild(inputElm);
 		parentDiv.appendChild(inputDiv);
 		parentDiv.appendChild(lineBreakDiv);
 		
-		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
 		titleElm.style = "padding-right: 5px";
 		
-		inputElm.style = `width:${inputWidth?inputWidth:100}px`;
+		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
 		inputElm.inputmode = "numeric";
 		inputElm.value = obj[property];
 		
 		this.Bind(inputElm, "oninput", "value", obj, property);
 	}
-		
+	
 	/// 
 	/// 
 	/// 
-	DrawEnumDropdown(parentDiv, obj, property, label, enumSet)
+	DrawAssetDropdown(parentDiv, obj, property, label, list, inputWidth)
 	{
 		let inputDiv = document.createElement('div');
 		let titleElm = document.createElement('label');
 		let inputElm = document.createElement('select');
 		let lineBreakDiv = document.createElement('div');
+		lineBreakDiv.class = "InspectorLineBreak";
 		inputDiv.appendChild(titleElm);
 		inputDiv.appendChild(inputElm);
 		parentDiv.appendChild(inputDiv);
 		parentDiv.appendChild(lineBreakDiv);
 		
-		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
 		titleElm.style = "padding-right: 5px";
 		
 		
-		inputElm.style = "width:100px;"
+		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		for(let e of list)
+		{
+			let option = document.createElement('option');
+			option.innerHTML = e;
+			option.value = e;
+			inputElm.appendChild(option);
+		}
+		
+		let actualValue = obj[property];
+		let index = list.indexOf(obj[property]);
+		inputElm.selectedIndex = index > -1 ? index : 0;
+		console.log("PROP: " + obj.type + "." + property);
+		this.Bind(inputElm, "oninput", "selectedIndex", obj, property, 
+				(value) => 
+				{
+					//HACK ALERT: We can't load resources here! They *must* already exist in the AssetManager for this to work!!
+					//ELEMENT-TO-PROP
+					console.log("ASSET: " + list[value]);
+					return this.#AssetManager.GetDirectResource(list[value]);
+				},
+				(value) =>
+				{
+					//need the image path but it also needs the domain info stripped out
+					let url = window.location.href;
+					let urlSplit = url.split('/');
+					let domain = urlSplit[0] + "//" + urlSplit[2];
+					let name = "." + value.src.split(domain).pop();
+					
+					//PROP-TO-ELEMENT
+					let index = list.indexOf(name);
+					console.log("INDEX: " + name);
+					return index > -1 ? index : 0;
+				});
+	}
+	
+	/// 
+	/// 
+	/// 
+	DrawListDropdown(parentDiv, obj, property, label, list, inputWidth)
+	{
+		let inputDiv = document.createElement('div');
+		let titleElm = document.createElement('label');
+		let inputElm = document.createElement('select');
+		let lineBreakDiv = document.createElement('div');
+		lineBreakDiv.class = "InspectorLineBreak";
+		inputDiv.appendChild(titleElm);
+		inputDiv.appendChild(inputElm);
+		parentDiv.appendChild(inputDiv);
+		parentDiv.appendChild(lineBreakDiv);
+		
+		inputDiv.className = 'InspectorElementDiv';
+		
+		titleElm.innerHTML = `${label}:`;
+		titleElm.style = "padding-right: 5px";
+		
+		
+		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		for(let e of list)
+		{
+			let option = document.createElement('option');
+			option.innerHTML = e;
+			option.value = e;
+			inputElm.appendChild(option);
+		}
+		
+		let actualValue = obj[property];
+		console.log("ACTUAL: " + actualValue);
+		let index = list.indexOf(obj[property]);
+		inputElm.selectedIndex = index > -1 ? index : 0;
+		this.Bind(inputElm, "oninput", "selectedIndex", obj, property, 
+				(value) => 
+				{
+					//ELEMENT-TO-PROP
+					return list[value];
+				},
+				(value) =>
+				{
+					//PROP-TO-ELEMENT
+					let index = list.indexOf(value);
+					return index > -1 ? index : 0;
+				});
+	}
+		
+	/// 
+	/// 
+	/// 
+	DrawEnumDropdown(parentDiv, obj, property, label, enumSet, inputWidth)
+	{
+		let inputDiv = document.createElement('div');
+		let titleElm = document.createElement('label');
+		let inputElm = document.createElement('select');
+		let lineBreakDiv = document.createElement('div');
+		lineBreakDiv.class = "InspectorLineBreak";
+		inputDiv.appendChild(titleElm);
+		inputDiv.appendChild(inputElm);
+		parentDiv.appendChild(inputDiv);
+		parentDiv.appendChild(lineBreakDiv);
+		
+		inputDiv.className = 'InspectorElementDiv';
+		
+		titleElm.innerHTML = `${label}:`;
+		titleElm.style = "padding-right: 5px";
+		
+		
+		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
 		for(let e of enumSet)
 		{
 			let option = document.createElement('option');
@@ -321,13 +444,14 @@ export class Inspector
 		let xElm = document.createElement('input');
 		let yElm = document.createElement('input');
 		let lineBreakDiv = document.createElement('div');
+		lineBreakDiv.class = "InspectorLineBreak";
 		inputDiv.appendChild(titleElm);
 		inputDiv.appendChild(xElm);
 		inputDiv.appendChild(yElm);
 		parentDiv.appendChild(inputDiv);
 		parentDiv.appendChild(lineBreakDiv);
 		
-		inputDiv.style = "display:inline-block; white-space:nowrap; margin:8px;";
+		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
 		titleElm.style = "padding-right: 5px";

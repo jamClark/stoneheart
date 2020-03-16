@@ -70,7 +70,7 @@ export function AppStart(canvas)
 	let MainCamera = Factory.CreateCamera(0, 0, RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
 	ToolPallet = new Pallet(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
-	InspectorPallet = new Inspector(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
+	InspectorPallet = new Inspector(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera), AssetMan);
 	
 	//create and register global systems
 	//TODO: We need a more automated way of doing this... if only javascript had simple RTTI :(

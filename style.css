@@ -84,6 +84,15 @@ body
 	color:white;
 }
 
+.InspectorElementDiv
+{
+	display:inline-block;
+	white-space:nowrap; 
+	margin:8px; 
+	margin-top:4px;
+	margin-bottom:4px;
+}
+
 .ToolIcon
 {
 	margin:5px;
@@ -93,7 +102,12 @@ body
 	height:64px;
 	background-color:black;
 	color:white;
-	background-size:100%; 100%;
+	background-size:100%;
+}
+
+.InspectorLineBreak
+{
+	height:1px;
 }
 
 /*Removes floating states.*/
