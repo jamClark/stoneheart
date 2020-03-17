@@ -226,9 +226,43 @@ export default class Factory
 	}
 	
 	/// 
+	/// Creates a simple entity that only has a spirte and has no collision or behavior.
+	/// 
+	static async CreateDecorativeEntity(position, renderLayer, spriteAsset)
+	{
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let pos = new WorldPos(position);
+		let sprite = new SpriteRenderer(await Factory.AssetManager.LoadAsset(spriteAsset), renderLayer, 0, 0);
+		let ent = new Entity(
+			"Decorative Entity", 
+			pos,
+			sprite,
+			new SelectionBox(),
+			);
+		
+		Factory.EntityManager.RegisterEntity(ent);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			type: "Decorative Entity",
+			name: "CreateDecorativeEntity",
+			params: 
+			[
+				"Entity-Active",
+				"WorldPosition-position",
+				"SpriteRenderer-Layer",
+				"SpriteRenderer-Sprite",
+			],
+		}
+		
+		return ent;
+	}
+	
+	/// 
 	/// Creates a simple entity that can be animated and has no collision or behavior.
 	/// 
-	static async CreateDecorativeEntity(position, renderLayer, animToPlay, animAsset, spriteAsset)
+	static async CreateDecorativeAnimatedEntity(position, renderLayer, animToPlay, animAsset, spriteAsset)
 	{
 		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let pos = new WorldPos(position);
@@ -250,12 +284,14 @@ export default class Factory
 		ent._factoryInfo =
 		{
 			type: "Decorative Entity (Animated)",
-			name: "CreateDecorativeEntity",
+			name: "CreateDecorativeAnimatedEntity",
 			params: 
 			[
 				"Entity-Active",
 				"WorldPosition-position",
 				"SpriteRenderer-Layer",
+				"SpriteRenderer-Sprite",
+				"SpriteAnimator-AnimAsset",
 			],
 		}
 		

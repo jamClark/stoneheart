@@ -85,7 +85,7 @@ export default class AssetManager
 		if(i > 0)
 		{
 			let ext = path.slice(i, path.length);
-			if(ext == ".jpg" || ext == ".png")
+			if(ext == ".jpg" || ext == ".png" || ext == ".gif")
 				return this._LoadFramework(path, this.#Images, this._LoadImage.bind(this), this.#PendingImageLoads);
 			else if(ext == ".mp3" || ext == ".wav")
 				return this._LoadFramework(path, this.#AudioClips, this._LoadAudioClip.bind(this), this.#PendingAudioClipLoads);
@@ -108,7 +108,7 @@ export default class AssetManager
 		if(i > 0)
 		{
 			let ext = path.slice(i, path.length);
-			if(ext == ".jpg" || ext == ".png")
+			if(ext == ".jpg" || ext == ".png" || ext == ".gif")
 				return this.#Images.get(path);
 			else if(ext == ".mp3" || ext == ".wav")
 				return this.#AudioClips.get(path);
@@ -221,6 +221,11 @@ export default class AssetManager
 			if(request.status == 200)
 			{
 				let animObject = this._GetActuallyUsefulAnimData(request.responseText);
+				let url = window.location.href;
+				let urlSplit = url.split('/');
+				let domain = urlSplit[0] + "//" + urlSplit[2];
+				animObject.src = domain+path.replace('.', ''); //need to remove the leading '.' from any path. NOTE: This will remove extension if there is no leading '.'!!
+				
 				this.#Anims.set(path, animObject);
 				resolve(animObject);
 				for(let p of pendingCallbacks)

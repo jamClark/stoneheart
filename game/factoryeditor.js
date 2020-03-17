@@ -320,7 +320,7 @@ export class Inspector
 					let urlSplit = url.split('/');
 					let domain = urlSplit[0] + "//" + urlSplit[2];
 					let name = "." + value.src.split(domain).pop();
-					
+					console.log("NAME: " + name);
 					//PROP-TO-ELEMENT
 					let index = list.indexOf(name);
 					return index > -1 ? index : 0;
