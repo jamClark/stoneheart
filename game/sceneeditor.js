@@ -203,8 +203,8 @@ export function RenderSelection(entityMan, camera)
 	let cols = entityMan.QueryForEntities(BoxCollider).map(x => x.GetComponent(BoxCollider));
 	for(let col of cols)
 	{
-		if(!col.Entity.Active)
-			Debug.DrawRect(col.WorldRect(col.Entity.GetComponent(WorldPos).position), "white");
+		if(!col.Entity.Active || !col.Enabled)
+			Debug.DrawRect(col.WorldRect(col.Entity.GetComponent(WorldPos).position), "grey");
 	}
 	
 	if(LastSelected == null)

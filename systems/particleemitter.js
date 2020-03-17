@@ -21,6 +21,7 @@ export default class ParticleEmitter extends BaseComponent
 	#LastEmitTime = -1000;
 	#Paused = false;
 	#PauseStart;
+	#Trans;
 	
 	constructor(renderLayer, spriteAsset)
 	{
@@ -29,7 +30,6 @@ export default class ParticleEmitter extends BaseComponent
 		this.SpriteAsset = null;
 		if(ParticleEmitter.Systems == null) ParticleEmitter.Systems = [];
 		spriteAsset.then(result => { this.SpriteAsset = result; });
-		
 		
 		//system configuration
 		this.RenderEnabled = true;
@@ -91,6 +91,7 @@ export default class ParticleEmitter extends BaseComponent
 	OnEnable()
 	{
 		ParticleEmitter.Systems.push(this);
+		this.#Trans = this.Entity.GetComponent(WorldPos);
 	}
 	
 	OnDisable()
@@ -160,7 +161,7 @@ export default class ParticleEmitter extends BaseComponent
 	/// 
 	/// 
 	/// 
-	Emit(pos)
+	Emit()
 	{
 		//do not attempt to emit if we have not finished loading the sprite asset
 		if(this.SpriteAsset == null)
@@ -180,7 +181,18 @@ export default class ParticleEmitter extends BaseComponent
 		
 		let localPos = new Vector2(	RandomRange(this.MinPosX, this.MaxPosX),
 									RandomRange(this.MinPosY, this.MaxPosY));
+		if(this.Space == SpaceMode.World)
+		{
+			trans.SetParent(null);
+			
+		}
+		else 
+		{
+			trans.SetParent(this.#Trans);
+			//trans.position = localPos;
+		}
 		trans.position = systemTrans.position.Add(localPos);
+		
 		this.#ActiveParticles.push(particle);
 	}
 	
@@ -192,9 +204,6 @@ export default class ParticleEmitter extends BaseComponent
 		let worldPos = new WorldPos();
 		let rend = new SpriteRenderer(system.SpriteAsset, system.RenderLayer, 0, 0);
 		let part = new Particle();
-		
-		if(system.Space == SpaceMode.Local)
-			pos.SetParent(system.Entity.GetComponent(WorldPos));
 		
 		//let animator = new SpriteRenderer(spriteAnim);
 		let ent = new Entity(

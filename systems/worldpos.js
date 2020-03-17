@@ -66,7 +66,7 @@ export default class WorldPosition extends BaseComponent
 	
 	SetParent(parent, worldPositionStays = false)
 	{
-		if(!(parent instanceof WorldPos))
+		if(parent != null && !(parent instanceof WorldPosition))
 			throw new Error("Parent of WorldPos transform must be of type WorldPos");
 		
 		this.#Parent = parent;

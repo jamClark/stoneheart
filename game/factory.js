@@ -130,9 +130,45 @@ export default class Factory
 				"WorldPosition-position",
 				"TiledSpriteRenderer-enabled",
 				"TiledSpriteRenderer-Layer",
+				"TiledSpriteRenderer-TextureOffset",
 				"BoxCollider-enabled",
 				"BoxCollider-Width",
 				"BoxCollider-Height",
+				"TiledSpriteRenderer-Sprite",
+			],
+		}
+		
+		return ent;	
+	}
+	
+	static async CreateDecorativeTile(position, width, height, renderLayer, spritePath)
+	{
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let trans = new WorldPos(position);
+		let colliderRect = new Rect(0, 0, width, height);
+		let box = new SelectionBox(width, height);
+		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(spritePath), 
+										       colliderRect, renderLayer);
+		
+		let ent = new Entity("Decorative Tile", trans, renderer, box);
+		Factory.EntityManager.RegisterEntity(ent);
+		
+		//we are linking the tile renderer's width to the selection box
+		ShadowMember(box, 'Width', (value) => renderer.Rect.Width = value);
+		ShadowMember(box, 'Height', (value) => renderer.Rect.Height = value);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			type: "Decorative Tile",
+			name: "CreateDecorativeTile",
+			params: [
+				"Entity-Active",
+				"WorldPosition-position",
+				"TiledSpriteRenderer-Layer",
+				"TiledSpriteRenderer-TextureOffset",
+				"SelectionBox-Width",
+				"SelectionBox-Height",
 				"TiledSpriteRenderer-Sprite",
 			],
 		}
@@ -167,7 +203,7 @@ export default class Factory
 				"ParticleEmitter-RenderLayer",
 				"ParticleEmitter-SpriteAsset",
 				"ParticleEmitter-Paused",
-				"ParticleEmitter-SpaceMode",
+				"ParticleEmitter-Space",
 				"ParticleEmitter-GravityScale",
 				"ParticleEmitter-LoopTime",
 				"ParticleEmitter-MaxParticles",
@@ -187,40 +223,6 @@ export default class Factory
 			],
 		}
 		return ent;
-	}
-	
-	static async CreateDecorativeTile(position, width, height, renderLayer, spritePath)
-	{
-		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
-		let trans = new WorldPos(position);
-		let colliderRect = new Rect(0, 0, width, height);
-		let box = new SelectionBox(width, height);
-		let renderer = new TiledSpriteRenderer(await this.AssetManager.LoadAsset(spritePath), 
-										       colliderRect, renderLayer);
-		
-		let ent = new Entity("Decorative Tile", trans, renderer, box);
-		Factory.EntityManager.RegisterEntity(ent);
-		
-		//we are linking the tile renderer's width to the selection box
-		ShadowMember(box, 'Width', (value) => renderer.Rect.Width = value);
-		ShadowMember(box, 'Height', (value) => renderer.Rect.Height = value);
-		
-		//needed for serialization
-		ent._factoryInfo =
-		{
-			type: "Decorative Tile",
-			name: "CreateDecorativeTile",
-			params: [
-				"Entity-Active",
-				"WorldPosition-position",
-				"TiledSpriteRenderer-Layer",
-				"SelectionBox-Width",
-				"SelectionBox-Height",
-				"TiledSpriteRenderer-Sprite",
-			],
-		}
-		
-		return ent;	
 	}
 	
 	/// 

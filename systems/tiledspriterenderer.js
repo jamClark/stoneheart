@@ -17,6 +17,7 @@ export default class TiledSpriteRenderer extends BaseComponent
 		this.FrameRect = [0, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height];
 		this.Rect = rect;
 		this.Layer = layer;
+		this.TextureOffset = new Vector2(0.0, 0.0);
 	}
 	
 	get Sprite() { return this.#Sprite; }

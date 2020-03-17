@@ -185,7 +185,7 @@ export default class CollisionSystem extends BaseComponentSystem
 		let allColliders = this.#StaticColliders.concat(this.#StaticTriggers);
 		for(let col of allColliders)
 		{
-			if(!allowDisabledColliders && !col.enabled) continue;
+			if(!allowDisabledColliders && (!col.enabled || !col.Entity.ActiveInHierarchy)) continue;
 			if(!(col instanceof BoxCollider))
 				console.log("COl is: " + col);
 			let trans = col.Entity.GetComponent(WorldPos);
@@ -258,7 +258,7 @@ export default class CollisionSystem extends BaseComponentSystem
 			for(let c1 of localStaticColliders)
 			{
 				let c = c1[1];
-				if(!c.enabled) continue;
+				if(!c.enabled || !c.Entity.ActiveInHierarchy) continue;
 				let otherRect = c.WorldRect(c.GetComponent(WorldPos).position);
 				if(myRect.IsOverlapping(otherRect) && (collider.LayerMask & c.LayerMask))
 				{
@@ -276,7 +276,7 @@ export default class CollisionSystem extends BaseComponentSystem
 			for(let t1 of this.#StaticTriggers)
 			{
 				let t = t1[1];
-				if(!t.enabled) continue;
+				if(!t.enabled || !t.Entity.ActiveInHierarchy) continue;
 				let otherRect = t.WorldRect(t.GetComponent(WorldPos).position);
 				if(myRect.IsOverlapping(otherRect) && (collider.LayerMask & t.LayerMask))
 				{ 
@@ -291,7 +291,7 @@ export default class CollisionSystem extends BaseComponentSystem
 		for(let d of this.#DynamicObjects)
 		{
 			if(d == collider) continue; //don't check for self collisions, obviously
-			if(!d.enabled) continue;
+			if(!d.enabled || !d.Entity.ActiveInHierarchy) continue;
 			let otherRect = d.WorldRect(d.GetComponent(WorldPos).position);
 			if(myRect.IsOverlapping(otherRect) && (collider.LayerMask & d.LayerMask))
 			{

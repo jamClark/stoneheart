@@ -4,8 +4,10 @@ import Vector2 from './../core/vector2.js';
 import Rect from './../core/rect.js';
 import WorldPos from './worldpos.js';
 
+let temp = 0;
+
 ///
-///
+/// BUG: Edge case where we have a fractional potion on one axis and the render dest size is smaller on the opposite axis, this causes nothing to be rendered.
 ///
 export default class TiledSpriteRendererSystem extends BaseComponentSystem
 {
@@ -36,32 +38,171 @@ export default class TiledSpriteRendererSystem extends BaseComponentSystem
 		let srcHeight = spriteComp.FrameRect[3];
 		let frameOffsetX = spriteComp.FrameRect[4];
 		let frameOffsetY = spriteComp.FrameRect[5];
-		let originalWidth = spriteComp.FrameRect[6];
-		let originalHeight = spriteComp.FrameRect[7];
 		
 		//get screen world pos
 		let screenRect = new Rect(spriteComp.Rect);
 		screenRect.Center = this.Camera.WorldToView(worldPos.position.Add(screenRect.Center));
 		
-		let scaledWidth = spriteComp.Width * xScale;
-		let scaledHeight = spriteComp.Height * yScale;
-		
-		TiledSpriteRendererSystem.DrawTiledImage(
-			this.#RenderLayer.RequestLayer(spriteComp.Layer).getContext('2d'), 
-			spriteComp.Sprite,
-			//source rect,
-			srcX, srcY, srcWidth, srcHeight,
-			//dest rect
-			screenRect.Left,
-			screenRect.Bottom, //use bottom due to screen-space being flipped on y-axis
-			screenRect.Width,
-			screenRect.Height,
-			xScale, yScale
-			);
+		if(spriteComp.TextureOffset.SqrMag > 0)
+		{
+			TiledSpriteRendererSystem.DrawTiledImageOffset(
+				this.#RenderLayer.RequestLayer(spriteComp.Layer).getContext('2d'), 
+				spriteComp.Sprite,
+				//source rect,
+				srcX, srcY, srcWidth, srcHeight,
+				//dest rect
+				screenRect.Left,
+				screenRect.Bottom, //use bottom due to screen-space being flipped on y-axis
+				screenRect.Width,
+				screenRect.Height,
+				xScale, yScale,
+				spriteComp.TextureOffset.x,
+				spriteComp.TextureOffset.y
+				);
+		}
+		else
+		{
+			TiledSpriteRendererSystem.DrawTiledImage(
+				this.#RenderLayer.RequestLayer(spriteComp.Layer).getContext('2d'), 
+				spriteComp.Sprite,
+				//source rect,
+				srcX, srcY, srcWidth, srcHeight,
+				//dest rect
+				screenRect.Left,
+				screenRect.Bottom, //use bottom due to screen-space being flipped on y-axis
+				screenRect.Width,
+				screenRect.Height,
+				xScale, yScale,
+				);
+		}
 	}
 	
 	/// 
-	/// Helper for rendering an image that is tiled
+	/// Draws a simple tiled-image within a given region of the screen. This version supports tiling offsets but
+	/// can induce drastic performance costs so is not recommened when not needed.
+	/// 
+	static DrawTiledImageOffset(context, image, srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight, xScale, yScale, xOffset, yOffset)
+	{	
+		let xPixelOffset = xOffset * srcWidth * xScale;
+		let yPixelOffset = yOffset * srcHeight * yScale;
+		let xInversePixelOffset = (1 - xOffset) * srcWidth * xScale;
+		let yInversePixelOffset = (1 - yOffset) * srcHeight * yScale;
+		
+		let cellWidth = srcWidth * xScale;
+		let cellHeight = srcHeight * yScale;
+		
+		let xFracNat = (destWidth-xPixelOffset) / cellWidth;
+		let xFrac = destWidth/cellWidth;
+		let xRepeat = Math.floor(xFracNat);
+		xFrac -= xRepeat;
+		xFracNat -= xRepeat;
+		
+		let yFracNat = (destHeight-yPixelOffset) / cellHeight;
+		let yFrac = (destHeight / cellHeight);
+		let yRepeat = Math.floor(yFracNat);
+		yFrac -= yRepeat;
+		yFracNat -= yRepeat;
+		
+		for(let y = 0; y < yRepeat; y++)
+		{		
+			TiledSpriteRendererSystem.DrawHorizontalOffsetSlice(context, image, y,
+										srcX, srcY, srcWidth, srcHeight, 
+										destX, destY, destWidth, cellHeight,
+										xScale, yScale, xOffset, yOffset,
+										xPixelOffset, yPixelOffset, xInversePixelOffset, yInversePixelOffset,
+										cellWidth, cellHeight, xFracNat, xFrac, xRepeat);
+		}
+		
+		
+		//is render area greater than fractional portion?
+		if(yRepeat > 0)//destHeight > yFrac*cellHeight-yPixelOffset)
+		{
+			//TOP SIDE
+			TiledSpriteRendererSystem.DrawHorizontalOffsetSlice(context, image, 0,
+										srcX, srcY+(yInversePixelOffset/yScale), srcWidth, srcHeight, 
+										destX, destY, destWidth, cellHeight,
+										xScale, yScale, xOffset, yOffset,
+										xPixelOffset, 0, xInversePixelOffset, yInversePixelOffset,
+										cellWidth, cellHeight, xFracNat, xFrac, xRepeat);
+			
+		
+			//BOTTOM SIDE
+			TiledSpriteRendererSystem.DrawHorizontalOffsetSlice(context, image, yRepeat,
+										srcX, srcY, srcWidth, yFrac*srcHeight-(yOffset*srcWidth), 
+										destX, destY, destWidth, yFrac*cellHeight-yPixelOffset, 
+										xScale, yScale, xOffset, yOffset,
+										xPixelOffset, yPixelOffset, xInversePixelOffset, yInversePixelOffset,
+										cellWidth, cellHeight, xFracNat, xFrac, xRepeat);
+		}
+		else
+		{
+			
+			//TOP SIDE
+			TiledSpriteRendererSystem.DrawHorizontalOffsetSlice(context, image, 0,
+									srcX, srcY+(yInversePixelOffset/yScale), srcWidth, destHeight/yScale,
+									destX, destY, destWidth, destHeight,
+									xScale, yScale, xOffset, yOffset,
+									xPixelOffset, 0, xInversePixelOffset, yInversePixelOffset,
+									cellWidth, cellHeight, xFracNat, xFrac, xRepeat);
+			if(destHeight > yFrac*cellHeight-yPixelOffset)
+			{
+				//BOTTOM SIDE
+				TiledSpriteRendererSystem.DrawHorizontalOffsetSlice(context, image, yRepeat,
+										srcX, srcY, srcWidth, yFrac*srcHeight-(yOffset*srcWidth), 
+										destX, destY, destWidth, yFrac*cellHeight-yPixelOffset, 
+										xScale, yScale, xOffset, yOffset,
+										xPixelOffset, yPixelOffset, xInversePixelOffset, yInversePixelOffset,
+										cellWidth, cellHeight, xFracNat, xFrac, xRepeat);
+			}
+		}
+			
+	}
+	
+	/// 
+	/// Helper for drawing a horizontal slice of a tiled image region with texture offsets.
+	/// 
+	static DrawHorizontalOffsetSlice(context, image, y, srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight, xScale, yScale, xOffset, yOffset,
+			xPixelOffset, yPixelOffset, xInversePixelOffset, yInversePixelOffset, cellWidth, cellHeight, xFracNat, xFrac, xRepeat)
+	{
+		for(let x = 0; x < xRepeat; x++)
+		{
+			context.drawImage(image, srcX, srcY, srcWidth, srcHeight, 
+							xPixelOffset + destX+(x*cellWidth), yPixelOffset + destY+(y*cellHeight),
+							cellWidth, destHeight);
+		}
+		
+		if(xRepeat > 0)//destWidth > xFrac*cellWidth-xPixelOffset)
+		{
+			//LEFT SIDE - KEEP THIS!!!
+			context.drawImage(image, srcX+(xInversePixelOffset/xScale), srcY, xPixelOffset/xScale, srcHeight, 
+						destX, yPixelOffset+destY+(y*cellHeight),
+						xPixelOffset, destHeight);
+			
+			//RIGHT SIDE
+			context.drawImage(image, srcX, srcY, xFrac*srcWidth-(xOffset*srcWidth), srcHeight, 
+						xPixelOffset + destX+(xRepeat*cellWidth), yPixelOffset+destY+(y*cellHeight),
+						xFrac*cellWidth-xPixelOffset, destHeight);
+		}
+		else
+		{
+			//LESS THAN THE FRACTIONAL PART!
+			context.drawImage(image, srcX+(xInversePixelOffset/xScale), srcY, destWidth/xScale, srcHeight, 
+						destX, yPixelOffset+destY+(y*cellHeight),
+						destWidth, destHeight);
+			if(destWidth > xFrac*cellWidth-xPixelOffset)
+			{
+				//RIGHT SIDE
+				context.drawImage(image, srcX, srcY, xFrac*srcWidth-(xOffset*srcWidth), srcHeight, 
+							xPixelOffset + destX+(xRepeat*cellWidth), yPixelOffset+destY+(y*cellHeight),
+							xFrac*cellWidth-xPixelOffset, destHeight);
+			}
+			
+		}
+	}
+	
+	/// 
+	/// Draws a simple tiled-image within a given region of the screen. This version does not support tiling offsets but will
+	/// perform much faster in most cases.
 	/// 
 	static DrawTiledImage(context, image, srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight, xScale, yScale)
 	{	
@@ -85,13 +226,15 @@ export default class TiledSpriteRendererSystem extends BaseComponentSystem
 								destX+(x*cellWidth), destY+(y*cellHeight),
 								cellWidth, cellHeight);
 			}
+			
 			//fractional part on x-axis
 			if(xFrac > 0)
 			{
 				context.drawImage(image, srcX, srcY, xFrac*srcWidth, srcHeight, 
 								destX+(xRepeat*cellWidth), destY+(y*cellHeight),
-								cellWidth*xFrac, cellHeight);
+								xFrac*cellWidth, cellHeight);
 			}
+			
 		}
 		
 		//fractional part on y-axis
@@ -109,10 +252,9 @@ export default class TiledSpriteRendererSystem extends BaseComponentSystem
 			{
 				context.drawImage(image, srcX, srcY, xFrac*srcWidth, yFrac*srcHeight, 
 								destX+(xRepeat*cellWidth), destY+(yRepeat*cellHeight),
-								cellWidth*xFrac, cellHeight*yFrac);
+								xFrac*cellWidth, yFrac*cellHeight);
 			}
 		}
-		
 	}
 	
 }

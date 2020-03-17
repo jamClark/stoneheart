@@ -7,7 +7,9 @@ import Assets from './assettable.js';
 
 
 /// 
-/// 
+/// HACK ALERT: DrawAssetDropdown accesses images directly without the use of promises so it 
+///				is essential that all images that will be displayed in the dropdown list are
+///				loaded ahead of time.
 /// 
 export class Inspector
 {
@@ -304,13 +306,11 @@ export class Inspector
 		let actualValue = obj[property];
 		let index = list.indexOf(obj[property]);
 		inputElm.selectedIndex = index > -1 ? index : 0;
-		console.log("PROP: " + obj.type + "." + property);
 		this.Bind(inputElm, "oninput", "selectedIndex", obj, property, 
 				(value) => 
 				{
 					//HACK ALERT: We can't load resources here! They *must* already exist in the AssetManager for this to work!!
 					//ELEMENT-TO-PROP
-					console.log("ASSET: " + list[value]);
 					return this.#AssetManager.GetDirectResource(list[value]);
 				},
 				(value) =>
@@ -323,7 +323,6 @@ export class Inspector
 					
 					//PROP-TO-ELEMENT
 					let index = list.indexOf(name);
-					console.log("INDEX: " + name);
 					return index > -1 ? index : 0;
 				});
 	}
