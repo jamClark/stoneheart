@@ -42,6 +42,11 @@ export default class Vector2
 		//return Mathf.DeltaAngle(a, b);
 	}
 	
+	toString()
+	{
+		return `Vector2(${this.x},${this.y})`;
+	}
+	
 	get SqrMag()
 	{
 		return (this.x * this.x) + (this.y * this.y);

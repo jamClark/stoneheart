@@ -2,6 +2,7 @@ import BaseComponentSystem from './../ecs/basecomponentsystem.js';
 import Input from './../core/input.js';
 import Time from './../core/time.js';
 import Vector2 from './../core/vector2.js';
+import {Audio} from './../core/audio.js';
 
 import CharacterController from './charactercontroller.js';
 import PlayerInputReader from  './playerinputreader.js';
@@ -74,7 +75,7 @@ export default class CharacterControllerSystem extends BaseComponentSystem
 		if(body.IsGrounded)
 		{
 			if(!this.WasGrounded && Time.time - this.#LastGroundedTime > 0.25) //stop sound from playing to frequently
-				controller.LandSound.replay(LAND_VOLUME);
+				Audio.PlayOnce(controller.LandSound, LAND_VOLUME, body.Position);
 			
 			this.#LastGroundedTime = Time.time;
 		}
@@ -86,7 +87,7 @@ export default class CharacterControllerSystem extends BaseComponentSystem
 		if(this.JumpPressed && this.IsGrounded && body.Velocity.y < MotionThreshold)
 		{
 			body.AddImpulse(new Vector2(0, controller.JumpForce));
-			controller.JumpSound.replay(JUMP_VOLUME);
+			Audio.PlayOnce(controller.JumpSound, JUMP_VOLUME, body.Position);
 		}
 		
 		//show appropriate anims

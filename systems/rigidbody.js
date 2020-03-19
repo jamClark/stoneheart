@@ -29,6 +29,8 @@ export default class Rigidbody extends BaseComponent
 	set Dampen(f) { this.#Dampen = (f > 1) ? 1 : (f < 0) ? 0 : f; }
 	get Dampen() { return this.#Dampen; }
 	
+	get Position() { return this.#WorldPos.position; }
+	
 	
 	/// 
 	/// Removes all velocity and acceleration that is in the direction of the supplied vector.

@@ -1,3 +1,4 @@
+import {AudioClip} from './audio.js';
 
 /// 
 /// 
@@ -13,11 +14,15 @@ export default class AssetManager
 	#PendingAudioClipLoads = [];
 	#PendingAnimLoads = [];
 	
-	#Context;
+	#CanvasContext;
+	#AudioContext;
 	
-	constructor(context)
+	
+	
+	constructor(canvasContext, audioContext)
 	{
-		this.#Context = context;
+		this.#CanvasContext = canvasContext;
+		this.#AudioContext = audioContext;
 		
 		//append a couple useful methods to the HTMLAudioElement object
 		if(typeof Audio.prototype.replay === 'undefined')
@@ -67,7 +72,7 @@ export default class AssetManager
 		let result = this.#Patterns.get(id);
 		if(result == undefined)
 		{
-			result = this.#Context.createPattern(sprite, repetition);
+			result = this.#CanvasContext.createPattern(sprite, repetition);
 			this.#Patterns.set(id, result);
 		}
 		
@@ -88,7 +93,7 @@ export default class AssetManager
 			if(ext == ".jpg" || ext == ".png" || ext == ".gif")
 				return this._LoadFramework(path, this.#Images, this._LoadImage.bind(this), this.#PendingImageLoads);
 			else if(ext == ".mp3" || ext == ".wav")
-				return this._LoadFramework(path, this.#AudioClips, this._LoadAudioClip.bind(this), this.#PendingAudioClipLoads);
+				return this._LoadFramework(path, this.#AudioClips, this._LoadAudioBuffer.bind(this), this.#PendingAudioClipLoads);
 			else if(ext == ".anim")
 				return this._LoadFramework(path, this.#Anims, this._LoadAespriteAnim.bind(this), this.#PendingAnimLoads);
 			else return new Promise((resolve, fail) => { fail("Invalid asset type passed to AssetManager.LoadAsset(): " + ext);});
@@ -175,6 +180,47 @@ export default class AssetManager
 	/// 
 	/// Specific load handler for sound assets.
 	/// 
+	_LoadAudioBuffer(path, resolve, fail, pendingCallbacks)
+	{
+		let outterThis = this;
+		var request = new XMLHttpRequest();
+		request.open('GET', path, true);
+		request.responseType = 'arraybuffer';
+		
+		let clip = new AudioClip();
+		clip.src = path;
+		request.onload = () =>
+		{
+			outterThis.#AudioContext.decodeAudioData(request.response, 
+				//success
+				(buffer) =>
+				{
+					clip.Data = buffer;
+					outterThis.#AudioClips.set(path, clip);
+					resolve(clip);
+					for(let p of pendingCallbacks)
+						p[0](clip);
+					pendingCallbacks.length = 0;
+				}, 
+				//error
+				() =>
+				{
+					outterThis.#AudioClips.delete(path);
+					for(let p of pendingCallbacks)
+						p[1]("Could not access sound file at: " + path);
+					fail("Could not access sound file at: " + path);
+					pendingCallbacks.length = 0;
+				});
+		}
+		request.send();
+	}
+	
+	/*
+	/// 
+	/// Specific load handler for sound assets.
+	///
+	/// NOTE: This has been depreciated in favor of _LoadAudioBuffer()!!
+	/// 
 	_LoadAudioClip(path, resolve, fail, pendingCallbacks)
 	{
 		let snd = new Audio();
@@ -198,6 +244,7 @@ export default class AssetManager
 		snd.src = path;
 		snd.load();
 	}
+	*/
 	
 	/// 
 	/// Specific load handler for Aesprite animations.

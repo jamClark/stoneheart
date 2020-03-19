@@ -4,6 +4,7 @@ import Time from './core/time.js';
 import AppState from './core/appstate.js';
 import AppStateMachine from './core/appstatemachine.js';
 import DebugTools from './core/debugtools.js';
+import {Audio} from './core/audio.js';
 import AssetManager from './core/assetmanager.js';
 import {LoadFileSync} from './core/filereader.js';
 import Entity from './ecs/entity.js';
@@ -53,6 +54,8 @@ const AllowLiveSceneEditing = true;
 /// 
 export function AppStart(canvas)
 {
+	Audio.Init(new Rect(0, 0, canvas.width+128, canvas.height+128), 5);
+	
 	//global initialization
 	EntMan = new EntityManager();
 	SysMan = new SystemManager(EntMan);
@@ -61,7 +64,7 @@ export function AppStart(canvas)
 	let canvasContext = canvas.getContext("2d");
 	canvasContext.imageSmoothingEnabled = false;
 	RenderLayers = new RenderLayer(canvas);
-	AssetMan = new AssetManager(canvasContext);
+	AssetMan = new AssetManager(canvasContext, Audio.Context);
 	SceneMan = new SceneManager(AssetMan, EntMan, SysMan);
 	
 	let AnimSys = new SpriteAnimatorSystem();
@@ -82,7 +85,6 @@ export function AppStart(canvas)
 	let CharacterControllerSys = new CharacterControllerSystem();
 	let SmoothFollowerSys = new SmoothFollowerSystem();
 	let ParticleEmitterSys = new ParticleEmitterSystem(RenderSys);
-	
 	
 	AppFSM = new AppStateMachine();
 	AppFSM.PushState(AppStateMachine.EmptyLoopState);
@@ -134,6 +136,7 @@ export function AppStart(canvas)
 				Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan));
 				Input.EndInputBlock();
 				RenderLayers.CompositeLayers();
+				Audio.Instance.Update(MainCamera.GetComponent(WorldPos).position);
 			},
 		]
 	);
@@ -160,6 +163,7 @@ export function AppStart(canvas)
 			Input.EndInputBlock();
 			Editor.RenderSelection(EntMan, MainCamera.GetComponent(Camera));
 			RenderLayers.CompositeLayers();
+			Audio.Instance.Update(MainCamera.GetComponent(WorldPos).position);
 			},
 		]
 	);

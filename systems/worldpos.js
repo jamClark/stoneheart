@@ -19,6 +19,7 @@ export default class WorldPosition extends BaseComponent
 		else this.#LocalPos = new Vector2(x, y);
 	}
 	
+	
 	get localPosition() { return new Vector2(this.#LocalPos); }
 	get position()
 	{
