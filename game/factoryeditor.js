@@ -237,6 +237,7 @@ export class Inspector
 		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
+		titleElm.className = 'InspectorLabel';
 		titleElm.style = "padding-right: 5px";
 		
 		inputElm.type = "checkbox";
@@ -264,6 +265,7 @@ export class Inspector
 		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
+		titleElm.className = 'InspectorLabel';
 		titleElm.style = "padding-right: 5px";
 		
 		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
@@ -291,6 +293,7 @@ export class Inspector
 		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
+		titleElm.className = 'InspectorLabel';
 		titleElm.style = "padding-right: 5px";
 		
 		
@@ -344,6 +347,7 @@ export class Inspector
 		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
+		titleElm.className = 'InspectorLabel';
 		titleElm.style = "padding-right: 5px";
 		
 		
@@ -392,6 +396,7 @@ export class Inspector
 		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
+		titleElm.className = 'InspectorLabel';
 		titleElm.style = "padding-right: 5px";
 		
 		
@@ -428,6 +433,7 @@ export class Inspector
 	{
 		let titleElm = document.createElement('label');
 		titleElm.innerHTML = `<b>${text}</b>`;
+		titleElm.className = 'InspectorLabel';
 		titleElm.style = "margin:8px; font-size: 1.2rem; padding-bottom: 5px; display:block;";
 		parentDiv.appendChild(titleElm);
 	}
@@ -452,6 +458,7 @@ export class Inspector
 		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
+		titleElm.className = 'InspectorLabel';
 		titleElm.style = "padding-right: 5px";
 		
 		xElm.inputmode = "numeric";

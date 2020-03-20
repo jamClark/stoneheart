@@ -61,7 +61,7 @@ export class Audio
 			alert("Web Audio not supported on this browser.");
 		}
 		
-		this.#CullingRect = cullingRect; //world-space rect that is used to determine if sounds can be heard on not whne played.
+		this.#CullingRect = cullingRect; //world-space rect that is used to determine if sounds can be heard on not when played.
 		this.#MaxVoices = maxVoices;
 		
 	}
@@ -228,3 +228,4 @@ export class AudioClip
 	get Data() { return this.#Buffer; }
 	set Data(buffer) { this.#Buffer = buffer; }
 }
+

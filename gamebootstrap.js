@@ -206,6 +206,7 @@ function MoveCamera(evt)
 	}
 }
 
+let RuntimeInputs;
 function EnableEditMode(camera)
 {
 	EditorCamera = camera;
@@ -217,6 +218,8 @@ function EnableEditMode(camera)
 	for(let tool of LoadedTools)
 		ToolPallet.InstallTool(tool);
 	
+	RuntimeInputs = Input.SaveState();
+	Input.ReleaseAllInputs();
 }
 
 function DisableEditMode(collisionSystem)
@@ -229,4 +232,7 @@ function DisableEditMode(collisionSystem)
 	InspectorPallet.Disable();
 	ToolPallet.UninstallAllTools();
 	collisionSystem.RebuildSpacialTree();
+	
+	Input.LoadState(RuntimeInputs);
+	Input.ReleaseAllInputs();
 }

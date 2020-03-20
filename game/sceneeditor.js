@@ -2,6 +2,7 @@ import Vector2 from './../core/vector2.js';
 import Rect from './../core/rect.js';
 import Input from './../core/input.js';
 import {LoadFileSync} from './../core/filereader.js';
+import Time from './../core/time.js';
 
 import WorldPos from './../systems/worldpos.js';
 import SelectionBox from './../systems/selectionbox.js';
@@ -13,6 +14,7 @@ import {Pallet, PalletTool, Inspector, InspectorDefinition} from './../game/fact
 /// 
 /// A variety of functions for live scene-editing.
 /// 
+let HasDragged = false;
 let SelectionInc = 0;
 let CurrentSelection = null;
 let LastSelected = null;
@@ -98,6 +100,7 @@ export function SnapPosition(pos)
 	return new Vector2(Math.round(pos.x / SnapSettings.x) * SnapSettings.x, Math.round(pos.y / SnapSettings.y) * SnapSettings.y);
 }
 
+let InitialSelect = false;
 /// 
 /// 
 /// 
@@ -112,10 +115,24 @@ export function HandleSelection(entityMan, camera)
 	
 	if(CurrentSelection != null)
 	{
+		let trans = CurrentSelection.Entity.GetComponent(WorldPos);
+		if(!HasDragged)
+			HasDragged = trans.position.Sub(BeginDragPos).Mag > 1;
+		
+		if(Input.GetMouseUp(0) && !HasDragged && !InitialSelect)
+		{
+			//selection increment
+			SelectionInc++;
+			DoSelection(entityMan, camera);
+			InitialSelect = false;
+		}
+		
 		if(Input.GetMouseUp(0) || Input.GetMouseDown(0))
 		{
 			//drop
+			HasDragged = false;
 			CurrentSelection = null;
+			InitialSelect = false;
 		}
 		else
 		{
@@ -124,37 +141,45 @@ export function HandleSelection(entityMan, camera)
 			trans.position = SnapPosition(camera.ViewToWorld(Input.MousePosition.Add(SelectionOffset)));
 		}
 	}
-	if(Input.GetMouseDown(0))
+	//initial selection
+	else if(Input.GetMouseDown(0))
 	{
-		let list = GetSelectionAtMouse(entityMan, camera);
-		if(list.length > 0)
-		{
-			//selectand begin dragging
-			if(SelectionInc >= list.length)
-				SelectionInc = 0;
-			CurrentSelection = list[SelectionInc];
-			if(CurrentSelection !== LastSelected)
-			{
-				if(LastSelected != null)
-					InvokeOnDeselectedListeners();
-				InvokeOnSelectedListeners();
-				LastSelected = CurrentSelection;
-			}
-			
-			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
-			SelectionOffset = camera.WorldToView(trans.position).Sub(Input.MousePosition);
-			SelectionInc++;
-		}
-		else
-		{
-			if(LastSelected != null)
-				InvokeOnDeselectedListeners();
-			SelectionInc = 0;
-			CurrentSelection = null;
-			LastSelected = null;
-		}
+		DoSelection(entityMan, camera);
+		if(LastSelected == null) InitialSelect = true;
 	}
+	
 	//TODO: Selection logic here using MouseUp instead of MouseDown
+}
+
+let BeginDragPos;
+/// 
+/// 
+/// 
+function DoSelection(entityMan, camera)
+{
+	let list = GetSelectionAtMouse(entityMan, camera);
+	if(list.length < 1)
+	{
+		//clicked an empty location, deselect last
+		ForceSelection(null);
+		return;
+	}
+	
+	//select and begin dragging operation
+	if(SelectionInc >= list.length)
+		SelectionInc = 0;
+	CurrentSelection = list[SelectionInc];
+	if(CurrentSelection !== LastSelected)
+	{
+		if(LastSelected != null)
+			InvokeOnDeselectedListeners();
+		InvokeOnSelectedListeners();
+		LastSelected = CurrentSelection;
+	}
+	
+	let trans = CurrentSelection.Entity.GetComponent(WorldPos);
+	SelectionOffset = camera.WorldToView(trans.position).Sub(Input.MousePosition);
+	BeginDragPos = trans.position;
 }
 
 /// 

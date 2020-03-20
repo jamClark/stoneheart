@@ -16,11 +16,9 @@ export default class Input
 	static #Blocking = false;
 	static #Inited = false;
 	
+	static #Gamepad;
 	static #GamepadDetected = false;
 	static #GamepadAxesStates = [];
-	static #GamepadButtonStates = [];
-	static #GamepadButtonDown = [];
-	static #GamepadButtonUp = [];
 	
 	static #Canvas;
 	
@@ -28,7 +26,7 @@ export default class Input
 	/// Initializes the input system and begins listening for key events from the 
 	/// given global source. For a browser app, 'window' will usually be passed
 	/// as the 'global' parameter.
-	/// 
+	/// d
 	static Init(global, canvas)
 	{
 		Input.#Canvas = canvas;
@@ -36,6 +34,9 @@ export default class Input
 		Input.MousePosY = 0;
 		if(Input.#Inited) return;
 		Input.#Inited = true;
+		
+		window.onblur = () => { Input.ReleaseAllInputs(); }
+		window.onfocus = () => { Input.ReleaseAllInputs(); }
 		global.addEventListener("keydown", (evt) => Input.InjectKeyDown(evt.code), false);
 		global.addEventListener("keyup", (evt) => Input.InjectKeyUp(evt.code), false);
 		global.addEventListener("gamepadconnected", Input.GamepadConnected);
@@ -49,39 +50,13 @@ export default class Input
 		canvas.onmousedown = (evt) => Input.InjectKeyDown("MOUSE0_"+evt.button);
 		canvas.onmouseup = (evt) => Input.InjectKeyUp("MOUSE0_"+evt.button);
 	}
-	
-	static GetMouse(button)
-	{
-		return Input.GetKey("MOUSE0_"+ button);
-	}
-	
-	static GetMouseDown(button)
-	{
-		return Input.GetKeyDown("MOUSE0_"+button);
-	}
-	
-	static GetMouseUp(button)
-	{
-		return Input.GetKeyUp("MOUSE0_"+button);
-	}
-	
-	static get MousePosition()
-	{
-		return new Vector2(this.MousePosX, this.MousePosY);
-	}
 		
 	static GamepadConnected(evt, connecting)
 	{
 		Input.#GamepadDetected = true;
-		let gamepad = evt.gamepad;
+		Input.#Gamepad = evt.gamepad;
 		
-		for(let b of gamepad.buttons)
-		{
-			Input.#GamepadButtonStates.push(false);
-			Input.#GamepadButtonDown.push(false);
-			Input.#GamepadButtonUp.push(false);
-		}
-		for(let b of gamepad.axes)
+		for(let b of Input.#Gamepad.axes)
 			Input.#GamepadAxesStates.push(0);
 		
 	}
@@ -89,6 +64,73 @@ export default class Input
 	static GamepadDisconnected(evt, connecting)
 	{
 		Input.GamepadDetected = false;
+	}
+	
+	/// 
+	/// Sends a signal as though all currently held inputs were released. This can be
+	/// used to effectively reset the input state in the event that the application looses focus.
+	/// 
+	static ReleaseAllInputs()
+	{
+		//clear out all pending keydowns
+		Input.#PendingKeyDown.clear();
+		
+		//for each key currently down or held, send a keyup
+		for(let k of Input.#KeyDown.keys())
+			Input.InjectKeyUp(k);
+		
+		for(let k of Input.#KeyHeld.keys())
+			Input.InjectKeyUp(k);
+		
+		Input.#KeyDown.clear();
+		Input.#KeyHeld.clear();
+		
+		for(let i = 0; i < Input.#Gamepad.axes.length; i++)
+			Input.#GamepadAxesStates[i] = 0.0;
+	}
+	
+	/// 
+	/// Saves the state of the input system for later restoration.
+	/// 
+	static SaveState()
+	{
+		let copy = function(src) {
+			let dest = new Map();
+			for(let [k,v] of src)
+				dest.set(k, v);
+			return dest;
+		}
+				
+		return {
+			IsInputState: true,
+			PendingKeyDown: copy(Input.#PendingKeyDown),
+			KeyDown: 		copy(Input.#KeyDown),
+			KeyHeld: 		copy(Input.#KeyHeld),
+			PendingKeyUp:	copy(Input.#PendingKeyUp),
+			KeyUp:			copy(Input.#KeyUp),
+		};
+	}
+	
+	/// 
+	/// Restores a previously saved input state.
+	/// 
+	static LoadState(state)
+	{
+		if(!state.IsInputState)
+			throw new Error("Invalid argument. Expected an Input-generated save state object.");
+		
+		let copy = function(src) {
+			let dest = new Map();
+			for(let [k,v] of src)
+				dest.set(k, v);
+			return dest;
+		}
+		
+		Input.#PendingKeyDown = copy(state.PendingKeyDown);
+		Input.#KeyDown = copy(state.KeyDown);
+		Input.#KeyHeld = copy(state.KeyHeld);
+		Input.#PendingKeyUp = copy(state.PendingKeyUp);
+		Input.#KeyUp = copy(state.KeyUp);
 	}
 	
 	/// 
@@ -133,14 +175,13 @@ export default class Input
 		if(gamepad == null)
 			return;
 		
-		
 		for(let i = 0; i < gamepad.buttons.length; i++)
 		{
 			let b = gamepad.buttons[i].pressed;
-			Input.#GamepadButtonDown[i] = (b && !Input.#GamepadButtonStates[i]) ? true : false;
-			Input.#GamepadButtonUp[i] = (!b && Input.#GamepadButtonStates[i]) ? true : false;
-			Input.#GamepadButtonStates[i] = b;
+			if(b) Input.InjectKeyDown("GAMEPAD0_"+i);
+			else Input.InjectKeyUp("GAMEPAD0_"+i);
 		}
+		
 		
 		for(let i = 0; i < gamepad.axes.length; i++)
 			Input.#GamepadAxesStates[i] = gamepad.axes[i];
@@ -186,12 +227,6 @@ export default class Input
 		Input.#PendingKeyUp = new Map();
 		Input.#KeyUp = new Map();
 		
-		for(let i = 0; i < Input.#GamepadButtonStates.length; i++)
-		{
-			Input.#GamepadButtonStates[i] = false;
-			Input.#GamepadButtonDown[i] = false;
-			Input.#GamepadButtonUp[i] = false;
-		}
 		for(let i = 0; i < Input.#GamepadAxesStates.length; i++)
 			Input.#GamepadAxesStates[i] = 0;
 		
@@ -270,32 +305,52 @@ export default class Input
 	/// 
 	/// 
 	/// 
-	static GetButton(index)
+	static GetButton(button)
 	{
-		return Input.#GamepadButtonStates[index];
+		return Input.GetKey("GAMEPAD0_"+ button);
 	}
 	
 	/// 
 	/// 
 	/// 
-	static GetButtonDown(index)
+	static GetButtonDown(button)
 	{
-		return Input.#GamepadButtonDown[index];
+		return Input.GetKeyDown("GAMEPAD0_"+button);
 	}
 	
 	/// 
 	/// 
 	/// 
-	static GetButtonUp(index)
+	static GetButtonUp(button)
 	{
-		return Input.#GamepadButtonUp[index];
+		return Input.GetKeyUp("GAMEPAD0_"+button);
 	}
 	
 	/// 
 	/// 
 	/// 
-	static GetAxis(index)
+	static GetAxis(button)
 	{
-		return Input.#GamepadAxesStates[index];
+		return Input.#GamepadAxesStates[button];
+	}
+	
+	static GetMouse(button)
+	{
+		return Input.GetKey("MOUSE0_"+ button);
+	}
+	
+	static GetMouseDown(button)
+	{
+		return Input.GetKeyDown("MOUSE0_"+button);
+	}
+	
+	static GetMouseUp(button)
+	{
+		return Input.GetKeyUp("MOUSE0_"+button);
+	}
+	
+	static get MousePosition()
+	{
+		return new Vector2(this.MousePosX, this.MousePosY);
 	}
 }

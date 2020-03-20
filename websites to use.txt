@@ -1,3 +1,8 @@
 https://keycode.info/
 
+https://stackoverflow.com/questions/10385779/in-html5-can-i-play-the-same-sound-more-than-once-at-the-same-time
+https://www.html5rocks.com/en/tutorials/webaudio/games/
 
+https://developers.google.com/web/updates/2017/12/audio-worklet
+
+https://stackoverflow.com/questions/49394355/how-do-you-execute-a-server-side-python-script-using-http-server

@@ -43,8 +43,15 @@ export default class TiledSpriteRendererSystem extends BaseComponentSystem
 		let screenRect = new Rect(spriteComp.Rect);
 		screenRect.Center = this.Camera.WorldToView(worldPos.position.Add(screenRect.Center));
 		
+		
+		
 		if(spriteComp.TextureOffset.SqrMag > 0)
 		{
+			//hackish workaround for issues with offsets when the
+			//opposing dimension is less than the size of the original image
+			let textureOffsetX = spriteComp.TextureOffset.x == 0 ? 1 : spriteComp.TextureOffset.x;
+			let textureOffsetY = spriteComp.TextureOffset.y == 0 ? 1 : spriteComp.TextureOffset.y;
+			
 			TiledSpriteRendererSystem.DrawTiledImageOffset(
 				this.#RenderLayer.RequestLayer(spriteComp.Layer).getContext('2d'), 
 				spriteComp.Sprite,
@@ -56,8 +63,8 @@ export default class TiledSpriteRendererSystem extends BaseComponentSystem
 				screenRect.Width,
 				screenRect.Height,
 				xScale, yScale,
-				spriteComp.TextureOffset.x,
-				spriteComp.TextureOffset.y
+				textureOffsetX,
+				textureOffsetY
 				);
 		}
 		else
