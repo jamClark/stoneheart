@@ -160,6 +160,7 @@ export default class AssetManager
 		img.onload = () =>
 		{
 			img._AssetManager = this;
+			img.srcPath = path;
 			this.#Images.set(path, img);
 			resolve(img);
 			for(let p of pendingCallbacks)
@@ -188,7 +189,8 @@ export default class AssetManager
 		request.responseType = 'arraybuffer';
 		
 		let clip = new AudioClip();
-		clip.src = path;
+		clip.srcPath = path;
+		
 		request.onload = () =>
 		{
 			outterThis.#AudioContext.decodeAudioData(request.response, 
@@ -215,37 +217,6 @@ export default class AssetManager
 		request.send();
 	}
 	
-	/*
-	/// 
-	/// Specific load handler for sound assets.
-	///
-	/// NOTE: This has been depreciated in favor of _LoadAudioBuffer()!!
-	/// 
-	_LoadAudioClip(path, resolve, fail, pendingCallbacks)
-	{
-		let snd = new Audio();
-		
-		snd.onloadeddata = () =>
-		{
-			this.#AudioClips.set(path, snd);
-			resolve(snd);
-			for(let p of pendingCallbacks)
-				p[0](snd);
-			pendingCallbacks.length = 0;
-		}
-		snd.onerror = () =>
-		{
-			this.#AudioClips.delete(path);
-			for(let p of pendingCallbacks)
-				p[1]("Could not access sound file at: " + path);
-			fail("Could not access sound file at: " + path);
-			pendingCallbacks.length = 0;
-		}
-		snd.src = path;
-		snd.load();
-	}
-	*/
-	
 	/// 
 	/// Specific load handler for Aesprite animations.
 	/// 
@@ -268,10 +239,11 @@ export default class AssetManager
 			if(request.status == 200)
 			{
 				let animObject = this._GetActuallyUsefulAnimData(request.responseText);
+				animObject.srcPath = path;
 				let url = window.location.href;
 				let urlSplit = url.split('/');
 				let domain = urlSplit[0] + "//" + urlSplit[2];
-				animObject.src = domain+path.replace('.', ''); //need to remove the leading '.' from any path. NOTE: This will remove extension if there is no leading '.'!!
+				animObject.srcPath = domain+path.replace('.', ''); //need to remove the leading '.' from any path. NOTE: This will remove extension if there is no leading '.'!!
 				
 				this.#Anims.set(path, animObject);
 				resolve(animObject);

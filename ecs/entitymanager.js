@@ -15,6 +15,12 @@ export default class EntityManager
 	
 	get Entities() { return [...this._entities]; }
 	
+	HouseKeeping()
+	{
+		this.RemoveDestroyedEntities();
+		this.EnableScheduledEntities();
+	}
+	
 	/// 
 	/// Iterates through all entities and removes any that have been marked for destruction.
 	/// 
@@ -25,12 +31,25 @@ export default class EntityManager
 		{
 			let ent = this._entities[i];
 			
-			if(ent.DestroyPending)
+			if(ent._DestroyPending)
 			{
 				ent.PostDestruction();
 				this._entities.splice(i, 1);
 			}
 			else i++;
+		}
+	}
+	
+	/// 
+	/// Iterates through all entities and invokes _InnerEnable() on any that have been marked for it.
+	/// Typically, entities that have had components added since the last update will have this flag set.
+	/// 
+	EnableScheduledEntities()
+	{
+		for(let ent of this._entities)
+		{
+			if(ent.ActiveInHierarchy && ent._ScheduleForEnabling)
+				ent._InnerEnable();
 		}
 	}
 	

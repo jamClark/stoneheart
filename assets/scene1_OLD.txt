@@ -1,0 +1,6 @@
+{"name":"CreatePlayer","params":[{"x":0,"y":0}]}
+{"name":"CreateWorldBlock","params":[{"x":0,"y":-80},2000,16,1,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":-500,"y":0},64,400,1,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":500,"y":0},64,400,1,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":0,"y":16},64,64,1,"./assets/sprites/tileset1.png"]}
+{"name":"CreateWorldBlock","params":[{"x":-32,"y":-32},64,64,1,"./assets/sprites/tileset1.png"]}

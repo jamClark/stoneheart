@@ -318,13 +318,7 @@ export class Inspector
 				},
 				(value) =>
 				{
-					//need the image path but it also needs the domain info stripped out
-					let url = window.location.href;
-					let urlSplit = url.split('/');
-					let domain = urlSplit[0] + "//" + urlSplit[2];
-					let name = "." + value.src.split(domain).pop();
-					//PROP-TO-ELEMENT
-					let index = list.indexOf(name);
+					let index = list.indexOf(value.srcPath);
 					return index > -1 ? index : 0;
 				});
 	}
@@ -578,9 +572,9 @@ export class Pallet
 		pos = this.#Camera.ViewToWorld(pos);
 		//setting the positional data. we are assuming the position is always the first element and is
 		//represented as an object with the fields 'x' and 'y' (like a Vector2)
-		toolInfo.Params[0] = new Vector2((pos.x + rawData[0] - rawData[2]),
+		toolInfo.Params[1] = new Vector2((pos.x + rawData[0] - rawData[2]),
 										 (pos.y - rawData[1] + rawData[3]));
-		toolInfo.Params[0] = Editor.SnapPosition(toolInfo.Params[0]);
+		toolInfo.Params[1] = Editor.SnapPosition(toolInfo.Params[1]);
 		this.#Factory[toolInfo.FunctionName](...toolInfo.Params).then( (result) =>{
 			Editor.ForceSelection(result);
 		});

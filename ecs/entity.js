@@ -14,14 +14,10 @@ export default class Entity
 	constructor(name, ...comps)
 	{
 		this.name = name;
-		for(let i = 0; i < comps.length; i++)
-		{
-			this.#Components.push(comps[i]);
-			comps[i]._Entity = this;
-			comps[i].OnAttached();
-		}
-		
 		this.Active = true;
+		for(let i = 0; i < comps.length; i++)
+			this.AddComponent(comps[i]);
+		
 	}
 	
 	set Active(flag)
@@ -30,16 +26,27 @@ export default class Entity
 		{
 			if(this.Active != flag)
 			{
-				for(let comp of this.#Components)
-					comp.OnEnable();
+				this.#Active = flag;
+				if(this.ActiveInHierarchy)
+				{
+					for(let comp of this.#Components)
+					{
+						if(!comp.enabled) comp.OnEnable();
+					}
+				}
 			}
 		}
 		else
 		{
-			if(this.Active != flag)
+			if(this.Active != flag && this.ActiveInHierarchy)
 			{
-				for(let comp of this.#Components)
-					comp.OnDisable();
+				if(this.ActiveInHierarchy)
+				{
+					for(let comp of this.#Components)
+					{
+						if(comp.enabled) comp.OnDisable();
+					}
+				}
 			}
 		}
 		this.#Active = flag;
@@ -79,7 +86,7 @@ export default class Entity
 	Destroy()
 	{
 		//let the manager know we can remove this entity on the next update
-		this.DestroyPending = true;
+		this._DestroyPending = true;
 	}
 	
 	/// 
@@ -250,7 +257,11 @@ export default class Entity
 			this.#Components.push(component);
 			component._Entity = this;
 			component.OnAttached();
-			component._InnerEnable();
+			
+			//schedule this event for next frame.
+			//this lets the manager know to call _InnerEnable() at the beginning of the next frame.
+			component._ScheduleForEnabling = true;
+			this._ScheduleForEnabling = true;
 		}
 		
 		return component;
@@ -300,7 +311,12 @@ export default class Entity
 			return this[s[1]];
 		
 		let comp = this.GetComponent(s[0]);
-		return s[1].split('.').reduce((o,i)=>o[i], comp);
+		let result = s[1].split('.').reduce((o,i)=>o[i], comp);
+		
+		//if it's an object with a '.src' property, let's treat it like and asset and set its string.
+		if(typeof result === 'object' && result.srcPath)
+			return result.srcPath;
+		else return result;
 	}
 	
 	/// 
@@ -326,6 +342,29 @@ export default class Entity
 		//HACK ALERT: This really should be replaced with a
 		//recursive method to avoid performance AND safety issues!
 		eval('comp.' + s[1] + " = value");
+	}
+	
+	/// 
+	/// Called internally during the EntityManager house keeping cycle on any enties that have recently had components added.
+	/// 
+	_InnerEnable()
+	{
+		let count = 0;
+		for(let comp of this.#Components)
+		{
+			if(comp._ScheduleForEnabling)
+			{
+				if(comp.enabled)
+				{
+					delete comp._ScheduleForEnabling;
+					comp._InnerEnable();
+				}
+				else count++;
+			}
+		}
+		
+		if(count == 0)
+			delete this._ScheduleForEnabling;
 	}
 	
 	/// 

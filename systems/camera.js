@@ -1,5 +1,6 @@
 import BaseComponent from './../ecs/basecomponent.js';
-import Vector2 from './../core/vector2.js'
+import Vector2 from './../core/vector2.js';
+import WorldPosition from './worldpos.js';
 
 /// 
 /// Represents a camera in worldspace.
@@ -11,14 +12,17 @@ export default class Camera extends BaseComponent
 	#WorldPosComp;
 	#Canvas;
 	
-	constructor(canvas, virtualX, virtualY, worldPosComp)
+	constructor(canvas, virtualX, virtualY)
 	{
 		super();
 		this.#VirtualX = virtualX;
 		this.#VirtualY = virtualY;
-		
-		this.#WorldPosComp = worldPosComp;
 		this.#Canvas = canvas;
+	}
+	
+	Awake()
+	{
+		this.#WorldPosComp = this.Entity.GetComponent(WorldPosition);
 	}
 	
 	get VirtualX() { return this.#VirtualX; }

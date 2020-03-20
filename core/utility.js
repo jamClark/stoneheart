@@ -1,4 +1,15 @@
 
+/// 
+/// Given a URL with a full path, this will return a relative path for the current domain.
+/// 
+export function StripDomainFromPath(fullpath)
+{
+	let url = window.location.href;
+	let urlSplit = url.split('/');
+	let domain = urlSplit[0] + "//" + urlSplit[2];
+	let relPath = "." + value.src.split(domain).pop();
+	return relPath;
+}
 
 /// 
 /// 

@@ -104,7 +104,7 @@ export default class Factory
 		return ent;
 	}
 	
-	static async CreateWorldBlock(position, width, height, renderLayer, spritePath)
+	static async CreateWorldBlock(active, position, renderEnabled, renderLayer, textureOffset, colliderEnabled, width, height, spritePath)
 	{
 		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let trans = new WorldPos(position);
@@ -141,7 +141,7 @@ export default class Factory
 		return ent;	
 	}
 	
-	static async CreateDecorativeTile(position, width, height, renderLayer, spritePath)
+	static async CreateDecorativeTile(active, position, renderLayer, textureOffset, width, height, spritePath)
 	{
 		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let trans = new WorldPos(position);
@@ -176,63 +176,14 @@ export default class Factory
 		return ent;	
 	}
 	
-	static async CreateParticleEmitter(position, renderLayer, spaceMode, spritePath, ...params)
-	{
-		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
-		let pos = new WorldPos(position);
-		let partSys = new ParticleEmitter(renderLayer, Factory.AssetManager.LoadAsset(spritePath));
-		partSys.SpaceMode = spaceMode;
-		partSys.ApplyEmitConfiguration(...params);
-		let ent = new Entity("Particle", 
-			pos,
-			partSys,
-			new SelectionBox(),
-			);
-		
-		Factory.EntityManager.RegisterEntity(ent);
-		
-		//needed for serialization
-		ent._factoryInfo =
-		{
-			type: "Particle Emitter",
-			name: "CreateParticleEmitter",
-			params:[
-				"Entity-Active",
-				"WorldPosition-position",
-				"ParticleEmitter-RenderEnabled",
-				"ParticleEmitter-RenderLayer",
-				"ParticleEmitter-SpriteAsset",
-				"ParticleEmitter-Paused",
-				"ParticleEmitter-Space",
-				"ParticleEmitter-GravityScale",
-				"ParticleEmitter-LoopTime",
-				"ParticleEmitter-MaxParticles",
-				"ParticleEmitter-EmitRate",
-				"ParticleEmitter-MinLifetime",
-				"ParticleEmitter-MaxLifetime",
-				"ParticleEmitter-MinScale",
-				"ParticleEmitter-MaxScale",
-				"ParticleEmitter-MinPosX",
-				"ParticleEmitter-MaxPosX",
-				"ParticleEmitter-MinPosY",
-				"ParticleEmitter-MaxPosY",
-				"ParticleEmitter-MinStartVelX",
-				"ParticleEmitter-MaxStartVelX",
-				"ParticleEmitter-MinStartVelY",
-				"ParticleEmitter-MaxStartVelY",
-			],
-		}
-		return ent;
-	}
-	
 	/// 
 	/// Creates a simple entity that only has a spirte and has no collision or behavior.
 	/// 
-	static async CreateDecorativeEntity(position, renderLayer, spriteAsset)
+	static async CreateDecorativeEntity(active, position, renderLayer, spritePath)
 	{
 		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let pos = new WorldPos(position);
-		let sprite = new SpriteRenderer(await Factory.AssetManager.LoadAsset(spriteAsset), renderLayer, 0, 0);
+		let sprite = new SpriteRenderer(await Factory.AssetManager.LoadAsset(spritePath), renderLayer, 0, 0);
 		let ent = new Entity(
 			"Decorative Entity", 
 			pos,
@@ -262,12 +213,12 @@ export default class Factory
 	/// 
 	/// Creates a simple entity that can be animated and has no collision or behavior.
 	/// 
-	static async CreateDecorativeAnimatedEntity(position, renderLayer, animToPlay, animAsset, spriteAsset)
+	static async CreateDecorativeAnimatedEntity(active, position, renderLayer, spritePath, animPath, animToPlay)
 	{
 		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
 		let pos = new WorldPos(position);
-		let sprite = new SpriteRenderer(await Factory.AssetManager.LoadAsset(spriteAsset), renderLayer, 0, 0);
-		let animator = new SpriteAnimator(await Factory.AssetManager.LoadAsset(animAsset));
+		let sprite = new SpriteRenderer(await Factory.AssetManager.LoadAsset(spritePath), renderLayer, 0, 0);
+		let animator = new SpriteAnimator(await Factory.AssetManager.LoadAsset(animPath));
 		let ent = new Entity(
 			"Decorative Entity (Animated)", 
 			pos,
@@ -297,5 +248,56 @@ export default class Factory
 		
 		return ent;
 	}
+	
+	static async CreateParticleEmitter(active, position, renderEnabled, renderLayer, spritePath, paused, spaceMode, ...params)
+	{
+		position = new Vector2(position);//this is because we may have just fed in a json deserialized object.
+		let pos = new WorldPos(position);
+		let partSys = new ParticleEmitter(renderLayer, Factory.AssetManager.LoadAsset(spritePath));
+		partSys.SpaceMode = spaceMode;
+		partSys.ApplyEmitConfiguration(...params);
+		let ent = new Entity("Particle", 
+			pos,
+			partSys,
+			new SelectionBox(),
+			);
+		
+		Factory.EntityManager.RegisterEntity(ent);
+		
+		//needed for serialization
+		ent._factoryInfo =
+		{
+			type: "Particle Emitter",
+			name: "CreateParticleEmitter",
+			params:[
+				"Entity-Active",
+				"WorldPosition-position",
+				"ParticleEmitter-RenderEnabled",
+				"ParticleEmitter-RenderLayer",
+				"ParticleEmitter-SpriteAsset",
+				"ParticleEmitter-Paused",
+				"ParticleEmitter-Space",
+				
+				"ParticleEmitter-GravityScale",
+				"ParticleEmitter-LoopTime",
+				"ParticleEmitter-MaxParticles",
+				"ParticleEmitter-EmitRate",
+				"ParticleEmitter-MinLifetime",
+				"ParticleEmitter-MaxLifetime",
+				"ParticleEmitter-MinScale",
+				"ParticleEmitter-MaxScale",
+				"ParticleEmitter-MinPosX",
+				"ParticleEmitter-MaxPosX",
+				"ParticleEmitter-MinPosY",
+				"ParticleEmitter-MaxPosY",
+				"ParticleEmitter-MinStartVelX",
+				"ParticleEmitter-MaxStartVelX",
+				"ParticleEmitter-MinStartVelY",
+				"ParticleEmitter-MaxStartVelY",
+			],
+		}
+		return ent;
+	}
+	
 }
 

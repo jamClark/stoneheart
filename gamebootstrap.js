@@ -68,7 +68,7 @@ export function AppStart(canvas)
 	SceneMan = new SceneManager(AssetMan, EntMan, SysMan);
 	
 	let AnimSys = new SpriteAnimatorSystem();
-	LoadedTools = Editor.DeserializePalletTools(AssetMan, './assets/pallettools.txt');
+	LoadedTools = Editor.DeserializePalletTools(AssetMan, './assets/pallettools.json');
 	Factory.Init(canvas, AssetMan, EntMan, AnimSys);
 	let MainCamera = Factory.CreateCamera(0, 0, RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
@@ -121,30 +121,30 @@ export function AppStart(canvas)
 	AppFSM.MainGameLoopState = new AppState(
 		[
 			() => { 
-				EntMan.RemoveDestroyedEntities();
-				RenderLayers.ClearLayers();
-				Input.BeginInputBlock();
+			EntMan.HouseKeeping();
+			RenderLayers.ClearLayers();
+			Input.BeginInputBlock();
 
-				//debugging and utility stuff
-				if(Input.GetKeyDown("KeyL"))
-					TogglePhysicsDebugDrawing();
-				if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
-					EnableEditMode(MainCamera.GetComponent(Camera));				
-				},
+			//debugging and utility stuff
+			if(Input.GetKeyDown("KeyL"))
+				TogglePhysicsDebugDrawing();
+			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
+				EnableEditMode(MainCamera.GetComponent(Camera));				
+			},
 			SysMan.Update.bind(SysMan),
 			() => {
-				Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan));
-				Input.EndInputBlock();
-				RenderLayers.CompositeLayers();
-				Audio.Instance.Update(MainCamera.GetComponent(WorldPos).position);
+			Time.ConsumeAccumulatedTime(SysMan.FixedUpdate.bind(SysMan));
+			Input.EndInputBlock();
+			RenderLayers.CompositeLayers();
+			Audio.Instance.Update(MainCamera.GetComponent(WorldPos).position);
 			},
 		]
 	);
 	AppFSM.LoadingState = new AppState([]); //TODO: Some kind of universal 'loading' system that ticks when loading
 	AppFSM.SceneEditorState = new AppState(
 		[
-		() => { 
-			EntMan.RemoveDestroyedEntities();
+			() => { 
+			EntMan.HouseKeeping();
 			RenderLayers.ClearLayers();
 			Input.BeginInputBlock();
 			
@@ -158,7 +158,7 @@ export function AppStart(canvas)
 			Editor.HandleSelection(EntMan, MainCamera.GetComponent(Camera));
 			},
 		EditorSysMan.Update.bind(EditorSysMan),
-		() => {
+			() => {
 			Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan));
 			Input.EndInputBlock();
 			Editor.RenderSelection(EntMan, MainCamera.GetComponent(Camera));

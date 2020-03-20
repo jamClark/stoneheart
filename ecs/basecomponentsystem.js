@@ -25,7 +25,7 @@ export default class BaseComponentSystem
 				let enabled = true;
 				for(let comp of matches)
 				{
-					if(!comp.enabled)
+					if(!comp.enabled || comp._ScheduleForEnabling)
 					{
 						enabled = false;
 						continue;
@@ -51,7 +51,7 @@ export default class BaseComponentSystem
 				let enabled = true;
 				for(let comp of matches)
 				{
-					if(!comp.enabled)
+					if(!comp.enabled || comp._ScheduleForEnabling)
 					{
 						enabled = false;
 						continue;

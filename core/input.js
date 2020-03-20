@@ -85,7 +85,7 @@ export default class Input
 		Input.#KeyDown.clear();
 		Input.#KeyHeld.clear();
 		
-		for(let i = 0; i < Input.#Gamepad.axes.length; i++)
+		for(let i = 0; i < Input.#GamepadAxesStates.length; i++)
 			Input.#GamepadAxesStates[i] = 0.0;
 	}
 	

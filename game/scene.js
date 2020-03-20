@@ -24,6 +24,30 @@ export default class SceneManager
 		this.#SysMan = systemManager;
 	}
 	
+	
+	SaveScene(path)
+	{
+		let output = "";
+		for(let ent of this.#EntMan.Entities)
+		{
+			if(ent._factoryInfo != null)
+			{
+				let obj = {
+					type: ent._factoryInfo.type,
+					name: ent._factoryInfo.name,
+					params: [],
+				};
+				
+				for(let param of ent._factoryInfo.params)
+					obj.params.push(ent.GetProperty(param));
+				
+				output += JSON.stringify(obj) + "\n";
+			}
+		}
+		
+		return output;
+	}
+	
 	async LoadScene(path)
 	{	
 		let lines = LoadFileSync(path).split('\n');
@@ -53,15 +77,4 @@ export default class SceneManager
 		}
 	}
 	
-	SaveScene(path)
-	{
-		let output = "";
-		for(let ent of this.#EntMan.Entities)
-		{
-			if(ent._factoryInfo != null)
-				output += JSON.stringify(ent._factoryInfo) + "\n";
-		}
-		
-		return output;
-	}
 }
