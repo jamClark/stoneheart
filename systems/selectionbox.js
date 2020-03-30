@@ -1,8 +1,17 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js'
 import WorldPos from './worldpos.js';
 import BoxCollider from './boxcollider.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
+
+TypedObject.RegisterType("SelectionBox", "BaseComponent", () =>
+{
+	let type = TypedObject.GetType("SelectionBox");
+	type.AddSerializedProp('Width', 'Height');
+	type.AddInspectorProp(["float","Width"], ["float", "Height"]);
+	type.BlacklistInspectorObject();
+});
 
 /// 
 /// Provides a means of selecting an Entity using a mouse during edit-mode.
@@ -18,6 +27,10 @@ export default class SelectionBox extends BaseComponent
 		super();
 		this.#Size = new Vector2(!width?32:width, !height?32:height);
 	}
+	
+	//override these so that we can never disable this component
+	get enabled() { return true; }
+	set enabled(value) {};
 	
 	get WorldRect()
 	{

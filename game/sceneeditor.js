@@ -8,7 +8,8 @@ import WorldPos from './../systems/worldpos.js';
 import SelectionBox from './../systems/selectionbox.js';
 import BoxCollider from './../systems/boxcollider.js';
 import Factory from './../game/factory.js';
-import {Pallet, PalletTool, Inspector, InspectorDefinition} from './../game/factoryeditor.js';
+import Inspector from './../game/inspector.js';
+import {Pallet, PalletTool} from './../game/toolpallet.js';
 
 
 /// 
@@ -16,7 +17,7 @@ import {Pallet, PalletTool, Inspector, InspectorDefinition} from './../game/fact
 /// 
 let HasDragged = false;
 let SelectionInc = 0;
-let CurrentSelection = null;
+let DragSelection = null;
 let LastSelected = null;
 let SelectionOffset = new Vector2();
 let RegisteredEnums = new Map();
@@ -69,13 +70,13 @@ export function RemoveDeselectedListener(handler)
 function InvokeOnSelectedListeners()
 {
 	for(let list of SelectedListeners)
-		list[1].call(list[0], CurrentSelection);
+		list[1].call(list[0], DragSelection);
 }
 
 function InvokeOnDeselectedListeners()
 {
 	for(let list of DeselectedListeners)
-		list[1].call(list[0], CurrentSelection);
+		list[1].call(list[0], DragSelection);
 }
 
 export function GetSelectionAtMouse(entityMan, camera)
@@ -113,42 +114,43 @@ export function HandleSelection(entityMan, camera)
 		return;
 	}
 	
-	if(CurrentSelection != null)
+	if(DragSelection != null)
 	{
-		let trans = CurrentSelection.Entity.GetComponent(WorldPos);
+		let trans = DragSelection.Entity.GetComponent(WorldPos);
 		if(!HasDragged)
 			HasDragged = trans.position.Sub(BeginDragPos).Mag > 1;
 		
-		if(Input.GetMouseUp(0) && !HasDragged && !InitialSelect)
-		{
-			//selection increment
-			SelectionInc++;
-			DoSelection(entityMan, camera);
-			InitialSelect = false;
-		}
-		
 		if(Input.GetMouseUp(0) || Input.GetMouseDown(0))
 		{
-			//drop
-			HasDragged = false;
-			CurrentSelection = null;
+			if(!InitialSelect && !HasDragged)
+			{
+				if(CheckSelection(entityMan, camera) == LastSelected)
+					SelectionInc++;
+				DoSelection(entityMan, camera);
+			}
 			InitialSelect = false;
+			
+			//drop
+			DragSelection = null;
+			HasDragged = false;
 		}
 		else
 		{
 			//drag
-			let trans = CurrentSelection.Entity.GetComponent(WorldPos);
+			let trans = DragSelection.Entity.GetComponent(WorldPos);
 			trans.position = SnapPosition(camera.ViewToWorld(Input.MousePosition.Add(SelectionOffset)));
 		}
 	}
-	//initial selection
-	else if(Input.GetMouseDown(0))
+	else
 	{
-		DoSelection(entityMan, camera);
-		if(LastSelected == null) InitialSelect = true;
+		if(Input.GetMouseDown(0))
+		{
+			let newSelection = CheckSelection(entityMan, camera);
+			if(newSelection != LastSelected)
+				InitialSelect = true;
+			DoSelection(entityMan, camera);
+		}
 	}
-	
-	//TODO: Selection logic here using MouseUp instead of MouseDown
 }
 
 let BeginDragPos;
@@ -162,24 +164,39 @@ function DoSelection(entityMan, camera)
 	{
 		//clicked an empty location, deselect last
 		ForceSelection(null);
-		return;
+		return null;
 	}
 	
 	//select and begin dragging operation
 	if(SelectionInc >= list.length)
 		SelectionInc = 0;
-	CurrentSelection = list[SelectionInc];
-	if(CurrentSelection !== LastSelected)
+	DragSelection = list[SelectionInc];
+	if(DragSelection !== LastSelected)
 	{
 		if(LastSelected != null)
 			InvokeOnDeselectedListeners();
 		InvokeOnSelectedListeners();
-		LastSelected = CurrentSelection;
+		LastSelected = DragSelection;
 	}
 	
-	let trans = CurrentSelection.Entity.GetComponent(WorldPos);
+	let trans = DragSelection.Entity.GetComponent(WorldPos);
 	SelectionOffset = camera.WorldToView(trans.position).Sub(Input.MousePosition);
 	BeginDragPos = trans.position;
+	return LastSelected;
+}
+
+/// 
+/// Checks what the next entity, if any, will be selected given the current state.
+/// 
+function CheckSelection(entityMan, camera)
+{
+	let list = GetSelectionAtMouse(entityMan, camera);
+	if(list < 1) return null;
+	
+	let inc = SelectionInc;
+	if(inc >= list.length)
+		inc = 0;
+	return list[inc];
 }
 
 /// 
@@ -192,7 +209,7 @@ export function ForceSelection(entity)
 		if(LastSelected != null)
 			InvokeOnDeselectedListeners();
 		SelectionInc = 0;
-		CurrentSelection = null;
+		DragSelection = null;
 		LastSelected = null;
 		return;
 	}
@@ -201,16 +218,16 @@ export function ForceSelection(entity)
 		let box = entity.GetComponent(SelectionBox);
 		if(box != null)
 		{
-			CurrentSelection = box;
-			if(CurrentSelection !== LastSelected)
+			DragSelection = box;
+			if(DragSelection !== LastSelected)
 			{
 				if(LastSelected != null)
 					InvokeOnDeselectedListeners();
 				InvokeOnSelectedListeners();
 			}
-			LastSelected = CurrentSelection;
+			LastSelected = DragSelection;
 			SelectionInc = 0;
-			CurrentSelection = null;// this stops us from dragging
+			DragSelection = null;// this stops us from dragging
 		}
 	}
 }
@@ -269,13 +286,6 @@ export function DeserializePalletTools(assetMan, path)
 					let temp = CreateEnum(RegisteredEnums, data.slice(1, data.length));
 					break;
 				}
-				case "INSPECTOR":
-				{
-					let temp = CreateInspectorDef(assetMan, data.slice(1, data.length));
-					if(temp != null) inspectors.push(temp); 
-					else console.log("INSPECTOR definition was invalid. Skipping.");
-					break;
-				}
 				default:
 				{
 					throw new Error("Unknown definition type: " + data[0]);
@@ -293,11 +303,6 @@ export function DeserializePalletTools(assetMan, path)
 export function CreateEnum(enumMap, args)
 {
 	enumMap.set(args[0], args.splice(1,args.length-1));
-}
-
-export function CreateInspectorDef(assetMan, args)
-{
-	return new InspectorDefinition(assetMan, ...args);
 }
 
 export function CreateTool(assetMan, args)

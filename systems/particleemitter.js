@@ -1,3 +1,4 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
@@ -9,6 +10,9 @@ import WorldPos from './worldpos.js';
 import SpriteRenderer from './spriterenderer.js';
 import Particle from './particle.js';
 import {RandomRange} from './../core/utility.js';
+
+
+TypedObject.RegisterType("ParticleEmitter", "BaseComponent");
 
 /// 
 /// An entity component that manages its own internal system for handling the spawning,
@@ -75,6 +79,10 @@ export default class ParticleEmitter extends BaseComponent
 			this.MaxStartVelY = yield 1;
 			return 1;
 		}
+		
+		//TODO: Setup the ghastly beast that is the serialization list for this component!
+		//BaseComponent._RegisterComponentType(this, ParticleEmitter);
+		//BaseComponent._DefineInspector(this, ParticleEmitter);
 	}
 	
 	get PoolId()

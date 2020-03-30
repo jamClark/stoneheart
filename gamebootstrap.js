@@ -18,9 +18,12 @@ import Rect from './core/rect.js';
 //game project imports
 import Assets from './game/assettable.js';
 import Factory from './game/factory.js';
-import {Pallet, Inspector, PalletTool} from './game/factoryeditor.js';
+import {Pallet, PalletTool} from './game/toolpallet.js';
 import SceneManager from './game/scene.js';
 import * as Editor from './game/sceneeditor.js';
+
+import HierarchyEditor from './game/hierarchyeditor.js';
+import InspectorEditor from './game/inspector.js';
 
 //ecs components
 import Camera from './systems/camera.js';
@@ -44,7 +47,8 @@ import {SpaceMode} from './systems/particleemitter.js';
 import SelectionBox from './systems/selectionbox.js';
 
 
-let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, ToolPallet, InspectorPallet, AppFSM;
+let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, AppFSM;
+let  ToolPallet, InspectorPanel, HierarchyPanel;
 let LoadedTools;
 const RenderScale = 2;
 const AllowLiveSceneEditing = true;
@@ -72,8 +76,12 @@ export function AppStart(canvas)
 	Factory.Init(canvas, AssetMan, EntMan, AnimSys);
 	let MainCamera = Factory.CreateCamera(0, 0, RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
-	ToolPallet = new Pallet(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera));
-	InspectorPallet = new Inspector(document.getElementById("RootContainer"), canvas, Factory, MainCamera.GetComponent(Camera), AssetMan);
+	
+	let rootDiv = document.getElementById("RootContainer");
+	let mainCamera = MainCamera.GetComponent(Camera);
+	ToolPallet = new Pallet(rootDiv, canvas, Factory, mainCamera);
+	InspectorPanel = new InspectorEditor("InspectorPanel", "Inspector", rootDiv, canvas, mainCamera, AssetMan);
+	HierarchyPanel = new HierarchyEditor(EntMan, "HierarchyPanel", "Hierarchy", rootDiv, canvas, mainCamera, AssetMan);
 	
 	//create and register global systems
 	//TODO: We need a more automated way of doing this... if only javascript had simple RTTI :(
@@ -128,7 +136,7 @@ export function AppStart(canvas)
 			//debugging and utility stuff
 			if(Input.GetKeyDown("KeyL"))
 				TogglePhysicsDebugDrawing();
-			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
+			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP") && Input.GetKeyDown("KeyO"))
 				EnableEditMode(MainCamera.GetComponent(Camera));				
 			},
 			SysMan.Update.bind(SysMan),
@@ -148,11 +156,9 @@ export function AppStart(canvas)
 			RenderLayers.ClearLayers();
 			Input.BeginInputBlock();
 			
-			if(Input.GetKeyDown("KeyL"))
-				TogglePhysicsDebugDrawing();
-			if(Input.GetKeyDown("KeyK"))
+			if(Input.GetKeyDown("KeyP") && Input.GetKeyDown("KeyK"))
 				console.log(SceneMan.SaveScene());
-			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP"))
+			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP") && Input.GetKeyDown("KeyO"))
 				DisableEditMode(CollisionSys);
 			
 			Editor.HandleSelection(EntMan, MainCamera.GetComponent(Camera));
@@ -214,7 +220,8 @@ function EnableEditMode(camera)
 	window.Debug.DebugDraw = true;
 	AppFSM.PushState(AppFSM.SceneEditorState);
 	ToolPallet.Enable();
-	InspectorPallet.Enable();
+	HierarchyPanel.Enable();
+	InspectorPanel.Enable();
 	for(let tool of LoadedTools)
 		ToolPallet.InstallTool(tool);
 	
@@ -229,7 +236,8 @@ function DisableEditMode(collisionSystem)
 	document.removeEventListener('mousemove', MoveCamera);
 	AppFSM.PopState();
 	ToolPallet.Disable();
-	InspectorPallet.Disable();
+	HierarchyPanel.Disable();
+	InspectorPanel.Disable();
 	ToolPallet.UninstallAllTools();
 	collisionSystem.RebuildSpacialTree();
 	

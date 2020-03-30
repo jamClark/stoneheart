@@ -1,7 +1,9 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Vector2 from './../core/vector2.js';
 import Time from './../core/time.js';
 
+TypedObject.RegisterType("Particle", "BaseComponent");
 
 /// 
 /// State information for a single particle of a particle system.

@@ -1,8 +1,10 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Time from './../core/time.js';
-
 import Rigidbody from './rigidbody.js';
 import Vector2 from './../core/vector2.js';
+
+TypedObject.RegisterType("CharacterController", "BaseComponent");
 
 /// 
 /// 
@@ -31,5 +33,7 @@ export default class CharacterController extends BaseComponent
 		
 		//state
 		this._CurrSpeed = 0;
+		//BaseComponent._RegisterComponentType(this, CharacterController);
+		//BaseComponent._DefineInspector(this, CharacterController);
 	}
 }

@@ -7,6 +7,9 @@ export default class EntityManager
 {
 	#Listeners = new Map();
 	
+	#EntityRegisteredListeners = [];
+	#EntityUnregisteredListeners = [];
+	
 	
 	constructor()
 	{
@@ -14,6 +17,30 @@ export default class EntityManager
 	}
 	
 	get Entities() { return [...this._entities]; }
+	
+	AddEntityRegisteredListener(handler)
+	{
+		this.#EntityRegisteredListeners.push(handler);
+	}
+	
+	RemoveEntityRegisteredListener(handler)
+	{
+		let index = this.#EntityRegisteredListeners.indexOf(handler);
+		if(index >= 0)
+			this.#EntityRegisteredListeners.splice(index, 1);
+	}
+	
+	AddEntityUnregisteredListener(handler)
+	{
+		this.#EntityUnregisteredListeners.push(handler);
+	}
+	
+	RemoveEntityUnregisteredListener(handler)
+	{
+		let index = this.#EntityUnregisteredListeners.indexOf(handler);
+		if(index >= 0)
+			this.#EntityUnregisteredListeners.splice(index, 1);
+	}
 	
 	HouseKeeping()
 	{
@@ -34,7 +61,8 @@ export default class EntityManager
 			if(ent._DestroyPending)
 			{
 				ent.PostDestruction();
-				this._entities.splice(i, 1);
+				if(!this.UnregisterEntity(ent))
+					i++;
 			}
 			else i++;
 		}
@@ -59,6 +87,8 @@ export default class EntityManager
 			throw new Error("Attemping to register a non-Entity object with an EntityManager.");
 		
 		this._entities.push(entity);
+		for(let callback of this.#EntityRegisteredListeners)
+				callback(this, entity);
 		entity._Manager = this;
 	}
 	
@@ -67,10 +97,17 @@ export default class EntityManager
 		if(!(entity instanceof Entity))
 			throw new Error("Attemping to unregister a non-Entity object with an EntityManager.");
 		
+		let result = false;
 		let index = this._entities.indexOf(entity);
 		if(index > -1)
+		{
+			result = true;
 			this._entities.splice(index, 1);
+			for(let callback of this.#EntityUnregisteredListeners)
+				callback(this, entity);
+		}
 		entity._Manager = null;
+		return result;
 	}
 	
 	/// 

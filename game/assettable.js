@@ -38,6 +38,8 @@ export default class Assets
 	{
 		ANA_R: 	"./assets/sprites/ana_right.png",
 		ANA_L: 	"./assets/sprites/ana_left.png",
+		DEMO_1:	"./assets/sprites/tileset1.png",
+		TILE_1:	"./assets/sprites/tileset2.png",
 	}
 	static get Sprites() { return Assets.#Sprites; }
 	

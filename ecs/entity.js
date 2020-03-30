@@ -20,6 +20,8 @@ export default class Entity
 		
 	}
 	
+	get Components() { return [...this.#Components]; }
+	
 	set Active(flag)
 	{
 		if(flag)
@@ -233,6 +235,11 @@ export default class Entity
 		return this.#Components.filter(comp => required.map(req => req.name).includes(comp.type)).length > 0;
 	}
 	
+	HasAnyNamedComponents(...required)
+	{
+		return this.#Components.filter(comp => required.includes(comp.type)).length > 0;
+	}
+	
 	QueryForComponentsByNamedArray(required)
 	{
 		let list = this.#Components.filter(comp => required.includes(comp.type) );
@@ -254,6 +261,10 @@ export default class Entity
 	{
 		if(component != null)
 		{
+			//if this component is already on the entity, check to see if it has the 'AllowMultiple attribute.
+			if(this.HasAnyNamedComponents(component.type) && !BaseComponent.HasAttribute(BaseComponent.AllowMultipleAttrName))
+				return null;
+			
 			this.#Components.push(component);
 			component._Entity = this;
 			component.OnAttached();

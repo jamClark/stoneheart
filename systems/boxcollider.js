@@ -1,9 +1,16 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
 import CollisionSystem from './collisionsystem.js'
 
 
+TypedObject.RegisterType("BoxCollider", "BaseComponent", () =>
+{
+	let type = TypedObject.GetType("BoxCollider");
+	type.AddSerializedProp('Layer', 'LayerMask', 'Width', 'Height', 'IsTrigger', 'IsStatic');
+	type.AddInspectorProp(["enum","Collision Layer"], ["bitmask","Collision Mask"], ["float","Width"], ["float","Height"], ["bool","Trigger"], ["bool","Static"]);
+});
 
 /// 
 /// Represents an AABB collision area.
@@ -34,6 +41,8 @@ export default class BoxCollider extends BaseComponent
 		this.IsStatic = isStatic;
 		this.#CollisionSystem = collisionSystem;
 		this.#LayerMask = CollisionSystem.Layers.LayerAll;
+		//BaseComponent._RegisterComponentType(this, BoxCollider, ['Layer', 'LayerMask', 'Width', 'Height', 'IsTrigger', 'IsStatic']);
+		//BaseComponent._DefineInspector(this, BoxCollider, ["enum","Collision Layer"], ["bitmask","Collision Mask"], ["float","Width"], ["float","Height"], ["bool","Trigger"], ["bool","Static"]);
 	}
 		
 	set Layer(layerIndex)

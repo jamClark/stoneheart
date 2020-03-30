@@ -1,7 +1,15 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
 import WorldPos from './worldpos.js';
+
+TypedObject.RegisterType("Rigidbody", "BaseComponent", () =>
+{
+	let type = TypedObject.GetType("Rigidbody");
+	type.AddSerializedProp("GravityScale", "TerminalFallSpeed", "Dampen");
+	type.AddInspectorProp(["float", "Gravity"], ["float","Terminal Spd"], ["float", "Dampen"]);
+});
 
 /// 
 /// 
@@ -24,6 +32,8 @@ export default class Rigidbody extends BaseComponent
 		this.Dampen = 0.0;
 		this.Impulse = Vector2.Zero;
 		this.IsGrounded = false;
+		//BaseComponent._RegisterComponentType(this, Rigidbody, ["GravityScale", "TerminalFallSpeed", "Dampen"]);
+		//BaseComponent._DefineInspector(this, Rigidbody, ["float", "Gravity"], ["float","Terminal Spd"], ["float", "Dampen"]);
 	}
 	
 	set Dampen(f) { this.#Dampen = (f > 1) ? 1 : (f < 0) ? 0 : f; }

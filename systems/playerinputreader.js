@@ -1,5 +1,7 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 
+TypedObject.RegisterType("PlayerInputReader", "BaseComponent");
 
 /// 
 /// 

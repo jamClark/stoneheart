@@ -1,6 +1,9 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Vector2 from './../core/vector2.js';
 import WorldPosition from './worldpos.js';
+
+TypedObject.RegisterType("Camera", "BaseComponent");
 
 /// 
 /// Represents a camera in worldspace.
@@ -18,6 +21,8 @@ export default class Camera extends BaseComponent
 		this.#VirtualX = virtualX;
 		this.#VirtualY = virtualY;
 		this.#Canvas = canvas;
+		//BaseComponent._RegisterComponentType(this, Camera);
+		//BaseComponent._DefineInspector(this, Camera);
 	}
 	
 	Awake()

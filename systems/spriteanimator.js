@@ -1,4 +1,12 @@
+import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
+
+TypedObject.RegisterType("SpriteAnimator", "BaseComponent", () =>
+{
+	let type = TypedObject.GetType("SpriteAnimator");
+	type.AddSerializedProp("AnimAsset","Speed","CurrentAnim");
+	type.AddInspectorProp(["Assets.Anims","Anim Src"], ["float","Speed"], ["string","Animation"]);
+});
 
 /// 
 /// 
@@ -14,6 +22,8 @@ export default class SpriteAnimator extends BaseComponent
 		super();
 		this.AnimAsset = animAsset;
 		this.Speed = 1;
+		//BaseComponent._RegisterComponentType(this, SpriteAnimator, ['AnimAsset',"Speed","CurrentAnim"]);
+		//BaseComponent._DefineInspector(this, SpriteAnimator, ["Assets.Anims","Anim Src"], ["float","Speed"], ["string","Animation"]);
 	}
 	
 	get CurrentSrcFrameData()
@@ -31,10 +41,14 @@ export default class SpriteAnimator extends BaseComponent
 	set CurrentAnim(animName)
 	{
 		if(this.AnimAsset == null) return;
+		let curr = this.AnimAsset["Anims"].get(this.#CurrentAnim);
+		if(!curr) return;
 		
 		this.#CurrentAnim = animName;
-		this.#CurrentFrame = this.AnimAsset["Anims"].get(this.#CurrentAnim)[0];
+		this.#CurrentFrame = curr[0];
 	}
+	
+	get CurrentAnim() { return this.#CurrentAnim; }
 	
 	CycleFrame(currentTime, inc = 1)
 	{
