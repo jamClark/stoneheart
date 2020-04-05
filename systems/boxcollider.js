@@ -52,9 +52,10 @@ export default class BoxCollider extends BaseComponent
 		if(value != this.#IsTrigger)
 		{
 			this.#CollisionSystem.Unregister(this);
+			this.#IsTrigger = value;
 			this.#CollisionSystem.Register(this, true);
 		}
-		this.#IsTrigger = value;
+		else this.#IsTrigger = value;
 	}
 	
 	get IsStatic() { return this.#IsStatic; }
@@ -63,9 +64,10 @@ export default class BoxCollider extends BaseComponent
 		if(value != this.#IsStatic)
 		{
 			this.#CollisionSystem.Unregister(this);
+			this.#IsStatic = value;
 			this.#CollisionSystem.Register(this, true);
 		}
-		this.#IsStatic = value;
+		else this.#IsStatic = value;
 	}
 		
 	set Layer(layerIndex)
