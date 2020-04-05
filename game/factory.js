@@ -93,10 +93,13 @@ export default class Factory
 	
 	static CreateCamera(spawnPosX, spawnPosY, renderScale)
 	{
-		let trans = new WorldPos(spawnPosX, spawnPosY);
+		let trans = new WorldPos();
+		trans.position = new Vector2(spawnPosX, spawnPosY);
+		let camera = new Camera(Factory.Canvas.width / renderScale, Factory.Canvas.height / renderScale);
+		
 		let ent = new Entity("Main Camera",
 			trans,
-			new Camera(Factory.Canvas, Factory.Canvas.width / renderScale, Factory.Canvas.height / renderScale, trans),
+			camera,
 			new SmoothFollower(0.07, 0),
 			);
 		

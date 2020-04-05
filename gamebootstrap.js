@@ -29,6 +29,7 @@ import InspectorEditor from './game/inspector.js';
 import Camera from './systems/camera.js';
 
 //ecs systems
+import ECS from './ecs/ecs.js';
 import SpriteRendererSystem from './systems/spriterenderersystem.js';
 import SpriteAnimatorSystem from './systems/spriteanimatorsystem.js';
 import TiledSpriteRendererSystem from './systems/tiledspriterenderersystem.js';
@@ -53,12 +54,15 @@ let LoadedTools;
 const RenderScale = 2;
 const AllowLiveSceneEditing = true;
 
+
 /// 
 /// Entry-point for the application.
 /// 
 export function AppStart(canvas)
 {
+	
 	Audio.Init(new Rect(0, 0, canvas.width+128, canvas.height+128), 5);
+	ECS.Set("canvas", canvas);
 	
 	//global initialization
 	EntMan = new EntityManager();
@@ -94,6 +98,9 @@ export function AppStart(canvas)
 	let SmoothFollowerSys = new SmoothFollowerSystem();
 	let ParticleEmitterSys = new ParticleEmitterSystem(RenderSys);
 	
+	ECS.Set("rendersys", RenderSys);
+	ECS.Set("collisionsystem", CollisionSys);
+	
 	AppFSM = new AppStateMachine();
 	AppFSM.PushState(AppStateMachine.EmptyLoopState);
 	Factory.CollisionSys = CollisionSys; //this is used internally when creating colliders but it doesn't exist at the time we call Init() above!!
@@ -120,6 +127,7 @@ export function AppStart(canvas)
 	
 	//Editor-Only Systems.
 	EditorSysMan.RegisterSystem(CollisionSys); //this is simply for debug rendering
+	EditorSysMan.RegisterSystem(AnimSys);
 	EditorSysMan.RegisterSystem(RenderSys);
 	EditorSysMan.RegisterSystem(TiledRenderSys);
 	EditorSysMan.RegisterSystem(ParticleEmitterSys);
@@ -183,7 +191,7 @@ export function AppStart(canvas)
 		AppFSM.PushState(AppFSM.LoadingState);
 		SceneMan.UnloadCurrentScene();
 		await SceneMan.LoadScene(path);
-		MainCamera.GetComponent(SmoothFollower).SetTarget(Factory.PlayerInst.GetComponent(WorldPos));
+		//MainCamera.GetComponent(SmoothFollower).SetTarget(Factory.PlayerInst.GetComponent(WorldPos));
 		CollisionSys.RebuildSpacialTree();
 		AppFSM.PopState();
 	}

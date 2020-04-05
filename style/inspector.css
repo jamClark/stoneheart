@@ -1,0 +1,43 @@
+
+#InspectorPanel
+{
+	resize: horizontal;
+	direction: rtl;
+	
+	position:fixed;
+	right:0%;
+	top:0%;
+	bottom: 10px;
+	width:15rem;
+}
+
+.InspectorElementDiv
+{
+	display:inline-block;
+	white-space:nowrap; 
+	margin:8px; 
+	margin-top:4px;
+	margin-bottom:4px;
+}
+
+.ComponentPanel
+{
+	overflow:none;
+	background-color:#331133;
+	
+	padding-left: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.CloseButton
+{
+	background-image:url("./../assets/sprites/x-button.png");
+	margin:5px;
+	display: block;
+	width:12px;
+	height:12px;
+	background-color:clear;
+	color:white;
+	background-repeat: no-repeat;
+	background-size:cover;
+}

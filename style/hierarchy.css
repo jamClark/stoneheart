@@ -1,0 +1,75 @@
+
+#HierarchyPanel
+{
+	resize: horizontal;
+	
+	position:fixed;
+	left:0%;
+	top:0%;
+	bottom: 120px;
+	width:10rem;
+}
+
+.HierarchyList
+{
+	margin: 0px;
+	padding: 0rem;
+}
+
+.HierarchyItem
+{
+	list-style: none;
+	display:block;
+	white-space:nowrap; 
+	padding-left:1rem;
+	
+	-webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+.HierarchyItem:hover
+{
+	color: #888888;
+	background-color:#331133;
+}
+
+.HierarchyItem:active
+{
+	color: #555555;
+	background-color:#280828;
+}
+
+.HierarchyItemSelected
+{
+	list-style: none;
+	display:block;
+	white-space:nowrap; 
+	padding-left:1rem;
+	background-color:#331133;
+	color:#eeccee;
+	
+	-webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
+.HierarchyItemSelected:hover
+{
+	color: #888888;
+	background-color:#331133;
+}
+
+.HierarchyItemSelected:active
+{
+	color: #555544;
+	background-color:#280828;
+}

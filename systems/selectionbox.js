@@ -1,16 +1,18 @@
 import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js'
-import WorldPos from './worldpos.js';
+import WorldPosition from './worldpos.js';
 import BoxCollider from './boxcollider.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
 
+TypedObject.RegisterFactoryMethod("SelectionBox", () => { return new SelectionBox(64, 64); });
 TypedObject.RegisterType("SelectionBox", "BaseComponent", () =>
 {
 	let type = TypedObject.GetType("SelectionBox");
 	type.AddSerializedProp('Width', 'Height');
 	type.AddInspectorProp(["float","Width"], ["float", "Height"]);
 	type.BlacklistInspectorObject();
+	type.AddAttribute("NoMenuDisplay");
 });
 
 /// 
@@ -22,10 +24,11 @@ export default class SelectionBox extends BaseComponent
 {
 	#Size;
 	
-	constructor(width, height)
+	constructor(width = 32, height = 32)
 	{
 		super();
-		this.#Size = new Vector2(!width?32:width, !height?32:height);
+		this.RequireComponent(WorldPosition);
+		this.#Size = new Vector2(width, height);
 	}
 	
 	//override these so that we can never disable this component
@@ -34,7 +37,7 @@ export default class SelectionBox extends BaseComponent
 	
 	get WorldRect()
 	{
-		let trans = this.Entity.GetComponent(WorldPos);
+		let trans = this.Entity.GetComponent(WorldPosition);
 		if(trans == null)
 			throw new Error("Missing WorldPos component!");
 		

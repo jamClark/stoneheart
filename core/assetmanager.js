@@ -240,10 +240,10 @@ export default class AssetManager
 			{
 				let animObject = this._GetActuallyUsefulAnimData(request.responseText);
 				animObject.srcPath = path;
-				let url = window.location.href;
-				let urlSplit = url.split('/');
-				let domain = urlSplit[0] + "//" + urlSplit[2];
-				animObject.srcPath = domain+path.replace('.', ''); //need to remove the leading '.' from any path. NOTE: This will remove extension if there is no leading '.'!!
+				//let url = window.location.href;
+				//let urlSplit = url.split('/');
+				//let domain = urlSplit[0] + "//" + urlSplit[2];
+				//animObject.srcPath = domain+path.replace('.', ''); //need to remove the leading '.' from any path. NOTE: This will remove extension if there is no leading '.'!!
 				
 				this.#Anims.set(path, animObject);
 				resolve(animObject);

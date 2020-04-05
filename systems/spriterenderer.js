@@ -1,7 +1,10 @@
 import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Vector2 from './../core/vector2.js';
+import WorldPosition from './worldpos.js';
 
+
+TypedObject.RegisterFactoryMethod("SpriteRenderer", () => { return new SpriteRenderer(); });
 TypedObject.RegisterType("SpriteRenderer", "BaseComponent", () =>
 {
 	let type = TypedObject.GetType("SpriteRenderer");
@@ -16,20 +19,26 @@ export default class SpriteRenderer extends BaseComponent
 {
 	#Sprite = null;
 	
-	constructor(sprite, layer = 0, xOffset = 0, yOffset = 0)
+	constructor(sprite = null)
 	{
 		super();
-		this.Sprite = sprite;
-		this.FrameRect = [0, 0, sprite.width, sprite.height, 0, 0, sprite.width, sprite.height];
+		this.RequireComponent(WorldPosition);
+		this.FrameRect = [0, 0, 0, 0, 0, 0, 0, 0];
 		this.DestScale = [1, 1];
-		this.LocalOffset = new Vector2(xOffset, yOffset);
-		this.Layer = layer;
-		//BaseComponent._RegisterComponentType(this, SpriteRenderer, ['Sprite','LocalOffset','Layer']);
-		//BaseComponent._DefineInspector(this, SpriteRenderer, ["Assets.Sprites","Sprite"], ["vector2","Local Offset"], ["enum","Render Layer"]);
+		this.LocalOffset = new Vector2(0, 0);
+		this.Layer = 0;
+		this.Sprite = sprite;
 	}
 	
 	get Sprite() { return this.#Sprite; }
-	set Sprite(sprite) { this.#Sprite = sprite; }
+	set Sprite(sprite) 
+	{
+		if(sprite instanceof Promise)
+			sprite.then(result => this.#Sprite = result);
+		else this.#Sprite = sprite;
+		if(this.#Sprite != null)
+			this.FrameRect = [0, 0, this.#Sprite.width, this.#Sprite.height, 0, 0, this.#Sprite.width, this.#Sprite.height];
+	}
 	
 }
 

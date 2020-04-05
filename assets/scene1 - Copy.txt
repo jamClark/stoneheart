@@ -1,0 +1,6 @@
+{"type":"Player","name":"CreatePlayer","params":[{"x":100.89000305842286,"y":-1.5099999999999976}]}
+{"type":"World Block","name":"CreateWorldBlock","params":[true,{"x":0,"y":-32},true,2,{"x":0,"y":0},true,"1024",64,"./assets/sprites/tileset1.png"]}
+{"type":"Particle Emitter","name":"CreateParticleEmitter","params":[true,{"x":0,"y":288},true,3,"./assets/sprites/spark_01.png",false,1,"0",5,1000,"100",4,4,1,1,"-1024","1024",0,0,"-10","10","-50","-100"]}
+{"type":"Decorative Tile","name":"CreateDecorativeTile","params":[true,{"x":160,"y":32},1,{"x":0.5,"y":0},"192",64,"./assets/sprites/tileset2.png"]}
+{"type":"World Block","name":"CreateWorldBlock","params":[true,{"x":224,"y":32},true,2,{"x":0,"y":0},true,64,64,"./assets/sprites/tileset1.png"]}
+{"type":"World Block","name":"CreateWorldBlock","params":[true,{"x":96,"y":32},true,2,{"x":0,"y":0},false,64,64,"./assets/sprites/tileset1.png"]}

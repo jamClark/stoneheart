@@ -32,6 +32,7 @@ let SnapSettings = {
 export function GetInspectorDefs() { return RegisteredInspectors; }
 export function GetEnumDefs() { return RegisteredEnums; }
 export function GetSnapSettings() { return SnapSettings }
+export function CurrentlySelectedEntity() { return LastSelected ? LastSelected.Entity : null; }
 
 export function AddSelectedListener(obj, handler)
 {

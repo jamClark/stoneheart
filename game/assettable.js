@@ -12,6 +12,7 @@ export default class Assets
 	{
 		ANA_R:		"./assets/sprites/ana_right.anim",
 		ANA_L:		"./assets/sprites/ana_left.anim",
+		ANA_F:		"./assets/sprites/ana_left.anim",
 	}
 	static get Anims() { return Assets.#Anims; }
 	

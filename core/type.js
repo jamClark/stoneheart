@@ -6,6 +6,7 @@ export default class TypedObject
 {
 	#TypeName;
 	
+	
 	constructor()
 	{
 		this.#TypeName = this.constructor.name;
@@ -20,6 +21,9 @@ export default class TypedObject
 	
 	
 	static #RegisteredTypes = new Map();
+	static #FactoryMethods = new Map();
+	
+	static get Types() { return this.#RegisteredTypes.values(); }
 	
 	static GetType(typeName)
 	{
@@ -32,6 +36,19 @@ export default class TypedObject
 		TypedObject.#RegisteredTypes.set(typeName, type);
 		if(callback != null)
 			callback();
+	}
+	
+	static RegisterFactoryMethod(typeName, method)
+	{
+		this.#FactoryMethods.set(typeName, method);
+	}
+	
+	static Activate(typeName)
+	{
+		let method = this.#FactoryMethods.get(typeName);
+		if(method == null)
+			throw new Error("Missing factory method for type '" + typeName + "'.");
+		return method();
 	}
 }
 
@@ -61,7 +78,26 @@ export class Type
 	get Name() { return this.#Name; }
 	get ParentName() { return this.#ParentTypeName; }
 	get Attributes() { return [...this.#Attributes]; }
-	HasAttribute(attr) { return this.#Attributes.includes(attr) != null; }
+	HasAttribute(attr) { return this.#Attributes.includes(attr); }
+	
+	/// 
+	/// Returns true if this object is derived from the given type. Can optionally
+	/// include the type itself.
+	/// 
+	IsDerivedFrom(typeName, includeSelf = false)
+	{
+		if(!includeSelf && this.#Name == typeName)
+			return false;
+		
+		let type = this;
+		while(type != null)
+		{
+			if(type.#Name == typeName)
+				return true;
+			type = TypedObject.GetType(this.ParentName);
+		}
+		return false;
+	}
 	
 	get SerializationList()
 	{
@@ -95,10 +131,10 @@ export class Type
 		return this.#InspectorBlacklist.includes(displayName);
 	}
 	
-	AddAtrribute(...attrNames)
+	AddAttribute(...attrNames)
 	{
 		for(let attrName of attrNames)
-			this.#Attributes.push(propName);
+			this.#Attributes.push(attrName);
 	}
 	
 	AddSerializedProp(...propNames)

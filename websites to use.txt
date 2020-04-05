@@ -6,3 +6,7 @@ https://www.html5rocks.com/en/tutorials/webaudio/games/
 https://developers.google.com/web/updates/2017/12/audio-worklet
 
 https://stackoverflow.com/questions/49394355/how-do-you-execute-a-server-side-python-script-using-http-server
+
+HOW TO CHANGE CHECKBOX COLORS:
+https://stackoverflow.com/questions/34388696/how-to-change-the-background-color-on-a-input-checkbox-with-css
+https://www.w3schools.com/howto/tryit.asp?filename=tryhow_css_custom_checkbox

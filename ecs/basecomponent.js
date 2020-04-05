@@ -1,5 +1,6 @@
 import {ColorLog} from './../core/utility.js';
 import TypedObject from './../core/type.js';
+import ECS from './ecs.js';
 
 TypedObject.RegisterType("BaseComponent", "TypedObject", () =>
 {
@@ -22,7 +23,7 @@ export default class BaseComponent extends TypedObject
 		this._RunOnce = true;
 	}
 	
-	
+	get ECS() { return ECS; }
 	
 	static get AllowMultipleAttrName() { return 'AllowMultiple'; }
 	
@@ -41,6 +42,11 @@ export default class BaseComponent extends TypedObject
 		
 		
 		this.#Enabled = value;
+	}
+	
+	GetComponent(compType)
+	{
+		return this.Entity.GetComponent(compType);
 	}
 	
 	OnAttached() {}
@@ -86,6 +92,11 @@ export default class BaseComponent extends TypedObject
 	GetInspectorOverrideForProperty(propName)
 	{
 		return BaseComponent.GetInspectorOverrideForProperty(this.type, propName);
+	}
+	
+	RequireComponent(type)
+	{
+		console.log("TODO: Implemented 'BaseComponent.RequireComponent()'.");
 	}
 	
 	

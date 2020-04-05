@@ -2,13 +2,14 @@ import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Vector2 from './../core/vector2.js';
 
+TypedObject.RegisterFactoryMethod("WorldPosition", () => { return new WorldPosition(); });
 TypedObject.RegisterType("WorldPosition", "BaseComponent", () =>
 {
 	let type = TypedObject.GetType("WorldPosition");
 	type.AddSerializedProp('localPosition');
 	type.AddInspectorProp(["vector2","Position"]);
 	type.BlacklistInspectorProp('enabled');
-	//type.OverrideInspectorProp(['localPosition', 'position']);
+	type.AddAttribute("NoMenuDisplay");
 });
 
 
@@ -27,14 +28,9 @@ export default class WorldPosition extends BaseComponent
 	#Children = [];
 	#LocalPos = new Vector2();
 	
-	constructor(x = 0, y = 0)
+	constructor()
 	{
 		super();
-		if(x instanceof Vector2)
-			this.#LocalPos = new Vector2(x);
-		else if(typeof x === 'object')
-			this.#LocalPos = new Vector2(x.x, x.y);
-		else this.#LocalPos = new Vector2(x, y);
 	}
 	
 	

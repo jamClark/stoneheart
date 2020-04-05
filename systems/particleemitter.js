@@ -11,7 +11,7 @@ import SpriteRenderer from './spriterenderer.js';
 import Particle from './particle.js';
 import {RandomRange} from './../core/utility.js';
 
-
+TypedObject.RegisterFactoryMethod("ParticleEmitter", () => { return new ParticleEmitter(); });
 TypedObject.RegisterType("ParticleEmitter", "BaseComponent");
 
 /// 
@@ -26,14 +26,16 @@ export default class ParticleEmitter extends BaseComponent
 	#Paused = false;
 	#PauseStart;
 	#Trans;
+	#Sprite;
 	
-	constructor(renderLayer, spriteAsset)
+	constructor(renderLayer  = 1, spriteAsset = null)
 	{
 		super(WorldPos, SpriteRenderer, Particle);
 		
-		this.SpriteAsset = null;
-		if(ParticleEmitter.Systems == null) ParticleEmitter.Systems = [];
-		spriteAsset.then(result => { this.SpriteAsset = result; });
+		if(ParticleEmitter.Systems == null) 
+			ParticleEmitter.Systems = [];
+		
+		this.SpriteAsset = spriteAsset;
 		
 		//system configuration
 		this.RenderEnabled = true;
@@ -81,8 +83,14 @@ export default class ParticleEmitter extends BaseComponent
 		}
 		
 		//TODO: Setup the ghastly beast that is the serialization list for this component!
-		//BaseComponent._RegisterComponentType(this, ParticleEmitter);
-		//BaseComponent._DefineInspector(this, ParticleEmitter);
+	}
+	
+	get SpriteAsset() { return this.#Sprite; }
+	set SpriteAsset(spriteAsset)
+	{
+		if(spriteAsset instanceof Promise)
+			spriteAsset.then(result => { this.#Sprite = result; });
+		else this.#Sprite = spriteAsset;
 	}
 	
 	get PoolId()

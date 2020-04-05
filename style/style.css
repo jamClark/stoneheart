@@ -1,0 +1,74 @@
+body
+{
+	background-color: #222222;
+}
+
+/*Container DIV of all elements*/
+#RootContainer
+{
+	width:640px; 
+	padding:0px; 
+	margin:auto; 
+	display:block;
+}
+
+/*The DIV containing the canvas*/
+#CanvasArea
+{
+	width: 100%;
+	position:relative;
+	left:0px;
+}
+
+/*The canvas*/
+#View
+{
+	float:left;
+	width:100%;
+	border: 1px solid #000000;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+/*Containing DIV for ToolPallet when active.*/
+#ToolPallet
+{
+	position: fixed;
+	left:0;
+	bottom:0;
+	right: 15.5rem;
+	height:100px;
+	overflow:auto;
+	float: left;
+	
+	background-color:#442244; 
+	padding:5px; 
+	padding-left:10px; 
+	padding-right:10px; 
+	color:white;
+}
+
+#DebugText
+{
+	color:white;
+}
+
+.ToolIcon
+{
+	margin:5px;
+	display: inline-block;
+	image-rendering: pixelated;
+	width:64px;
+	height:64px;
+	background-color:black;
+	color:white;
+	background-size:100%;
+}
+
+/*Removes floating states.*/
+.clearfix::after
+{
+	content: "";
+	clear: both;
+	display: table;
+}

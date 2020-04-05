@@ -1,6 +1,7 @@
 import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 
+TypedObject.RegisterFactoryMethod("PlayerInputReader", () => { return new PlayerInputReader(); });
 TypedObject.RegisterType("PlayerInputReader", "BaseComponent");
 
 /// 

@@ -58,26 +58,84 @@ export default class Editor
 	/// 
 	/// 
 	/// 
-	static DrawBoolField(parentDiv, obj, property, label)
+	static DrawButton(parentDiv, label, callback, styleId, styleOptions)
 	{
 		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
-		let inputElm = document.createElement('input');
-		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
+		let inputElm = document.createElement('button');
 		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
+		inputDiv.appendChild(inputElm);
 		
+		inputElm.innerHTML = label;
+		inputElm.type = "button";
+		inputElm.onclick = callback;
+		inputElm.className = styleId;
+		if(styleOptions)
+			inputElm.style = styleOptions;
+		
+		return inputElm;
+	}
+	
+	/// 
+	/// 
+	/// 
+	static DrawPressable(parentDiv, label, styleId, callback, styleOptions)
+	{
+		let inputDiv = document.createElement('div');
+		parentDiv.appendChild(inputDiv);
+		
+		inputDiv.innerHTML = label;
+		inputDiv.type = "button";
+		inputDiv.onclick = callback;
+		inputDiv.className = styleId;
+		if(styleOptions)
+			inputDiv.style = styleOptions;
+		
+		return inputDiv;
+	}
+	
+	/// 
+	/// Base framework for drawing field controls.
+	/// 
+	static DrawBaseField(parentDiv, label, noBreak = false)
+	{
+		let inputDiv  = document.createElement('div');
 		inputDiv.className = 'InspectorElementDiv';
+		inputDiv.style = "width:90%; display:flex; flex-direction:row;";
+		parentDiv.appendChild(inputDiv);
 		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
-		titleElm.style = "padding-right: 5px";
+		if(!noBreak)
+		{
+			let lineBreakDiv = document.createElement('div');
+			lineBreakDiv.class = "EditorLineBreak";
+			parentDiv.appendChild(lineBreakDiv);
+		}
+		
+		if(label != null && (typeof label === 'string') && label.length > 0)
+		{
+			let titleElm = document.createElement('label');
+			titleElm.innerHTML = `${label}:`;
+			titleElm.className = 'EditorLabel';
+			titleElm.style = "padding-right: 5px";
+			inputDiv.appendChild(titleElm);
+		}
+		
+		return inputDiv;
+	}
+	
+	/// 
+	/// 
+	/// 
+	static DrawBoolField(parentDiv, obj, property, label, styleOptions)
+	{
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
+		let inputElm = document.createElement('input');
+		fieldRoot.appendChild(inputElm);
 		
 		inputElm.type = "checkbox";
 		inputElm.value = obj[property];
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
 		
 		return Editor.Bind(inputElm, "oninput", "checked", obj, property);
 	}
@@ -85,26 +143,15 @@ export default class Editor
 	/// 
 	/// 
 	/// 
-	static DrawFloatField(parentDiv, obj, property, label, inputWidth)
+	static DrawFloatField(parentDiv, obj, property, label, styleOptions)
 	{
-		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
 		let inputElm = document.createElement('input');
-		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
+		fieldRoot.appendChild(inputElm);
 		
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
-		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
-		
-		inputDiv.className = 'InspectorElementDiv';
-		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
-		titleElm.style = "padding-right: 5px";
-		
-		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
 		inputElm.inputmode = "numeric";
 		inputElm.value = obj[property];
 		
@@ -114,26 +161,15 @@ export default class Editor
 	/// 
 	/// 
 	/// 
-	static DrawIntField(parentDiv, obj, property, label, inputWidth)
+	static DrawIntField(parentDiv, obj, property, label, styleOptions)
 	{
-		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
 		let inputElm = document.createElement('input');
-		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
+		fieldRoot.appendChild(inputElm);
 		
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
-		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
-		
-		inputDiv.className = 'InspectorElementDiv';
-		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
-		titleElm.style = "padding-right: 5px";
-		
-		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
 		inputElm.inputmode = "number";
 		inputElm.step = "1";
 		inputElm.value = obj[property];
@@ -144,26 +180,15 @@ export default class Editor
 	/// 
 	/// 
 	/// 
-	static DrawStringField(parentDiv, obj, property, label, inputWidth)
+	static DrawStringField(parentDiv, obj, property, label, styleOptions)
 	{
-		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
 		let inputElm = document.createElement('input');
-		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
+		fieldRoot.appendChild(inputElm);
 		
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
-		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
-		
-		inputDiv.className = 'InspectorElementDiv';
-		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
-		titleElm.style = "padding-right: 5px";
-		
-		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
 		inputElm.value = obj[property];
 		
 		return Editor.Bind(inputElm, "oninput", "value", obj, property);
@@ -174,26 +199,15 @@ export default class Editor
 	///				is essential that all images that will be displayed in the dropdown list are
 	///				loaded ahead of time.
 	/// 
-	static DrawAssetDropdown(parentDiv, obj, property, label, list, assetMan, inputWidth)
+	static DrawAssetDropdown(parentDiv, obj, property, label, list, assetMan, styleOptions)
 	{
-		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
 		let inputElm = document.createElement('select');
-		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
-		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
+		fieldRoot.appendChild(inputElm);
 		
-		inputDiv.className = 'InspectorElementDiv';
-		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
-		titleElm.style = "padding-right: 5px";
-		
-		
-		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
 		for(let e of list)
 		{
 			let option = document.createElement('option');
@@ -209,12 +223,14 @@ export default class Editor
 		return Editor.Bind(inputElm, "oninput", "selectedIndex", obj, property, 
 				(value) => 
 				{
+					if(value == null) return "";
 					//HACK ALERT: We can't load resources here! They *must* already exist in the AssetManager for this to work!!
 					//ELEMENT-TO-PROP
 					return assetMan.GetDirectResource(list[value]);
 				},
 				(value) =>
 				{
+					if(value == null) return -1;
 					let index = list.indexOf(value.srcPath);
 					return index > -1 ? index : 0;
 				});
@@ -223,26 +239,15 @@ export default class Editor
 	/// 
 	/// 
 	/// 
-	static DrawListDropdown(parentDiv, obj, property, label, list, inputWidth)
+	static DrawListDropdown(parentDiv, obj, property, label, list, styleOptions)
 	{
-		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
 		let inputElm = document.createElement('select');
-		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
-		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
+		fieldRoot.appendChild(inputElm);
 		
-		inputDiv.className = 'InspectorElementDiv';
-		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
-		titleElm.style = "padding-right: 5px";
-		
-		
-		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
 		for(let e of list)
 		{
 			let option = document.createElement('option');
@@ -252,7 +257,6 @@ export default class Editor
 		}
 		
 		let actualValue = obj[property];
-		console.log("ACTUAL: " + actualValue);
 		let index = list.indexOf(obj[property]);
 		inputElm.selectedIndex = index > -1 ? index : 0;
 		
@@ -273,26 +277,15 @@ export default class Editor
 	/// 
 	/// 
 	/// 
-	static DrawEnumDropdown(parentDiv, obj, property, label, enumSet, inputWidth)
+	static DrawEnumDropdown(parentDiv, obj, property, label, enumSet, styleOptions)
 	{
-		let inputDiv = document.createElement('div');
-		let titleElm = document.createElement('label');
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
 		let inputElm = document.createElement('select');
-		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
-		inputDiv.appendChild(titleElm);
-		inputDiv.appendChild(inputElm);
-		parentDiv.appendChild(inputDiv);
-		parentDiv.appendChild(lineBreakDiv);
+		fieldRoot.appendChild(inputElm);
 		
-		inputDiv.className = 'InspectorElementDiv';
-		
-		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
-		titleElm.style = "padding-right: 5px";
-		
-		
-		inputElm.style = `width:${inputWidth?inputWidth:100}px;`;
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
 		for(let e of enumSet)
 		{
 			let option = document.createElement('option');
@@ -321,24 +314,28 @@ export default class Editor
 	/// 
 	/// 
 	/// 
-	static DrawHeader(parentDiv, text)
+	static DrawHeader(parentDiv, text, styleOptions)
 	{
 		let titleElm = document.createElement('label');
 		titleElm.innerHTML = `<b>${text}</b>`;
-		titleElm.className = 'InspectorHeader';
+		titleElm.className = 'EditorHeader';
 		titleElm.style = "font-size: 1.1rem; padding-bottom: 2px; display:block;";
+		if(styleOptions)
+			titleElm.style = styleOptions;
 		parentDiv.appendChild(titleElm);
 	}
 	
 	/// 
 	/// 
 	/// 
-	static DrawLabel(parentDiv, text)
+	static DrawLabel(parentDiv, text, styleOptions)
 	{
 		let titleElm = document.createElement('label');
 		titleElm.innerHTML = `${text}`;
-		titleElm.className = 'InspectorLabel';
+		titleElm.className = 'EditorLabel';
 		titleElm.style = "padding-right: 5px; display:block;";
+		if(styleOptions)
+			titleElm.style = styleOptions;
 		parentDiv.appendChild(titleElm);
 	}
 	
@@ -352,7 +349,7 @@ export default class Editor
 		let xElm = document.createElement('input');
 		let yElm = document.createElement('input');
 		let lineBreakDiv = document.createElement('div');
-		lineBreakDiv.class = "InspectorLineBreak";
+		lineBreakDiv.class = "EditorLineBreak";
 		inputDiv.appendChild(titleElm);
 		inputDiv.appendChild(xElm);
 		inputDiv.appendChild(yElm);
@@ -362,7 +359,7 @@ export default class Editor
 		inputDiv.className = 'InspectorElementDiv';
 		
 		titleElm.innerHTML = `${label}:`;
-		titleElm.className = 'InspectorLabel';
+		titleElm.className = 'EditorLabel';
 		titleElm.style = "padding-right: 5px";
 		
 		xElm.inputmode = "numeric";

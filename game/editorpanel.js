@@ -13,6 +13,8 @@ export default class EditorPanel
 	#AssetMan;
 	#Enabled;
 	
+	#MenuClosers = [];
+	
 	get PanelDiv() { return this.#PanelDiv; }
 	get RootDiv() { return this.#RootDiv; }
 	get Canvas() { return this.#Canvas; }
@@ -34,6 +36,15 @@ export default class EditorPanel
 		this.#PanelDiv = document.createElement('div');
 		this.#PanelDiv.style = "direction: ltr; overflow:auto; width:100%; height: 100%;";
 		this.#DirectionDiv.appendChild(this.#PanelDiv);
+		
+		//window.addEventListener("click", this.CheckForValidContextClicks);
+	}
+	
+	/// 
+	/// This event handler closes all active context menus if a valid target is not clicked.
+	/// 
+	CheckForValidContextClicks(evt)
+	{
 	}
 	
 	Enable()
@@ -52,5 +63,16 @@ export default class EditorPanel
 		
 		this.#RootDiv.removeChild(this.#DirectionDiv);
 		return true;
+	}
+	
+	RegisterMenuCloser(func)
+	{
+		this.#MenuClosers.push(func);
+	}
+	
+	CloseContextMenus()
+	{
+		for(let func of this.#MenuClosers)
+			func();
 	}
 }

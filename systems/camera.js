@@ -3,26 +3,32 @@ import BaseComponent from './../ecs/basecomponent.js';
 import Vector2 from './../core/vector2.js';
 import WorldPosition from './worldpos.js';
 
-TypedObject.RegisterType("Camera", "BaseComponent");
+TypedObject.RegisterFactoryMethod("Camera", () => { return new Camera; });
+TypedObject.RegisterType("Camera", "BaseComponent", () =>
+{
+	let type = TypedObject.GetType("Camera");
+	type.AddAttribute("NoMenuDisplay");
+});
 
 /// 
 /// Represents a camera in worldspace.
 /// 
 export default class Camera extends BaseComponent
 {
-	#VirtualX = 1;
-	#VirtualY = 1;
+	#VirtualX;
+	#VirtualY;
+	#Canvas;	
 	#WorldPosComp;
-	#Canvas;
 	
-	constructor(canvas, virtualX, virtualY)
+	constructor(virtualX = 640, virtualY = 480)
 	{
 		super();
+		this.RequireComponent(WorldPosition);
 		this.#VirtualX = virtualX;
 		this.#VirtualY = virtualY;
-		this.#Canvas = canvas;
-		//BaseComponent._RegisterComponentType(this, Camera);
-		//BaseComponent._DefineInspector(this, Camera);
+		this.#Canvas = this.ECS.Get("canvas");
+		
+		console.log("Camera: Canvas = " + this.#Canvas);
 	}
 	
 	Awake()

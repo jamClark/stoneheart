@@ -4,13 +4,16 @@ import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
 import CollisionSystem from './collisionsystem.js'
 
-
+TypedObject.RegisterFactoryMethod("BoxCollider", () => { return new BoxCollider(); });
 TypedObject.RegisterType("BoxCollider", "BaseComponent", () =>
 {
 	let type = TypedObject.GetType("BoxCollider");
 	type.AddSerializedProp('Layer', 'LayerMask', 'Width', 'Height', 'IsTrigger', 'IsStatic');
 	type.AddInspectorProp(["enum","Collision Layer"], ["bitmask","Collision Mask"], ["float","Width"], ["float","Height"], ["bool","Trigger"], ["bool","Static"]);
+
 });
+
+
 
 /// 
 /// Represents an AABB collision area.
@@ -29,20 +32,40 @@ export default class BoxCollider extends BaseComponent
 	#Rect;
 	#CollisionSystem;
 	#LayerMask;
+	#IsTrigger; //this is considered a 'collider' if it's not a 'trigger'
+	#IsStatic;
 	
-	constructor(collisionSystem, rect, isTrigger = false, isStatic = false)
+	constructor(rect = null)
 	{
 		super();
-		if(!(collisionSystem instanceof CollisionSystem))
-			throw new Error("Argument is not of type 'CollisionSystem'");
-		
-		this.#Rect = new Rect(rect);
-		this.IsTrigger = isTrigger; //this is considered a 'collider' if it's not a 'trigger'
-		this.IsStatic = isStatic;
-		this.#CollisionSystem = collisionSystem;
+		this.#Rect = (rect == null) ? new Rect(0, 0, 64, 64) : new Rect(rect);
 		this.#LayerMask = CollisionSystem.Layers.LayerAll;
-		//BaseComponent._RegisterComponentType(this, BoxCollider, ['Layer', 'LayerMask', 'Width', 'Height', 'IsTrigger', 'IsStatic']);
-		//BaseComponent._DefineInspector(this, BoxCollider, ["enum","Collision Layer"], ["bitmask","Collision Mask"], ["float","Width"], ["float","Height"], ["bool","Trigger"], ["bool","Static"]);
+		this.#CollisionSystem = this.ECS.Get("collisionsystem");
+		
+		this.#IsTrigger = false;
+		this.#IsStatic = false;
+	}
+	
+	get IsTrigger() { return this.#IsTrigger; }
+	set IsTrigger(value)
+	{
+		if(value != this.#IsTrigger)
+		{
+			this.#CollisionSystem.Unregister(this);
+			this.#CollisionSystem.Register(this, true);
+		}
+		this.#IsTrigger = value;
+	}
+	
+	get IsStatic() { return this.#IsStatic; }
+	set IsStatic(value)
+	{
+		if(value != this.#IsStatic)
+		{
+			this.#CollisionSystem.Unregister(this);
+			this.#CollisionSystem.Register(this, true);
+		}
+		this.#IsStatic = value;
 	}
 		
 	set Layer(layerIndex)

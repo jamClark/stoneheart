@@ -3,7 +3,11 @@ import BaseComponent from './../ecs/basecomponent.js';
 import Vector2 from './../core/vector2.js';
 import Time from './../core/time.js';
 
-TypedObject.RegisterType("Particle", "BaseComponent");
+TypedObject.RegisterType("Particle", "BaseComponent", () =>
+{
+	let type = TypedObject.GetType("Particle");
+	type.AddAttribute("NoMenuDisplay");
+});
 
 /// 
 /// State information for a single particle of a particle system.

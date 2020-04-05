@@ -54,6 +54,8 @@ export default class SceneManager
 		let lineCount = 1;
 		for(let line of lines)
 		{
+			line = line.trim();
+			if(line.length == 0) continue;
 			let ent = null;
 			try { ent = JSON.parse(line); }
 			catch(e)

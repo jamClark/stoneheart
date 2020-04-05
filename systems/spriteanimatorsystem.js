@@ -17,17 +17,23 @@ export default class SpriteAnimatorSystem extends BaseComponentSystem
 	
 	Process(entity, animator, spriteComp)
 	{
+		if(animator.AnimAsset == null || spriteComp.Sprite == null)
+			return;
+		
 		animator.CycleFrame(Time.time);
 		let data = animator.CurrentSrcFrameData;
-		spriteComp.FrameRect = [
-			data["SrcFrame"][0],
-			data["SrcFrame"][1],
-			data["SrcSize"][0],
-			data["SrcSize"][1],
-			data["Offset"][0],
-			data["Offset"][1],
-			animator.AnimAsset["OriginalFrameSize"][0],
-			animator.AnimAsset["OriginalFrameSize"][1]
-		];
+		if(data != null)
+		{
+			spriteComp.FrameRect = [
+				data["SrcFrame"][0],
+				data["SrcFrame"][1],
+				data["SrcSize"][0],
+				data["SrcSize"][1],
+				data["Offset"][0],
+				data["Offset"][1],
+				animator.AnimAsset["OriginalFrameSize"][0],
+				animator.AnimAsset["OriginalFrameSize"][1]
+			];
+		}
 	}
 }

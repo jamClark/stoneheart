@@ -2,8 +2,9 @@ import TypedObject from './../core/type.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import Rect from './../core/rect.js';
 import Vector2 from './../core/vector2.js';
-import WorldPos from './worldpos.js';
+import WorldPosition from './worldpos.js';
 
+TypedObject.RegisterFactoryMethod("Rigidbody", () => { return new Rigidbody(); });
 TypedObject.RegisterType("Rigidbody", "BaseComponent", () =>
 {
 	let type = TypedObject.GetType("Rigidbody");
@@ -19,26 +20,25 @@ export default class Rigidbody extends BaseComponent
 	#WorldPos;
 	#Dampen;
 	
-	constructor(worldPos)
+	constructor()
 	{
 		super();
-		if(typeof worldPos == null)
-			throw new Error("WorldPos component required for RigidBody");
-			
-		this.#WorldPos = worldPos;
+		this.RequireComponent(WorldPosition);
 		this.Velocity = new Vector2();
 		this.GravityScale = 1.0;
 		this.TerminalFallSpeed = -300;
 		this.Dampen = 0.0;
 		this.Impulse = Vector2.Zero;
 		this.IsGrounded = false;
-		//BaseComponent._RegisterComponentType(this, Rigidbody, ["GravityScale", "TerminalFallSpeed", "Dampen"]);
-		//BaseComponent._DefineInspector(this, Rigidbody, ["float", "Gravity"], ["float","Terminal Spd"], ["float", "Dampen"]);
+	}
+	
+	Awake()
+	{
+		this.#WorldPos = this.GetComponent(WorldPosition);
 	}
 	
 	set Dampen(f) { this.#Dampen = (f > 1) ? 1 : (f < 0) ? 0 : f; }
 	get Dampen() { return this.#Dampen; }
-	
 	get Position() { return this.#WorldPos.position; }
 	
 	
