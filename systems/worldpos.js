@@ -114,8 +114,8 @@ export default class WorldPosition extends BaseComponent
 		
 		if(parent == null && this.#Parent != null)
 		{
-			let index = this.#Parent.indexOf(this);
-			this.#Parent.splice(index, 1);
+			let index = this.#Parent.#Children.indexOf(this);
+			this.#Parent.#Children.splice(index, 1);
 		}
 		this.#Parent = parent;
 		if(parent != null)

@@ -1,14 +1,17 @@
+import TypedObject from './../../core/type.js';
 import Editor from './editor.js';
 import EditorPanel from './editorpanel.js';
 import * as Scene from './sceneeditor.js';
-import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../core/utility.js'
+import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../../core/utility.js'
 
-import Entity from './../ecs/entity.js';
-import WorldPosition from './../systems/worldpos.js';
-import SelectionBox from './../systems/selectionbox.js';
+import Entity from './../../ecs/entity.js';
+import WorldPosition from './../../systems/worldpos.js';
+import SelectionBox from './../../systems/selectionbox.js';
 
 const HierarchyMenuId = "HierarchyContextMenu";
 const HierarchyItemMenuId = "HierarchyItemContextMenu";
+
+
 /// 
 /// 
 /// 
@@ -147,8 +150,33 @@ export default class HierarchyEditor extends EditorPanel
 	
 	DuplicateEntity(evt)
 	{
-		let ent = this.HierarchyItemToEnt(this.#ContextMenuItem);
-		alert("Duplicate " + ent.name + " not yet supported.");
+		let srcEnt = this.HierarchyItemToEnt(this.#ContextMenuItem);
+		
+		let ent = new Entity(srcEnt.name);
+		let trans = new WorldPosition();
+		let selection = new SelectionBox();
+		ent.AddComponent(trans);
+		ent.AddComponent(selection);
+		this.#EntityMan.RegisterEntity(ent);
+		
+		trans.position = srcEnt.GetComponent(WorldPosition).position;
+		ent.Active = srcEnt.Active;
+		
+		
+		for(let comp of srcEnt.Components)
+		{
+			if(comp.type != "WorldPosition" && comp.type != "SelectionBox")
+			{
+				let newComp = TypedObject.Activate(comp.type);
+				ent.AddComponent(newComp);
+				newComp.CopySettings(comp);
+			}
+		}
+		
+		
+		this.StopListeningForSelection();
+		Scene.ForceSelection(ent);
+		this.StartListeningForSelection();
 		this.RemoveAllContextMenus();
 	}
 	
@@ -183,6 +211,7 @@ export default class HierarchyEditor extends EditorPanel
 		this.StartListeningForSelection();
 		
 		this.RemoveAllContextMenus();
+		return ent;
 	}
 	
 	StartListeningForSelection()
@@ -238,6 +267,10 @@ export default class HierarchyEditor extends EditorPanel
 		for(let i = 0; i < entList.length; i++)
 		{
 			let ent = entList[i];
+			
+			if(ent.HideInHierarchy)
+				continue;
+			
 			let trans = ent.GetComponent(WorldPosition);
 			
 			//build a map for entity index back to each html element.
@@ -278,7 +311,7 @@ export default class HierarchyEditor extends EditorPanel
 			this.#Bindings.push(Editor.BindHTML(li, ent, "name"));
 			//recursively append child elements
 			if(trans!= null && trans.ChildCount > 0)
-				this.BuildList(li, trans.Children, selectionIndex);
+				this.BuildList(li, trans.Children.map(x => x.Entity), selectionIndex);
 		}
 		
 	}

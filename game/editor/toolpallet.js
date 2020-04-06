@@ -1,10 +1,10 @@
-import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../core/utility.js'
-import Factory from './factory.js';
-import Vector2 from './../core/vector2.js';
-import AssetManager from './../core/assetmanager.js';
+import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../../core/utility.js'
+import Factory from './../factory.js';
+import Vector2 from './../../core/vector2.js';
+import AssetManager from './../../core/assetmanager.js';
 import * as Editor from './sceneeditor.js';
-import Assets from './assettable.js';
-import {ColorLog} from './../core/utility.js';
+import Assets from './../assettable.js';
+import {ColorLog} from './../../core/utility.js';
 
 
 /// 

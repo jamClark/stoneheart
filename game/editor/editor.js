@@ -1,5 +1,5 @@
-import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../core/utility.js'
-import Vector2 from './../core/vector2.js';
+import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../../core/utility.js'
+import Vector2 from './../../core/vector2.js';
 /// 
 /// Utility class that provides static functions for drawing editor
 /// controls and bind their data to data sources.
@@ -278,6 +278,43 @@ export default class Editor
 	/// 
 	/// 
 	static DrawEnumDropdown(parentDiv, obj, property, label, enumSet, styleOptions)
+	{
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
+		let inputElm = document.createElement('select');
+		fieldRoot.appendChild(inputElm);
+		
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
+		for(let e of enumSet)
+		{
+			let option = document.createElement('option');
+			option.innerHTML = e[0];
+			option.value = e[1];
+			inputElm.appendChild(option);
+		}
+		
+		let index = enumSet.map(x => x[1]).indexOf(obj[property]);
+		inputElm.selectedIndex = index > -1 ? index : 0;
+		
+		return Editor.Bind(inputElm, "oninput", "selectedIndex", obj, property, 
+				(value) => 
+				{
+					//ELEMENT-TO-PROP
+					return enumSet[value][1];
+				},
+				(value) =>
+				{
+					//PROP-TO-ELEMENT
+					let index = enumSet.map(x => x[1]).indexOf(value);
+					return index > -1 ? index : 0;
+				});
+	}
+	
+	/// 
+	/// 
+	/// 
+	static DrawBitmaskDropdown(parentDiv, obj, property, label, enumSet, styleOptions)
 	{
 		let fieldRoot = this.DrawBaseField(parentDiv, label);
 		let inputElm = document.createElement('select');

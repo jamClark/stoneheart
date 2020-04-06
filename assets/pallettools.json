@@ -1,5 +1,6 @@
 ["ENUM","Render Layer",["Background 0",0],["Background 1",1],["Background 2",2],["Background 3",3],["Background 4",4],["Foreground 1",41],["Foreground 2",42],["Foreground 3",43],["Foreground 4",44]]
 ["ENUM","Space Mode",["World",1],["Local",2]]
+["BITMASK","Collision Layers",["Layer1",1],["Layer2",2],["Layer3",4],["Layer4",8],["Layer5",16],["Layer6",32],["Layer7",64],["Layer8",128]]
 ["TOOL", "CreateWorldBlock", "./assets/sprites/blockicon.png", true, {"x":0,"y":0}, true, 1, {"x":0,"y":0}, true, 64, 64, "./assets/sprites/tileset1.png"]
 ["TOOL", "CreateDecorativeTile", "./assets/sprites/tileicon.png", true, {"x":0,"y":0}, 1, {"x":0,"y":0}, 64, 64, "./assets/sprites/tileset2.png"]
 ["TOOL", "CreateDecorativeEntity", "./assets/sprites/enticon.png", true, {"x":0,"y":0}, 3, "./assets/sprites/ana_left.png"]

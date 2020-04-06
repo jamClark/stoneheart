@@ -1,11 +1,11 @@
 import Editor from './editor.js';
 import EditorPanel from './editorpanel.js';
-import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../core/utility.js'
-import AssetManager from './../core/assetmanager.js';
+import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../../core/utility.js'
+import AssetManager from './../../core/assetmanager.js';
 import * as Scene from './sceneeditor.js';
-import Assets from './assettable.js';
-import {ColorLog} from './../core/utility.js';
-import TypedObject from './../core/type.js';
+import Assets from './../assettable.js';
+import {ColorLog} from './../../core/utility.js';
+import TypedObject from './../../core/type.js';
 
 
 const DropDownMenuID = "ComponentDropdownMenu";
@@ -223,6 +223,16 @@ export default class InspectorEditor extends EditorPanel
 				let enumSet = enums.get(label);
 				if(enumSet != null)
 					this.#Bindings.push(Editor.DrawEnumDropdown(parentDiv, comp, propName, label, enumSet));
+				else ColorLog("Missing enum '" + label + "'.", "warning");
+				break;
+			}
+			case "bitmask":
+			{
+				//let's see if we've defined an enum for this type
+				let enums = Scene.GetEnumDefs();
+				let enumSet = enums.get(label);
+				if(enumSet != null)
+					this.#Bindings.push(Editor.DrawBitmaskDropdown(parentDiv, comp, propName, label, enumSet));
 				else ColorLog("Missing enum '" + label + "'.", "warning");
 				break;
 			}

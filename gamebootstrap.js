@@ -18,12 +18,12 @@ import Rect from './core/rect.js';
 //game project imports
 import Assets from './game/assettable.js';
 import Factory from './game/factory.js';
-import {Pallet, PalletTool} from './game/toolpallet.js';
 import SceneManager from './game/scene.js';
-import * as Editor from './game/sceneeditor.js';
 
-import HierarchyEditor from './game/hierarchyeditor.js';
-import InspectorEditor from './game/inspector.js';
+import {Pallet, PalletTool} from './game/editor/toolpallet.js';
+import * as Editor from './game/editor/sceneeditor.js';
+import HierarchyEditor from './game/editor/hierarchyeditor.js';
+import InspectorEditor from './game/editor/inspector.js';
 
 //ecs components
 import Camera from './systems/camera.js';

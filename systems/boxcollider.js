@@ -8,8 +8,8 @@ TypedObject.RegisterFactoryMethod("BoxCollider", () => { return new BoxCollider(
 TypedObject.RegisterType("BoxCollider", "BaseComponent", () =>
 {
 	let type = TypedObject.GetType("BoxCollider");
-	type.AddSerializedProp('Layer', 'LayerMask', 'Width', 'Height', 'IsTrigger', 'IsStatic');
-	type.AddInspectorProp(["enum","Collision Layer"], ["bitmask","Collision Mask"], ["float","Width"], ["float","Height"], ["bool","Trigger"], ["bool","Static"]);
+	type.AddSerializedProp('LayerMask', 'Width', 'Height', 'IsTrigger', 'IsStatic');
+	type.AddInspectorProp(["bitmask","Collision Layers"], ["float","Width"], ["float","Height"], ["bool","Trigger"], ["bool","Static"]);
 
 });
 
@@ -83,6 +83,11 @@ export default class BoxCollider extends BaseComponent
 	get LayerMask()
 	{
 		return this.#LayerMask;
+	}
+	
+	set LayerMask(value)
+	{
+		this.#LayerMask = value;
 	}
 	
 	OnAttached()

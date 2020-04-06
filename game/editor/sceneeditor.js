@@ -1,15 +1,15 @@
-import Vector2 from './../core/vector2.js';
-import Rect from './../core/rect.js';
-import Input from './../core/input.js';
-import {LoadFileSync} from './../core/filereader.js';
-import Time from './../core/time.js';
+import Vector2 from './../../core/vector2.js';
+import Rect from './../../core/rect.js';
+import Input from './../../core/input.js';
+import {LoadFileSync} from './../../core/filereader.js';
+import Time from './../../core/time.js';
 
-import WorldPos from './../systems/worldpos.js';
-import SelectionBox from './../systems/selectionbox.js';
-import BoxCollider from './../systems/boxcollider.js';
-import Factory from './../game/factory.js';
-import Inspector from './../game/inspector.js';
-import {Pallet, PalletTool} from './../game/toolpallet.js';
+import WorldPos from './../../systems/worldpos.js';
+import SelectionBox from './../../systems/selectionbox.js';
+import BoxCollider from './../../systems/boxcollider.js';
+import Factory from './../factory.js';
+import Inspector from './inspector.js';
+import {Pallet, PalletTool} from './toolpallet.js';
 
 
 /// 
@@ -283,6 +283,11 @@ export function DeserializePalletTools(assetMan, path)
 					break;
 				}
 				case "ENUM":
+				{
+					let temp = CreateEnum(RegisteredEnums, data.slice(1, data.length));
+					break;
+				}
+				case "BITMASK":
 				{
 					let temp = CreateEnum(RegisteredEnums, data.slice(1, data.length));
 					break;

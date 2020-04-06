@@ -12,7 +12,21 @@ import Particle from './particle.js';
 import {RandomRange} from './../core/utility.js';
 
 TypedObject.RegisterFactoryMethod("ParticleEmitter", () => { return new ParticleEmitter(); });
-TypedObject.RegisterType("ParticleEmitter", "BaseComponent");
+TypedObject.RegisterType("ParticleEmitter", "BaseComponent", () =>
+{
+	let type = TypedObject.GetType("ParticleEmitter");
+	type.AddSerializedProp(	'RenderEnabled', 'RenderLayer', 'Space', 'GravityScale', 'LoopTime','MaxParticles', 'EmitRate', 'SpriteAsset',
+							'MinLifetime', 'MaxLifetime', 'MinScale', 'MaxScale', 'MinPosX', 'MaxPosX', 'MinPosY', 'MaxPosY', 'MinStartVelX', 'MaxStartVelX', 'MinStartVelY', 'MaxStartVelY');
+	type.AddInspectorProp(['bool','Render'], ['enum','Render Layer'], ['enum', 'Space Mode'], ['float', 'Gravity'],
+		['float','Loop Time'],['int','Max Particles'], ['float','Emit Rate'], ['Assets.Sprites','Sprite'],
+		['float','Min Lifetime'], ['float','Max Lifetime'],
+		['float','Min Scale'], ['float','Max Scale'],
+		['float','Min PosX'], ['float','Max PosX'],
+		['float','Min PosY'], ['float','Max PosY'],
+		['float','Min VelX'], ['float','Max VelX'],
+		['float','Min VelY'], ['float','Max VelY'],
+		);
+});
 
 /// 
 /// An entity component that manages its own internal system for handling the spawning,
@@ -200,7 +214,6 @@ export default class ParticleEmitter extends BaseComponent
 		if(this.Space == SpaceMode.World)
 		{
 			trans.SetParent(null);
-			
 		}
 		else 
 		{
@@ -233,7 +246,7 @@ export default class ParticleEmitter extends BaseComponent
 		{
 			part.OnSummonedFromPool();
 		}
-		
+		ent.HideInHierarchy = true;
 		return ent;
 	}
 	
