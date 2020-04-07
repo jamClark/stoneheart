@@ -103,7 +103,7 @@ export default class ParticleEmitter extends BaseComponent
 	set SpriteAsset(spriteAsset)
 	{
 		if(spriteAsset instanceof Promise)
-			spriteAsset.then(result => { this.#Sprite = result; });
+			spriteAsset.then(result => this.Sprite = result);
 		else this.#Sprite = spriteAsset;
 	}
 	

@@ -57,7 +57,7 @@ export default class CharacterController extends BaseComponent
 	set JumpSound(asset)
 	{
 		if(asset instanceof Promise)
-			asset.then(result => this.#JumpSound = result);
+			asset.then(result => this.JumpSound = result);
 		else this.#JumpSound = asset;
 	}
 	
@@ -65,7 +65,7 @@ export default class CharacterController extends BaseComponent
 	set LandSound(asset)
 	{
 		if(asset instanceof Promise)
-			asset.then(result => this.#LandSound = result);
+			asset.then(result => this.LandSound = result);
 		else this.#LandSound = asset;
 	}
 	
@@ -73,7 +73,7 @@ export default class CharacterController extends BaseComponent
 	set LeftSprite(asset)
 	{
 		if(asset instanceof Promise)
-			asset.then(result => this.#LeftSprite = result);
+			asset.then(result => this.LeftSprite = result);
 		else this.#LeftSprite = asset;
 	}
 	
@@ -81,7 +81,7 @@ export default class CharacterController extends BaseComponent
 	set RightSprite(asset)
 	{
 		if(asset instanceof Promise)
-			asset.then(result => this.#RightSprite = result);
+			asset.then(result => this.RightSprite = result);
 		else this.#RightSprite = asset;
 	}
 	
@@ -89,7 +89,7 @@ export default class CharacterController extends BaseComponent
 	set LeftAnim(asset)
 	{
 		if(asset instanceof Promise)
-			asset.then(result => this.#LeftAnim = result);
+			asset.then(result => this.LeftAnim = result);
 		else this.#LeftAnim = asset;
 	}
 	
@@ -97,7 +97,7 @@ export default class CharacterController extends BaseComponent
 	set RightAnim(asset)
 	{
 		if(asset instanceof Promise)
-			asset.then(result => this.#RightAnim = result);
+			asset.then(result => this.RightAnim = result);
 		else this.#RightAnim = asset;
 	}
 }

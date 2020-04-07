@@ -32,7 +32,7 @@ export default class SpriteAnimator extends BaseComponent
 	set AnimAsset(asset = null)
 	{
 		if(asset instanceof Promise)
-			asset.then(result => this.#Anim = result);
+			asset.then(result => this.AnimAsset = result);
 		else this.#Anim = asset;
 	}
 	
@@ -50,9 +50,9 @@ export default class SpriteAnimator extends BaseComponent
 	
 	set CurrentAnim(animName)
 	{
-		
 		this.#CurrentAnim = animName;
 		if(this.AnimAsset == null) return;
+		console.log(this.AnimAsset["Anims"] instanceof Map);
 		let curr = this.AnimAsset["Anims"].get(this.#CurrentAnim);
 		if(!curr) return;
 		

@@ -3,6 +3,7 @@ import Editor from './editor.js';
 import EditorPanel from './editorpanel.js';
 import * as Scene from './sceneeditor.js';
 import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../../core/utility.js'
+import {LoadFileSync, CreateFileDownload} from './../../core/filereader.js';
 
 import Entity from './../../ecs/entity.js';
 import WorldPosition from './../../systems/worldpos.js';
@@ -36,6 +37,8 @@ export default class HierarchyEditor extends EditorPanel
 		<div class="ContextMenu" id="${HierarchyMenuId}">
 			<ul class="ContextMenuList">
 				<li class="ContextMenuItem" id="CreateEntItem">Create Entity</li>
+				<li class="ContextMenuItem" id="LoadEntItem" onclick=document.getElementById('file-input').click();>Load Entity</li>
+				<input id="file-input" type="file" name="name" style="display:none"/>
 			</ul>
 		</div>
 		
@@ -44,14 +47,18 @@ export default class HierarchyEditor extends EditorPanel
 				<li class="ContextMenuItem" id="DuplicateEntItem">Duplicate</li>
 				<li class="ContextMenuItem" id="CreateEntItem2">Create Entity</li>
 				<li class="ContextMenuItem" id="DeleteEntItem">Delete</li>
+				<li class="ContextMenuItem" id="SerializeEntItem">Save</li>
 			</ul>
 		</div>
 		`;
 		
-		document.getElementById("DuplicateEntItem").onclick = this.DuplicateEntity.bind(this);
 		document.getElementById("CreateEntItem").onclick = this.CreateEntity.bind(this);
+		document.getElementById("file-input").onchange = this.LoadEntity.bind(this);
+		
+		document.getElementById("DuplicateEntItem").onclick = this.DuplicateEntity.bind(this);
 		document.getElementById("CreateEntItem2").onclick = this.CreateEntity.bind(this);
 		document.getElementById("DeleteEntItem").onclick = this.DeleteEntity.bind(this);
+		document.getElementById("SerializeEntItem").onclick = this.SerializeEnt.bind(this);
 		
 		//this.DrawFloatField(this.PanelDiv, Editor.GetSnapSettings(), "x", "Snap X", 50);
 		//this.DrawFloatField(this.PanelDiv, Editor.GetSnapSettings(), "y", "Snap Y", 50);
@@ -210,6 +217,36 @@ export default class HierarchyEditor extends EditorPanel
 		Scene.ForceSelection(ent);
 		this.StartListeningForSelection();
 		
+		this.RemoveAllContextMenus();
+		return ent;
+	}
+	
+	SerializeEnt(evt)
+	{
+		let ent = this.HierarchyItemToEnt(this.#ContextMenuItem);
+		CreateFileDownload(ent.Serialize());
+		//console.log(ent.Serialize());
+		this.RemoveAllContextMenus();
+	}
+	
+	LoadEntity()
+	{
+		let link = document.getElementById('file-input');
+		let dataStream = LoadFileSync("./assets/prefabs/" + link.files[0].name);
+		let ent = this.DeserializeEntity(dataStream);
+		link.value = null;
+		this.RemoveAllContextMenus();
+		return ent;
+	}
+	
+	DeserializeEntity(strm)
+	{
+		let ent = Entity.Deserialize(this.AssetMan, strm);
+		this.#EntityMan.RegisterEntity(ent);
+		
+		this.StopListeningForSelection();
+		Scene.ForceSelection(ent);
+		this.StartListeningForSelection();
 		this.RemoveAllContextMenus();
 		return ent;
 	}

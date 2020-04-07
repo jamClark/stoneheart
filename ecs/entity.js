@@ -1,3 +1,4 @@
+import BaseComponent from './basecomponent.js';
 import EntityMessage from './entitymessage.js';
 import WorldPos from './../systems/worldpos.js';
 
@@ -18,6 +19,34 @@ export default class Entity
 		for(let i = 0; i < comps.length; i++)
 			this.AddComponent(comps[i]);
 		
+	}
+	
+	Serialize()
+	{
+		let obj = {
+			TYPE: "Entity",
+			name: this.name,
+			Active: this.Active,
+			Components: this.#Components.map(x => x.Serialize()),
+		};
+		
+		return JSON.stringify(obj);
+	}
+	
+	static Deserialize(assetManager, strm)
+	{
+		if(typeof strm !== 'string')
+			throw new Error("Cannot deserialize non-string data.");
+		
+		let obj = JSON.parse(strm);
+		if(!obj || !obj.TYPE || obj.TYPE !== 'Entity')
+			throw new Error("Improperly formatted entity serialization stream.");
+		
+		let ent = new Entity(obj.name);
+		ent.Active = obj.Active;
+		for(let comp of obj.Components)
+			BaseComponent.Deserialize(ent, assetManager, JSON.stringify(comp)); //We have to re-serialize because javascript's JSOn implemention is fucking stupid as shit and can't handle nested strings, apparently.
+		return ent;
 	}
 	
 	get Components() { return [...this.#Components]; }

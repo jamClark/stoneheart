@@ -14,3 +14,24 @@ export function LoadFileSync(filePath)
 	return xmlhttp.responseText;
 }
 
+export function CreateFileDownload(content, type = "text/plain;charset=utf-8")
+{
+	/*
+	let link = document.createElement('a');
+	link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+	link.setAttribute('download', filename);
+	link.style.display = 'none';
+	link.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	*/
+	
+	let link = document.createElement('a');
+	link.style.display = "none";
+	var file = new Blob([content], {type: type});
+	link.href = URL.createObjectURL(file);
+	link.download = name;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+}

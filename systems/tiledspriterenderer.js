@@ -30,15 +30,17 @@ export default class TiledSpriteRenderer extends BaseComponent
 		this.Layer = 0;
 		this.Sprite = sprite;
 	}
-	
 	get Sprite() { return this.#Sprite; }
 	set Sprite(sprite) 
 	{
 		if(sprite instanceof Promise)
-			sprite.then(result => this.#Sprite = result);
-		else this.#Sprite = sprite;
-		if(this.#Sprite != null)
-			this.FrameRect = [0, 0, this.#Sprite.width, this.#Sprite.height, 0, 0, this.#Sprite.width, this.#Sprite.height];
+			sprite.then(result => this.Sprite = result);
+		else 
+		{
+			this.#Sprite = sprite;
+			if(this.#Sprite != null)
+				this.FrameRect = [0, 0, this.#Sprite.width, this.#Sprite.height, 0, 0, this.#Sprite.width, this.#Sprite.height];
+		}
 	}
 	
 	get Width() { return this.Rect.Width; }

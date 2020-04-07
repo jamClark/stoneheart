@@ -18,6 +18,7 @@ TypedObject.RegisterType("SpriteRenderer", "BaseComponent", () =>
 export default class SpriteRenderer extends BaseComponent
 {
 	#Sprite = null;
+	#LocalOffset = new Vector2(0, 0);
 	
 	constructor(sprite = null)
 	{
@@ -25,19 +26,28 @@ export default class SpriteRenderer extends BaseComponent
 		this.RequireComponent(WorldPosition);
 		this.FrameRect = [0, 0, 0, 0, 0, 0, 0, 0];
 		this.DestScale = [1, 1];
-		this.LocalOffset = new Vector2(0, 0);
 		this.Layer = 0;
 		this.Sprite = sprite;
+	}
+	
+	get LocalOffset() { return new Vector2(this.#LocalOffset); }
+	set LocalOffset(pos)
+	{
+		this.#LocalOffset.x = pos.x;
+		this.#LocalOffset.y = pos.y;
 	}
 	
 	get Sprite() { return this.#Sprite; }
 	set Sprite(sprite) 
 	{
 		if(sprite instanceof Promise)
-			sprite.then(result => this.#Sprite = result);
-		else this.#Sprite = sprite;
-		if(this.#Sprite != null)
-			this.FrameRect = [0, 0, this.#Sprite.width, this.#Sprite.height, 0, 0, this.#Sprite.width, this.#Sprite.height];
+			sprite.then(result => this.Sprite = result);
+		else 
+		{
+			this.#Sprite = sprite;
+			if(this.#Sprite != null)
+				this.FrameRect = [0, 0, this.#Sprite.width, this.#Sprite.height, 0, 0, this.#Sprite.width, this.#Sprite.height];
+		}
 	}
 	
 }

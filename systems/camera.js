@@ -27,8 +27,6 @@ export default class Camera extends BaseComponent
 		this.#VirtualX = virtualX;
 		this.#VirtualY = virtualY;
 		this.#Canvas = this.ECS.Get("canvas");
-		
-		console.log("Camera: Canvas = " + this.#Canvas);
 	}
 	
 	Awake()
