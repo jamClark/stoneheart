@@ -55,11 +55,83 @@ const RenderScale = 2;
 const AllowLiveSceneEditing = true;
 
 
+class Composite
+{
+	#InnerValue;
+	constructor()
+	{
+		this.#InnerValue = "Bibity-boo";
+		this.Var = 101;
+	}
+	
+	get Value() { return this.#InnerValue; }
+	
+	Destroy()
+	{
+		DestroyThing(this);
+	}
+}
+
+let Proxies = [];
+let Comps = [];
+let Revs = [];
+function CreateThing()
+{
+	let comp = new Composite();
+	let {proxy, revoke} = Proxy.revocable(comp,
+		{
+			get: function(target, name) {
+				return target[name];
+			},
+			set: function(target, name, value, receiver) 
+			{
+				target[name] = value;
+				return true;
+			}
+		});
+	Comps.push(comp);
+	Proxies.push(proxy);
+	Revs.push(revoke);
+	return proxy;
+}
+
+function FindThing(ref)
+{
+	return Proxies.indexOf(ref);
+}
+
+function DestroyThing(ref)
+{
+	let index = FindThing(ref);
+	if(index >= 0)
+	{
+		console.log("Thing found.... destroying");
+		Revs[index]();
+		Proxies.splice(index, 1);
+		Comps.splice(index, 1);
+		Revs.splice(index, 1);
+	}
+}
+
 /// 
 /// Entry-point for the application.
 /// 
 export function AppStart(canvas)
 {
+	/*
+	let comp = CreateThing();
+	console.log("INDEX: " + FindThing(comp));
+	console.log("Value: " + comp.Value);
+	comp.Hi = "Fuck off";
+	console.log("VALUE: " + comp.Hi);
+	console.log("ORG: " + Comps[0].Value);
+	console.log("ORG: " + Comps[0].Hi);
+	
+	comp.Destroy();
+	if(comp == null)
+		return console.log("Proxy is null");
+	else console.log("VALUE: " + comp.Value);
+	*/
 	
 	Audio.Init(new Rect(0, 0, canvas.width+128, canvas.height+128), 5);
 	ECS.Set("canvas", canvas);

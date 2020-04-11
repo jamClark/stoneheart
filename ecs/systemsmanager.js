@@ -38,7 +38,7 @@ export default class SystemsManager
 		if(!this.enabled) return;
 		
 		for(let i = 0; i < this.#Systems.length; i++)
-			this.#Systems[i].BatchProcess(this.#EntityManager._entities);
+			this.#Systems[i].BatchProcess(this.#EntityManager._EntitiesDirect);
 	}
 	
 	///
@@ -49,6 +49,6 @@ export default class SystemsManager
 		if(!this.enabled) return;
 		
 		for(let i = 0; i < this.#FixedSystems.length; i++)
-			this.#FixedSystems[i].FixedBatchProcess(this.#EntityManager._entities);
+			this.#FixedSystems[i].FixedBatchProcess(this.#EntityManager._EntitiesDirect);
 	}
 }

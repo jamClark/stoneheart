@@ -241,6 +241,16 @@ export default class InspectorEditor extends EditorPanel
 				this.#Bindings.push(Editor.DrawVector2Field(parentDiv, comp, propName, label));
 				break;
 			}
+			case "component":
+			{
+				this.#Bindings.push(Editor.DrawComponentRefField(parentDiv, comp, propName, label));
+				break;
+			}
+			case "entity":
+			{
+				this.#Bindings.push(Editor.DrawEntityRefField(parentDiv, comp, propName, label));
+				break;
+			}
 			default:
 			{
 				

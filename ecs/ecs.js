@@ -1,3 +1,4 @@
+import {GenerateUUID} from './../core/utility.js';
 
 /// 
 /// A kind of global container for shared global data that will need to be accessed
@@ -22,5 +23,37 @@ export default class ECS
 	static Get(id)
 	{
 		return ECS.#Fields.get(id);
+	}
+	
+	/// 
+	/// Creates a copy of the given ECS Entity.
+	/// 
+	static Instantiate(entityMan, blueprint)
+	{
+		if(!(blueprint instanceof Entity))
+			throw new Error("Cannot instantiate non-Entity objects.");
+		if(!blueprint)
+			throw new Error("Invalid null argument passed to Instantiate.");
+		
+		
+		let ent = new Entity(srcEnt.name);
+		let trans = new WorldPosition();
+		let selection = new SelectionBox();
+		ent.AddComponent(trans);
+		ent.AddComponent(selection);
+		entityMan.RegisterEntity(ent);
+		
+		trans.position = srcEnt.GetComponent(WorldPosition).position;
+		ent.Active = srcEnt.Active;
+		
+		for(let comp of srcEnt.Components)
+		{
+			if(comp.type != "WorldPosition" && comp.type != "SelectionBox")
+			{
+				let newComp = TypedObject.Activate(comp.type);
+				ent.AddComponent(newComp);
+				newComp.CopySettings(comp);
+			}
+		}
 	}
 }

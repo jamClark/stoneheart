@@ -115,7 +115,6 @@ export default class CollisionSystem extends BaseComponentSystem
 	/// 
 	Register(collider, rebuildTree = false)
 	{
-		console.log("REGISTERING:");
 		let ent = collider.Entity;
 		if(ent == null)
 			throw new Error("Collider was not attached to an Entity.");

@@ -52,7 +52,6 @@ export default class SpriteAnimator extends BaseComponent
 	{
 		this.#CurrentAnim = animName;
 		if(this.AnimAsset == null) return;
-		console.log(this.AnimAsset["Anims"] instanceof Map);
 		let curr = this.AnimAsset["Anims"].get(this.#CurrentAnim);
 		if(!curr) return;
 		

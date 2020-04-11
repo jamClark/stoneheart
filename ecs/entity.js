@@ -1,6 +1,7 @@
 import BaseComponent from './basecomponent.js';
 import EntityMessage from './entitymessage.js';
 import WorldPos from './../systems/worldpos.js';
+import {GenerateUUID} from './../core/utility.js';
 
 /// 
 /// Container and accessor for a set of components attached to a single object.
@@ -11,6 +12,7 @@ export default class Entity
 	#Listeners = new Map();
 	#GlobalListeners = new Map();
 	#Active = false;
+	#GUID = GenerateUUID();
 	
 	constructor(name, ...comps)
 	{
@@ -18,13 +20,56 @@ export default class Entity
 		this.Active = true;
 		for(let i = 0; i < comps.length; i++)
 			this.AddComponent(comps[i]);
-		
+		this._Manager = null;
+	}
+	
+	get Manager() { return !this._Manager ? null:this._Manager; }
+	get GUID() { return this.#GUID; }
+	_SetGUID(guid) { this.#GUID = guid; }
+	
+	/// 
+	/// Returns true if this object is destroyed or it's proxy has been revoked.
+	/// 
+	get IsNull() 
+	{
+		if(this.IsDestroyed) return true;
+		try {
+			new Proxy(value, value);
+			return false;
+		} catch(err) {
+			return Object(value) === value;
+		}
+	}
+	
+	/// 
+	/// Returns true if this object is destroyed or it's proxy has been revoked.
+	/// 
+	static IsNull(obj) 
+	{
+		if(obj == null || this.IsDestroyed) return true;
+		try {
+			new Proxy(value, value);
+			return false;
+		} catch(err) {
+			return Object(value) === value;
+		}
+	}
+	
+	FindComponentByGuid(guid)
+	{
+		for(let comp of this.#Components)
+		{
+			if(comp.GUID == guid)
+				return comp;
+		}
+		return null;
 	}
 	
 	Serialize()
 	{
 		let obj = {
 			TYPE: "Entity",
+			guid: this.#GUID,
 			name: this.name,
 			Active: this.Active,
 			Components: this.#Components.map(x => x.Serialize()),
@@ -33,7 +78,7 @@ export default class Entity
 		return JSON.stringify(obj);
 	}
 	
-	static Deserialize(assetManager, strm)
+	static Deserialize(entityManager, assetManager, strm, preserveGuid = false)
 	{
 		if(typeof strm !== 'string')
 			throw new Error("Cannot deserialize non-string data.");
@@ -43,9 +88,12 @@ export default class Entity
 			throw new Error("Improperly formatted entity serialization stream.");
 		
 		let ent = new Entity(obj.name);
+		if(preserveGuid)
+			ent._SetGUID(obj.guid);
 		ent.Active = obj.Active;
+		entityManager.RegisterEntity(ent);
 		for(let comp of obj.Components)
-			BaseComponent.Deserialize(ent, assetManager, JSON.stringify(comp)); //We have to re-serialize because javascript's JSOn implemention is fucking stupid as shit and can't handle nested strings, apparently.
+			BaseComponent.Deserialize(ent, assetManager, JSON.stringify(comp), preserveGuid); //We have to re-serialize because javascript's JSOn implemention is fucking stupid as shit and can't handle nested strings, apparently.
 		return ent;
 	}
 	
@@ -108,6 +156,11 @@ export default class Entity
 		}
 		
 		return true;
+	}
+	
+	get IsDestroyed()
+	{
+		return this._DestroyPending;
 	}
 	
 	/// 

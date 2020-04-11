@@ -1,4 +1,6 @@
 import {ColorLog} from './../core/utility.js';
+import {GenerateUUID} from './../core/utility.js';
+import Entity from './entity.js';
 import TypedObject from './../core/type.js';
 import ECS from './ecs.js';
 
@@ -14,7 +16,8 @@ TypedObject.RegisterType("BaseComponent", "TypedObject", () =>
 ///
 export default class BaseComponent extends TypedObject
 {
-	#Enabled = true;
+	#Enabled = true;	
+	#GUID = GenerateUUID();
 	
 	constructor()
 	{
@@ -23,6 +26,8 @@ export default class BaseComponent extends TypedObject
 		this._RunOnce = true;
 	}
 	
+	get GUID() { return this.#GUID; }
+	_SetGUID(guid) { this.#GUID = guid; }
 	get ECS() { return ECS; }
 	
 	static get AllowMultipleAttrName() { return 'AllowMultiple'; }
@@ -32,11 +37,28 @@ export default class BaseComponent extends TypedObject
 		let type = TypedObject.GetType(this.type);
 		let compList = [];
 		compList.push(["TYPE", this.type]);
+		compList.push(["GUID", this.#GUID]);
 		for(let prop of type.SerializationList)
 		{
-			if(this[prop].srcPath)
-				compList.push(["ASSET", prop, this[prop].srcPath]);
-			else compList.push([prop, this[prop]]);
+			let propValue = this[prop];
+			if(propValue == null || propValue.IsDestroyed)
+				compList.push(["REF", "NONE", prop, null]);
+			else if(propValue.srcPath)
+				compList.push(["ASSET", prop, propValue.srcPath]);
+			else if(propValue.GUID)
+			{
+				//reference to an object. is it a linkable one?
+				if(propValue instanceof Entity)
+					compList.push(["REF", "ENTITY", prop, propValue.GUID]);
+				else if(propValue instanceof BaseComponent)
+					compList.push(["REF", "COMP", prop, propValue.Entity.GUID, propValue.GUID]);
+				else
+				{
+					ColorLog("Unserializable object type '" + prop + "'.");
+					continue;
+				}
+			}
+			else compList.push([prop, propValue]);
 		}
 		
 		return compList;
@@ -47,7 +69,7 @@ export default class BaseComponent extends TypedObject
 		return this.ComposeSerializationData();//JSON.stringify(this.ComposeSerializationData());
 	}
 	
-	static Deserialize(entity, assetManager, strm)
+	static Deserialize(entity, assetManager, strm, preserveGuid = false)
 	{
 		let obj = JSON.parse(strm);
 		let comp = TypedObject.Activate(obj[0][1]);
@@ -55,15 +77,67 @@ export default class BaseComponent extends TypedObject
 			throw new Error("Serialized information is not a component.");
 		
 		entity.AddComponent(comp);
-		//TODO: If we ever implement referencing to other objects, we'll need to store and check the data type here
-		for(let i = 1; i < obj.length; i++)
+		if(preserveGuid)
+			comp._SetGUID(obj[1][1]);
+		
+		for(let i = 2; i < obj.length; i++)
 		{
-			if(obj[i][0] === "ASSET")
+			let propType = obj[i][0];
+			if(propType === "ASSET")
 			{
+				let propId = obj[i][1];
 				let path = obj[i][2];
-				let asset = assetManager.LoadAsset(obj[i][2]);
-				comp[obj[i][1]] = asset;
+				let asset = assetManager.LoadAsset(path);
+				comp[propId] = asset;
 			}
+			else if(propType === "REF")
+			{
+				//reference types, we'll need to find what it is refencing by guid
+				let refType = obj[i][1];
+				let propId = obj[i][2];
+				let entGuid = obj[i][3];
+				comp[propId] = null;
+				
+				if(refType === "NONE")
+					continue;
+				else if(refType === "ENTITY")
+				{
+					let promise = new Promise((resolve, fail) => {
+						comp.Entity.Manager.ScheduleGuidSearch(entGuid, resolve, fail);
+					});
+					
+					promise.then(
+						result => { comp[propId] = result; },
+						fail =>
+						{
+							console.log(fail); 
+							comp[propId] = null;
+						});
+						
+				}
+				else if(refType === "COMP")
+				{
+					let compGuid = obj[i][4];
+					//similar to the entity guid search above, but now with the added
+					//fun of also looking for the attached component
+					let promise = new Promise((resolve, fail) => {
+						comp.Entity.Manager.ScheduleGuidSearch(entGuid, resolve, fail);
+					});
+					
+					promise.then(
+						result => { comp[propId] = result.FindComponentByGuid(compGuid); },
+						fail =>
+						{
+							console.log(fail); 
+							comp[propId] = null;
+						});
+				}
+				else if(refType === "PREFAB")
+				{
+					throw new Error("Prefab-reference serialization not yet implemented.");
+				}
+			}
+			//straight copy of a value-type
 			else comp[obj[i][0]] = obj[i][1];
 		}
 		
@@ -107,6 +181,11 @@ export default class BaseComponent extends TypedObject
 			this.Awake();
 		}
 		this.OnEnable();
+	}
+	
+	get IsDestroyed()
+	{
+		return this.Entity == null || this.Entity.IsDestroyed;
 	}
 	
 	/// 

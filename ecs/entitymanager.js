@@ -5,18 +5,44 @@ import Entity from './entity.js';
 /// 
 export default class EntityManager
 {
+	#GuidLut = new Map();
 	#Listeners = new Map();
 	
 	#EntityRegisteredListeners = [];
 	#EntityUnregisteredListeners = [];
-	
+	#Entities = [];
+	#ScheduledSearches = [];
 	
 	constructor()
 	{
-		this._entities = [];
 	}
 	
-	get Entities() { return [...this._entities]; }
+	get _EntitiesDirect() { return this.#Entities; }
+	get Entities() { return [...this.#Entities]; }
+	
+	ScheduleGuidSearch(guid, resolve, fail)
+	{
+		//next frame we'll see if we can't find this mofo
+		this.#ScheduledSearches.push([guid, resolve, fail]);
+		
+		//TODO: This is for testing. Needs to be done at the end of the frame so that level loading can work
+		this.HandlePendingGuidSearches();
+	}
+	
+	HandlePendingGuidSearches()
+	{
+		for(let search of this.#ScheduledSearches)
+		{
+			let result = this.#GuidLut.get(search[0]);
+			if(result)
+				search[1](result);
+			else search[2]("No entity with the guid '" + search[0] + "' exists in the scene.");
+		}
+		
+		this.#ScheduledSearches = [];
+	}
+	
+	FindEntityByGuid(guid) { return this.#GuidLut.get(guid); }
 	
 	AddEntityRegisteredListener(handler)
 	{
@@ -40,6 +66,7 @@ export default class EntityManager
 		let index = this.#EntityUnregisteredListeners.indexOf(handler);
 		if(index >= 0)
 			this.#EntityUnregisteredListeners.splice(index, 1);
+		else console.log("WARNING: Could not remove the desired entity registration handlers!");
 	}
 	
 	HouseKeeping()
@@ -54,9 +81,9 @@ export default class EntityManager
 	RemoveDestroyedEntities()
 	{
 		let i = 0;
-		for(let i = 0; i < this._entities.length;)
+		for(let i = 0; i < this.#Entities.length;)
 		{
-			let ent = this._entities[i];
+			let ent = this.#Entities[i];
 			
 			if(ent._DestroyPending)
 			{
@@ -74,7 +101,7 @@ export default class EntityManager
 	/// 
 	EnableScheduledEntities()
 	{
-		for(let ent of this._entities)
+		for(let ent of this.#Entities)
 		{
 			if(ent.ActiveInHierarchy && ent._ScheduleForEnabling)
 				ent._InnerEnable();
@@ -86,10 +113,11 @@ export default class EntityManager
 		if(!(entity instanceof Entity))
 			throw new Error("Attemping to register a non-Entity object with an EntityManager.");
 		
-		this._entities.push(entity);
+		this.#Entities.push(entity);
 		for(let callback of this.#EntityRegisteredListeners)
 				callback(this, entity);
 		entity._Manager = this;
+		this.#GuidLut.set(entity.GUID, entity);
 	}
 	
 	UnregisterEntity(entity)
@@ -98,15 +126,16 @@ export default class EntityManager
 			throw new Error("Attemping to unregister a non-Entity object with an EntityManager.");
 		
 		let result = false;
-		let index = this._entities.indexOf(entity);
+		let index = this.#Entities.indexOf(entity);
 		if(index > -1)
 		{
 			result = true;
-			this._entities.splice(index, 1);
+			this.#Entities.splice(index, 1);
 			for(let callback of this.#EntityUnregisteredListeners)
 				callback(this, entity);
 		}
 		entity._Manager = null;
+		this.#GuidLut.delete(entity.GUID);
 		return result;
 	}
 	
@@ -116,7 +145,7 @@ export default class EntityManager
 	QueryForEntities(... desiredTypes)
 	{
 		let list = [];
-		for(let ent of this._entities)
+		for(let ent of this.#Entities)
 		{
 			if(ent.HasComponents(...desiredTypes))
 				list.push(ent);

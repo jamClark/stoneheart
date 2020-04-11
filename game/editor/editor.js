@@ -58,6 +58,68 @@ export default class Editor
 	/// 
 	/// 
 	/// 
+	static DrawEntityRefField(parentDiv, obj, property, label, styleOptions)
+	{
+	}
+	
+	/// 
+	/// 
+	/// 
+	static DrawComponentRefField(parentDiv, obj, property, label, styleOptions)
+	{
+		let fieldRoot = this.DrawBaseField(parentDiv, label);
+		let inputElm = document.createElement('div');
+		fieldRoot.appendChild(inputElm);
+		
+		let compRef = obj[property];
+		//need to check if the entity is null just in case
+		if(compRef == null || compRef.IsDestroyed)
+		{
+			inputElm.value 		= "null";
+			inputElm.innerHTML 	= "null";
+		}
+		else
+		{
+			inputElm.value 		= compRef.Entity.GUID + ":"  + compRef.guid;
+			inputElm.innerHTML 	= compRef.Entity.name + "->" + compRef.type;
+		}
+		inputElm.style = "width:100%";
+		if(styleOptions)
+			inputElm.style = styleOptions;
+		
+		return Editor.Bind(inputElm, "changed", "value", obj, property,
+			(value) =>
+			{
+				//elm-to-prop
+				if(value == null || value.length < 1)
+					return null;
+				
+				let guids = value.split(":");
+				console.log("Seeking entity " + guids[0] + " with comp " + guids[1]);
+				//TODO: seek out the entity/comp pair using the guids stored in the 'value' property
+			},
+			(value) =>
+			{
+				//prop-to-elm
+				let compRef = value;
+				let guidValue = "null";
+				if(compRef == null || compRef.IsDestroyed)
+				{
+					guidValue			= "null";
+					inputElm.innerHTML 	= "null";
+				}
+				else
+				{
+					guidValue 			= compRef.Entity.GUID + ":"  + compRef.guid;
+					inputElm.innerHTML 	= compRef.Entity.name + "->" + compRef.type;
+				}
+				return guidValue;
+			});
+	}
+	
+	/// 
+	/// 
+	/// 
 	static DrawButton(parentDiv, label, callback, styleId, styleOptions)
 	{
 		let inputDiv = document.createElement('div');

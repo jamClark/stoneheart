@@ -71,8 +71,7 @@ export default class HierarchyEditor extends EditorPanel
 	Enable()
 	{
 		if(!super.Enable()) return false;
-		this.#EntityMan.AddEntityRegisteredListener(this.HandleEntityAdded.bind(this));
-		this.#EntityMan.AddEntityUnregisteredListener(this.HandleEntityRemoved.bind(this));
+		this.StartListeningForEntsAdded();
 		this.BuildList(this.PanelDiv, this.#EntityMan.Entities);
 		this.StartListeningForSelection();
 		
@@ -88,8 +87,7 @@ export default class HierarchyEditor extends EditorPanel
 			RemoveMemberShadow(binding[0], binding[1]);
 		this.#Bindings = [];
 		
-		this.#EntityMan.RemoveEntityRegisteredListener(this.HandleEntityAdded.bind(this));
-		this.#EntityMan.RemoveEntityUnregisteredListener(this.HandleEntityRemoved.bind(this));
+		this.StopListeningForEntsAdded();
 		this.ClearList(this.PanelDiv);
 		this.StopListeningForSelection();
 		this.#EntToHierarchy.clear();
@@ -97,6 +95,22 @@ export default class HierarchyEditor extends EditorPanel
 		this.RemoveAllContextMenus();
 		this.PanelDiv.removeEventListener("contextmenu", this.ShowContextMenu);
 		return true;
+	}
+	
+	StartListeningForEntsAdded()
+	{
+		this.ListeningForEntsAdded = true;
+		this.#EntityMan.AddEntityRegisteredListener(this.HandleEntityAdded.bind(this));
+		this.#EntityMan.AddEntityUnregisteredListener(this.HandleEntityRemoved.bind(this));
+	}
+	
+	StopListeningForEntsAdded()
+	{
+		this.ListeningForEntsAdded = false;
+		
+		//THIS IS FAILING DUE TO THE BINDING
+		//this.#EntityMan.RemoveEntityRegisteredListener(this.HandleEntityAdded.bind(this));
+		//this.#EntityMan.RemoveEntityUnregisteredListener(this.HandleEntityRemoved.bind(this));
 	}
 	
 	ShowContextMenu(evt)
@@ -241,13 +255,17 @@ export default class HierarchyEditor extends EditorPanel
 	
 	DeserializeEntity(strm)
 	{
-		let ent = Entity.Deserialize(this.AssetMan, strm);
-		this.#EntityMan.RegisterEntity(ent);
+		this.StopListeningForEntsAdded();
+		let ent = Entity.Deserialize(this.#EntityMan, this.AssetMan, strm, false);
+		this.StartListeningForEntsAdded();
+		//this.#EntityMan.RegisterEntity(ent);
 		
 		this.StopListeningForSelection();
 		Scene.ForceSelection(ent);
 		this.StartListeningForSelection();
 		this.RemoveAllContextMenus();
+		this.ClearList(this.PanelDiv);
+		this.BuildList(this.PanelDiv, this.#EntityMan.Entities);
 		return ent;
 	}
 	
@@ -265,12 +283,16 @@ export default class HierarchyEditor extends EditorPanel
 	
 	HandleEntityAdded(manager, ent)
 	{
+		if(!this.ListeningForEntsAdded)
+			return;
 		this.ClearList(this.PanelDiv);
 		this.BuildList(this.PanelDiv, this.#EntityMan.Entities);
 	}
 	
 	HandleEntityRemoved(manager, ent)
 	{
+		if(!this.ListeningForEntsAdded)
+			return;
 		this.ClearList(this.PanelDiv);
 		this.BuildList(this.PanelDiv, this.#EntityMan.Entities);
 	}
