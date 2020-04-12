@@ -1,5 +1,12 @@
 import {SearchPropertyContainer, ShadowMember, RemoveMemberShadow} from './../../core/utility.js'
 import Vector2 from './../../core/vector2.js';
+
+export * from './editorpanel.js';
+export * from './hierarchyeditor.js';
+export * from './inspector.js';
+export * from './sceneeditor.js'
+export * from './toolpallet.js';
+
 /// 
 /// Utility class that provides static functions for drawing editor
 /// controls and bind their data to data sources.

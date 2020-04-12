@@ -202,3 +202,35 @@ export function RemoveMemberShadow(foo, propName)
 		delete foo[`_SHADOWCALLBACKS_${propName}`];
 }
 
+
+/// 
+/// 
+/// 
+export function ImportFromDirectory(url)
+{
+	let request = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+	request.onreadystatechange=function()
+	{
+		if (request.readyState==4 && request.status==200)
+		{
+			var fileList = request.responseText.split('\n');
+			for(let i = 0; i < fileList.length; i++)
+			{
+				var fileinfo = fileList[i].split(' ');
+				for(let j = 0; j < fileinfo.length; j++)
+				{
+					if(fileinfo[j].includes("<li><a"))
+					{
+						let filesec = fileinfo[j+1];
+						filesec = filesec.split('"')[1];
+						filesec = filesec.split('"')[0];
+						import(url+filesec);
+					}
+				}
+			}
+		}
+	}
+	request.open("GET", url, false);
+	request.send();
+}
+

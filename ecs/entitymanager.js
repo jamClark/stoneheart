@@ -182,6 +182,18 @@ export default class EntityManager
 	}
 	
 	/// 
+	/// Registers an entity as being a global listener for a given message type.
+	/// 
+	AddListenerByName(messageName, entity)
+	{
+		let ents = this.#Listeners.get(messageName);
+		if(ents == null)
+			ents = [];
+		ents.push(entity);
+		this.#Listeners.set(messageName, ents);
+	}
+	
+	/// 
 	/// Removes an entity as being a global listener for a given message type.
 	/// 
 	RemoveListener(messageType, entity)
@@ -192,6 +204,19 @@ export default class EntityManager
 		if(index >= 0) ents.splice(index, 1);
 		if(ents.length < 1) 
 			this.#Listeners.delete(messageType.name.toString());
+	}
+	
+	/// 
+	/// Removes an entity as being a global listener for a given message type.
+	/// 
+	RemoveListenerByName(messageName, entity)
+	{
+		let ents = this.#Listeners.get(messageName);
+		if(ents == null) return;
+		let index = ents.indexOf(entity);
+		if(index >= 0) ents.splice(index, 1);
+		if(ents.length < 1) 
+			this.#Listeners.delete(messageName);
 	}
 	
 	/// 

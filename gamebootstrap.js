@@ -21,7 +21,7 @@ import Factory from './game/factory.js';
 import SceneManager from './game/scene.js';
 
 import {Pallet, PalletTool} from './game/editor/toolpallet.js';
-import * as Editor from './game/editor/sceneeditor.js';
+import * as SceneEditor from './game/editor/sceneeditor.js';
 import HierarchyEditor from './game/editor/hierarchyeditor.js';
 import InspectorEditor from './game/editor/inspector.js';
 
@@ -40,6 +40,8 @@ import CharacterControllerSystem from './systems/charactercontrollersystem.js'
 import SmoothFollowerSystem from './systems/smoothfollowersystem.js';
 import ParticleEmitterSystem from './systems/particleemittersystem.js';
 
+import {} from './systems/components.js';
+
 //components
 import WorldPos from './systems/worldpos.js';
 import SmoothFollower from './systems/smoothfollower.js';
@@ -55,84 +57,12 @@ const RenderScale = 2;
 const AllowLiveSceneEditing = true;
 
 
-class Composite
-{
-	#InnerValue;
-	constructor()
-	{
-		this.#InnerValue = "Bibity-boo";
-		this.Var = 101;
-	}
-	
-	get Value() { return this.#InnerValue; }
-	
-	Destroy()
-	{
-		DestroyThing(this);
-	}
-}
-
-let Proxies = [];
-let Comps = [];
-let Revs = [];
-function CreateThing()
-{
-	let comp = new Composite();
-	let {proxy, revoke} = Proxy.revocable(comp,
-		{
-			get: function(target, name) {
-				return target[name];
-			},
-			set: function(target, name, value, receiver) 
-			{
-				target[name] = value;
-				return true;
-			}
-		});
-	Comps.push(comp);
-	Proxies.push(proxy);
-	Revs.push(revoke);
-	return proxy;
-}
-
-function FindThing(ref)
-{
-	return Proxies.indexOf(ref);
-}
-
-function DestroyThing(ref)
-{
-	let index = FindThing(ref);
-	if(index >= 0)
-	{
-		console.log("Thing found.... destroying");
-		Revs[index]();
-		Proxies.splice(index, 1);
-		Comps.splice(index, 1);
-		Revs.splice(index, 1);
-	}
-}
 
 /// 
 /// Entry-point for the application.
 /// 
 export function AppStart(canvas)
 {
-	/*
-	let comp = CreateThing();
-	console.log("INDEX: " + FindThing(comp));
-	console.log("Value: " + comp.Value);
-	comp.Hi = "Fuck off";
-	console.log("VALUE: " + comp.Hi);
-	console.log("ORG: " + Comps[0].Value);
-	console.log("ORG: " + Comps[0].Hi);
-	
-	comp.Destroy();
-	if(comp == null)
-		return console.log("Proxy is null");
-	else console.log("VALUE: " + comp.Value);
-	*/
-	
 	Audio.Init(new Rect(0, 0, canvas.width+128, canvas.height+128), 5);
 	ECS.Set("canvas", canvas);
 	
@@ -148,7 +78,7 @@ export function AppStart(canvas)
 	SceneMan = new SceneManager(AssetMan, EntMan, SysMan);
 	
 	let AnimSys = new SpriteAnimatorSystem();
-	LoadedTools = Editor.DeserializePalletTools(AssetMan, './assets/pallettools.json');
+	LoadedTools = SceneEditor.DeserializePalletTools(AssetMan, './assets/pallettools.json');
 	Factory.Init(canvas, AssetMan, EntMan, AnimSys);
 	let MainCamera = Factory.CreateCamera(0, 0, RenderScale);
 	window.Debug = new DebugTools(RenderLayers.RequestLayer(100), MainCamera.GetComponent(Camera), false); //yeah, it's a global. Sue me.
@@ -177,7 +107,6 @@ export function AppStart(canvas)
 	AppFSM.PushState(AppStateMachine.EmptyLoopState);
 	Factory.CollisionSys = CollisionSys; //this is used internally when creating colliders but it doesn't exist at the time we call Init() above!!
 	Input.Init(window, canvas);
-	EntMan.RegisterEntity(MainCamera);
 	
 	//register the systems that we will tick for each update/fixed update cycle
 	//Runtime Systems.
@@ -241,13 +170,13 @@ export function AppStart(canvas)
 			if(AllowLiveSceneEditing && Input.GetKeyDown("KeyP") && Input.GetKeyDown("KeyO"))
 				DisableEditMode(CollisionSys);
 			
-			Editor.HandleSelection(EntMan, MainCamera.GetComponent(Camera));
+			SceneEditor.HandleSelection(EntMan, MainCamera.GetComponent(Camera));
 			},
 		EditorSysMan.Update.bind(EditorSysMan),
 			() => {
 			Time.ConsumeAccumulatedTime(EditorSysMan.FixedUpdate.bind(EditorSysMan));
 			Input.EndInputBlock();
-			Editor.RenderSelection(EntMan, MainCamera.GetComponent(Camera));
+			SceneEditor.RenderSelection(EntMan, MainCamera.GetComponent(Camera));
 			RenderLayers.CompositeLayers();
 			Audio.Instance.Update(MainCamera.GetComponent(WorldPos).position);
 			},
@@ -263,7 +192,6 @@ export function AppStart(canvas)
 		AppFSM.PushState(AppFSM.LoadingState);
 		SceneMan.UnloadCurrentScene();
 		await SceneMan.LoadScene(path);
-		//MainCamera.GetComponent(SmoothFollower).SetTarget(Factory.PlayerInst.GetComponent(WorldPos));
 		CollisionSys.RebuildSpacialTree();
 		AppFSM.PopState();
 	}

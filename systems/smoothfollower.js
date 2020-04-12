@@ -1,4 +1,5 @@
 import TypedObject from './../core/type.js';
+import Entity from './../ecs/entity.js';
 import BaseComponent from './../ecs/basecomponent.js';
 import ReferenceWrapper from './../ecs/referencewrapper.js';
 import WorldPosition from './worldpos.js';
@@ -34,8 +35,13 @@ export default class SmoothFollower extends BaseComponent
 	get Target() { return this.#Target.Ref; }
 	set Target(target)
 	{
-		if(target != null && !(target instanceof WorldPosition))
-			throw new Error("Follower target must be a WorldPosition component.");
-		this.#Target.Ref = target;
+		if(!target) this.#Target.Ref = null;
+		else if(!(target instanceof WorldPosition))
+		{
+			if(target instanceof Entity)
+				this.#Target.Ref = target.GetComponent(WorldPosition);
+			else throw new Error("Follower target must be a WorldPosition component or an Entity.");
+		}
+		else this.#Target.Ref = target;
 	}
 }

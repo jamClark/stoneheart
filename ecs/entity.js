@@ -26,6 +26,7 @@ export default class Entity
 	get Manager() { return !this._Manager ? null:this._Manager; }
 	get GUID() { return this.#GUID; }
 	_SetGUID(guid) { this.#GUID = guid; }
+	get Entity() { return this; }
 	
 	/// 
 	/// Returns true if this object is destroyed or it's proxy has been revoked.
@@ -249,6 +250,24 @@ export default class Entity
 	/// 
 	/// Registers an object as a listener for a specific message event.
 	/// 
+	AddListenerByName(messageName, listener)
+	{
+		if(typeof listener != "object")
+			throw new Error("Listener must be an object");
+		if(typeof listener.HandleMessage != "function")
+			throw new Error("Listener object must have a function named 'HandleMessage'");
+		
+		let list = this.#Listeners.get(messageName);
+		if(list == null)
+			list = [];
+		list.push(listener);
+		
+		this.#Listeners.set(messageName, list);
+	}
+	
+	/// 
+	/// Registers an object as a listener for a specific message event.
+	/// 
 	AddGlobalListener(messageType, listener)
 	{
 		if(typeof listener != "object")
@@ -265,6 +284,25 @@ export default class Entity
 		list.push(listener);
 		
 		this.#GlobalListeners.set(messageType.name.toString(), list);
+	}
+	
+	/// 
+	/// Registers an object as a listener for a specific message event.
+	/// 
+	AddGlobalListenerByName(messageName, listener)
+	{
+		if(typeof listener != "object")
+			throw new Error("Listener must be an object");
+		if(typeof listener.HandleMessage != "function")
+			throw new Error("Listener object must have a function named 'HandleMessage'");
+		
+		this._Manager.AddListenerByName(messageName, this);
+		let list = this.#Listeners.get(messageName);
+		if(list == null)
+			list = [];
+		list.push(listener);
+		
+		this.#GlobalListeners.set(messageName, list);
 	}
 	
 	/// 
@@ -289,6 +327,25 @@ export default class Entity
 	/// 
 	/// Unregisters a previously registered objects as a listener for a specific message event.
 	/// 
+	RemoveListenerByName(messageName, listener)
+	{
+		if(typeof listener != "object")
+			throw new Error("Listener must be an object");
+		if(typeof listener.HandleMessage != "function")
+			throw new Error("Listener object must have a function named 'HandleMessage'");
+		
+		let list = this.#Listeners.get(messageName);
+		if(list == null) return;
+		let index = list.indexOf(listener);
+		if(index >= 0) list.splice(index, 1);
+		if(list.length < 1)
+			this.#Listeners.delete(messageName);
+			
+	}
+	
+	/// 
+	/// Unregisters a previously registered objects as a listener for a specific message event.
+	/// 
 	RemoveGlobalListener(messageType, listener)
 	{
 		if(typeof listener != "object")
@@ -304,6 +361,27 @@ export default class Entity
 		if(index >= 0) list.splice(index, 1);
 		if(list.length < 1)
 			this.#GlobalListeners.delete(messageType.name.toString());
+			
+	}
+	
+	/// 
+	/// Unregisters a previously registered objects as a listener for a specific message event.
+	/// 
+	RemoveGlobalListenerByName(messageName, listener)
+	{
+		if(typeof listener != "object")
+			throw new Error("Listener must be an object");
+		if(typeof listener.HandleMessage != "function")
+			throw new Error("Listener object must have a function named 'HandleMessage'");
+			
+		this._Manager.RemoveListenerByName(messageName, this);
+		
+		let list = this.#Listeners.get(messageName);
+		if(list == null) return;
+		let index = list.indexOf(listener);
+		if(index >= 0) list.splice(index, 1);
+		if(list.length < 1)
+			this.#GlobalListeners.delete(messageName);
 			
 	}
 	
@@ -366,8 +444,8 @@ export default class Entity
 		if(index > -1)
 		{
 			this.#Components.splice(index, 1);
-			component._Entity = null;
 			component.OnDisable();
+			component._Entity = null;
 			component.OnDetached();
 		}
 		return component;

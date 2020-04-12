@@ -1,5 +1,13 @@
 import {GenerateUUID} from './../core/utility.js';
 
+export * from './basecomponent.js';
+export * from './basecomponentsystem.js';
+export * from './entity.js';
+export * from './entitymanager.js';
+export * from './entitymessage.js';
+export * from './referencewrapper.js';
+export * from './systemsmanager.js';
+
 /// 
 /// A kind of global container for shared global data that will need to be accessed
 /// by any part of the ECS. Fields int his class are read-only once set.

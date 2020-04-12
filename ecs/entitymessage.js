@@ -14,4 +14,5 @@ export default class EntityMessage
 	/// around are of the correct type.
 	/// 
 	static get IsEntityMessage() { return true; }
+	
 }
