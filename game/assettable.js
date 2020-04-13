@@ -36,6 +36,7 @@ export default class Assets
 	
 	static #Sprites = 
 	{
+		TRIGGER:"./assets/sprites/trigger.png",
 		ANA_R: 	"./assets/sprites/ana_right.png",
 		ANA_L: 	"./assets/sprites/ana_left.png",
 		DEMO_1:	"./assets/sprites/tileset1.png",

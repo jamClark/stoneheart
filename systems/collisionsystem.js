@@ -4,7 +4,7 @@ import Vector2 from './../core/vector2.js';
 import WorldPos from './worldpos.js';
 import BoxCollider from './boxcollider.js';
 import Rigidbody from './rigidbody.js';
-import {CollisionEnterEvent, CollisionStayEvent, CollisionExitEvent} from './collisionevent.js';
+import {CollisionEnterEvent, CollisionStayEvent, CollisionExitEvent, TriggerEnterEvent, TriggerStayEvent, TriggerExitEvent} from './collisionevent.js';
 import {QuadTree, QuadNode} from './../core/quadtree.js';
 
 
@@ -44,7 +44,7 @@ class ContactManifold
 	/// 
 	Copy()
 	{
-		let mani = new ContactManifold(this.ColB, this.ColB);
+		let mani = new ContactManifold(this.ColA, this.ColB);
 		mani.Normal = this.Normal;
 		mani.Hit = this.Hit;
 		mani.Penetration = this.Penetration;
@@ -273,9 +273,9 @@ export default class CollisionSystem extends BaseComponentSystem
 		let localStaticTriggers = this.#StaticTriggers;
 		if(localStaticTriggers != null)
 		{
-			for(let t1 of this.#StaticTriggers)
+			for(let t of localStaticTriggers)
 			{
-				let t = t1[1];
+				if(t == collider) continue; //don't check for self collisions
 				if(!t.enabled || !t.Entity.ActiveInHierarchy) continue;
 				let otherRect = t.WorldRect(t.GetComponent(WorldPos).position);
 				if(myRect.IsOverlapping(otherRect) && (collider.LayerMask & t.LayerMask))
@@ -382,7 +382,8 @@ export default class CollisionSystem extends BaseComponentSystem
 					{
 						manifold.Normal = new Vector2(0, 1);
 						//HACK ALERT: Assuming gravity vector here and setting grounded state based on that!
-						col1.Entity.GetComponent(Rigidbody).IsGrounded = true;
+						let rb = col1.Entity.GetComponent(Rigidbody);
+						if(rb && !col1.IsTrigger && !col2.IsTrigger) rb.IsGrounded = true;
 					}
 					else
 					{
@@ -421,9 +422,10 @@ export default class CollisionSystem extends BaseComponentSystem
 			let trans = contact.ColA.GetComponent(WorldPos);
 			trans.Translate(depen);
 			let body = contact.ColA.GetComponent(Rigidbody);
-			if(body == null)
-				throw new Error("The dynamic body in this contact pair was not set as 'ColA' in the manifold.");
-			else body.NegateVelocity(contact.Normal.Mul(-1));
+			if(body != null)
+				body.NegateVelocity(contact.Normal.Mul(-1));
+			//else throw new Error("The dynamic body in this contact pair was not set as 'ColA' in the manifold.");
+			
 		}
 	}
 	
@@ -462,7 +464,7 @@ export default class CollisionSystem extends BaseComponentSystem
 			let i = this.FindCollisionInList(c, historic);
 			if(i < 0)
 			{
-				let msg = new CollisionEnterEvent(c);
+				let msg = (c.ColA.IsTrigger || c.ColB.IsTrigger) ? new TriggerEnterEvent(c) : new CollisionEnterEvent(c);
 				c.ColA.Entity.SendMessage(c.ColB.Entity, msg);
 				c.ColB.Entity.SendMessage(c.ColA.Entity, msg);
 				historic.push(c);
@@ -473,7 +475,7 @@ export default class CollisionSystem extends BaseComponentSystem
 				//in the historic version so we need to send the current version instead.
 				//At this time there is no need to replce the historic version but that
 				//could change in the future. If it does, this would be the place to do that.
-				let msg = new CollisionStayEvent(c);
+				let msg = (c.ColA.IsTrigger || c.ColB.IsTrigger) ? new TriggerStayEvent(c) : new CollisionStayEvent(c);
 				c.ColA.Entity.SendMessage(c.ColB.Entity, msg);
 				c.ColB.Entity.SendMessage(c.ColA.Entity, msg);
 			}
@@ -496,7 +498,7 @@ export default class CollisionSystem extends BaseComponentSystem
 				//HACK ALERT:checking for null due to posibility of destory entities
 				if(c.ColA.Entity != null && c.ColB.Entity != null)
 				{
-					let msg = new CollisionExitEvent(c);
+					let msg = (c.ColA.IsTrigger || c.ColB.IsTrigger) ? new TriggerExitEvent(c) : new CollisionExitEvent(c);
 					c.ColA.Entity.SendMessage(c.ColB.Entity, msg);
 					c.ColB.Entity.SendMessage(c.ColA.Entity, msg);
 				}

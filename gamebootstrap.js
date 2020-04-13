@@ -40,7 +40,9 @@ import CharacterControllerSystem from './systems/charactercontrollersystem.js'
 import SmoothFollowerSystem from './systems/smoothfollowersystem.js';
 import ParticleEmitterSystem from './systems/particleemittersystem.js';
 
+//jump-starts som auto-importing stuff so that file-level code is run
 import {} from './systems/components.js';
+import {} from './game/systems/components.js';
 
 //components
 import WorldPos from './systems/worldpos.js';
@@ -48,7 +50,6 @@ import SmoothFollower from './systems/smoothfollower.js';
 import SpriteRenderer from './systems/spriterenderer.js';
 import {SpaceMode} from './systems/particleemitter.js';
 import SelectionBox from './systems/selectionbox.js';
-
 
 let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, AppFSM;
 let  ToolPallet, InspectorPanel, HierarchyPanel;

@@ -16,3 +16,7 @@ export default class CollisionEvent extends EntityMessage
 export class CollisionStayEvent extends CollisionEvent {}
 export class CollisionEnterEvent extends CollisionEvent {}
 export class CollisionExitEvent extends CollisionEvent {}
+
+export class TriggerStayEvent extends CollisionEvent {}
+export class TriggerEnterEvent extends CollisionEvent {}
+export class TriggerExitEvent extends CollisionEvent {}

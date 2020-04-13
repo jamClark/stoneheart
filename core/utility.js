@@ -1,3 +1,4 @@
+import Time from './time.js';
 
 /// 
 /// Given a URL with a full path, this will return a relative path for the current domain.
@@ -232,5 +233,25 @@ export function ImportFromDirectory(url)
 	}
 	request.open("GET", url, false);
 	request.send();
+}
+
+/// 
+/// Executes a give method for a set rate per second. Returns an internal accumulator
+/// that must be passed back into this method in subsiquent calls.
+/// 
+export function ExecuteAtRate(rate, accum, callback, ...params)
+{
+	if(rate < 0) return;
+	
+	if(rate > 0)
+	{
+		accum += (rate*Time.deltaTime);
+		while(accum > 1)
+		{
+			accum -= 1;
+			callback(...params);
+		}
+	}
+	return accum;
 }
 
