@@ -6,8 +6,8 @@ TypedObject.RegisterFactoryMethod("SpriteAnimator", () => { return new SpriteAni
 TypedObject.RegisterType("SpriteAnimator", "BaseComponent", () =>
 {
 	let type = TypedObject.GetType("SpriteAnimator");
-	type.AddSerializedProp("AnimAsset","Speed","CurrentAnim");
-	type.AddInspectorProp(["Assets.Anims","Asset"], ["float","Speed"], ["string","Animation"]);
+	type.AddSerializedProp("AnimAsset","Speed","CurrentAnim","Loop");
+	type.AddInspectorProp(["Assets.Anims","Asset"], ["float","Speed"], ["string","Animation"], ["bool","Loop"]);
 });
 
 /// 
@@ -26,6 +26,7 @@ export default class SpriteAnimator extends BaseComponent
 		this.RequireComponent(SpriteRenderer);
 		this.AnimAsset = animAsset;
 		this.Speed = 1;
+		this.Loop = true;
 	}
 	
 	get AnimAsset() { return this.#Anim; }
@@ -66,15 +67,16 @@ export default class SpriteAnimator extends BaseComponent
 		let range = this.AnimAsset["Anims"].get(this.#CurrentAnim);
 		if(range == null) return;
 		
+		if(!this.Loop && this.#CurrentFrame == range[1])
+			return;
+		
 		//TODO: increment based on time elapsed and frame time
 		if((currentTime*1000) - this.#LastFrameTime > this.CurrentFrameDuration/this.Speed)
 		{
 			this.#CurrentFrame += inc;
 			this.#LastFrameTime = currentTime*1000;
 		}
-		
-		
-		
+				
 		if(this.#CurrentFrame > range[1])
 			this.#CurrentFrame = range[0];
 		else if(this.#CurrentFrame < range[0])

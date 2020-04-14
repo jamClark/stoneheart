@@ -85,8 +85,8 @@ export default class Damage extends BaseComponent
 	
 	SendDamageMessages(ent1, ent2)
 	{
-		this.Entity.SendMessage(ent1, ChangeHealthCmd.Shared.Modify(this.#Amount));
-		this.Entity.SendMessage(ent2, ChangeHealthCmd.Shared.Modify(this.#Amount));
+		this.Entity.SendMessage(ent1, ChangeHealthCmd.Shared(this.#Amount));
+		this.Entity.SendMessage(ent2, ChangeHealthCmd.Shared(this.#Amount));
 	}
 }
 
