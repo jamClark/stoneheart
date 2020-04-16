@@ -205,14 +205,14 @@ export function RemoveMemberShadow(foo, propName)
 
 
 /// 
-/// 
+/// Imports all javascript modules from a given path in order to run any root-level code.
 /// 
 export function ImportFromDirectory(url)
 {
 	let request = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
 	request.onreadystatechange=function()
 	{
-		if (request.readyState==4 && request.status==200)
+    if (request.readyState==4 && request.status==200)
 		{
 			var fileList = request.responseText.split('\n');
 			for(let i = 0; i < fileList.length; i++)
@@ -233,6 +233,65 @@ export function ImportFromDirectory(url)
 	}
 	request.open("GET", url, false);
 	request.send();
+}
+
+/// 
+/// Lists all files in an online directory. Can optionally list files in all
+/// sub-directories as well. Requires the hosting service to allow directory listings
+/// as well as not provide an default web pages in any sub-directories being checked.
+/// 
+export async function ListAllFilesAsync(url, recursive = false)
+{
+  return new Promise((resolve, fail) =>
+  {
+    let request = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    
+    request.onreadystatechange=function()
+    {
+      if (request.readyState==4 && request.status==200)
+      {
+        var fileList = request.responseText.split('\n');
+        let fileNames = [];
+        let subPromises = [];
+        
+        for(let i = 0; i < fileList.length; i++)
+        {
+          var fileinfo = fileList[i].split(' ');
+          for(let j = 0; j < fileinfo.length; j++)
+          {
+            if(fileinfo[j].includes("<li><a"))
+            {
+              let filesec = fileinfo[j+1];
+              filesec = filesec.split('"')[1];
+              filesec = filesec.split('"')[0];
+              
+              if(filesec.includes("/"))
+              {
+                if(recursive)
+                  subPromises.push(ListAllFilesAsync(url+"/"+filesec.substring(0,filesec.length-1), true));
+              }
+              else fileNames.push(url+"/"+filesec);
+            }
+          }
+        }
+        
+        if(subPromises.length > 0)
+        {
+          Promise.all(subPromises).then((values) => {
+            for(let v of values)
+              fileNames.push(...v);
+            
+            resolve(fileNames);
+          });
+        }
+        else resolve(fileNames);
+      }
+      
+    }
+    
+    request.open("GET", url, false);
+    request.send();
+  });
 }
 
 /// 

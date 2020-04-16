@@ -51,6 +51,7 @@ import SpriteRenderer from './systems/spriterenderer.js';
 import {SpaceMode} from './systems/particleemitter.js';
 import SelectionBox from './systems/selectionbox.js';
 
+
 let EntMan, SysMan, EditorSysMan, AssetMan, SceneMan, RenderLayers, AppFSM;
 let  ToolPallet, InspectorPanel, HierarchyPanel;
 let LoadedTools;
@@ -58,12 +59,12 @@ const RenderScale = 2;
 const AllowLiveSceneEditing = true;
 
 
-
 /// 
 /// Entry-point for the application.
 /// 
 export function AppStart(canvas)
 {
+  
 	Audio.Init(new Rect(0, 0, canvas.width+128, canvas.height+128), 5);
 	ECS.Set("canvas", canvas);
 	
@@ -92,6 +93,7 @@ export function AppStart(canvas)
 	
 	//create and register global systems
 	//TODO: We need a more automated way of doing this... if only javascript had simple RTTI :(
+	//UPDATE: added a type system but still haven't gotten around to doin gnaything about this for now
 	let RenderSys = new SpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
 	let TiledRenderSys = new TiledSpriteRendererSystem(RenderLayers, MainCamera.GetComponent(Camera));
 	let PhysicsSys = new PhysicsSystem();
@@ -155,6 +157,7 @@ export function AppStart(canvas)
 			Input.EndInputBlock();
 			RenderLayers.CompositeLayers();
 			Audio.Instance.Update(MainCamera.GetComponent(WorldPos).position);
+			EntMan.HandlePendingGuidSearches();
 			},
 		]
 	);
@@ -180,6 +183,7 @@ export function AppStart(canvas)
 			SceneEditor.RenderSelection(EntMan, MainCamera.GetComponent(Camera));
 			RenderLayers.CompositeLayers();
 			Audio.Instance.Update(MainCamera.GetComponent(WorldPos).position);
+			EntMan.HandlePendingGuidSearches();
 			},
 		]
 	);
@@ -198,11 +202,14 @@ export function AppStart(canvas)
 	}
 	
 	//pre-load all assets we'll need, load the default scene, and then push the main looping state
-	Assets.PreloadAllAssets(AssetMan).then( async () =>
-	{
-		await loadLevel('./assets/scene1.txt');
-		AppFSM.PushState(AppFSM.MainGameLoopState);
-	});
+  Assets.CompileAssetList("./assets").then( () => {}).then( () =>
+  {
+    Assets.PreloadAllAssets(AssetMan).then( async () =>
+    {
+      await loadLevel('./assets/scene1.txt');
+      AppFSM.PushState(AppFSM.MainGameLoopState);
+    });
+  });
 	
 }
 

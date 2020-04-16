@@ -26,7 +26,7 @@ export default class EntityManager
 		this.#ScheduledSearches.push([guid, resolve, fail]);
 		
 		//TODO: This is for testing. Needs to be done at the end of the frame so that level loading can work
-		this.HandlePendingGuidSearches();
+		//this.HandlePendingGuidSearches();
 	}
 	
 	HandlePendingGuidSearches()

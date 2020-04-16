@@ -1,3 +1,5 @@
+import {ListAllFilesAsync} from './../core/utility.js'
+
 /// 
 /// Big dumb list of assets used by this project.
 /// 
@@ -10,8 +12,10 @@ export default class Assets
 {
 	static #Anims = 
 	{
+    /*
 		ANA_R:		"./assets/sprites/ana_right.anim",
 		ANA_L:		"./assets/sprites/ana_left.anim",
+    */
 	}
 	static get Anims() { return Assets.#Anims; }
 	
@@ -22,20 +26,26 @@ export default class Assets
 	
 	static #Particles = 
 	{
+    /*
 		SPARK_01:	"./assets/sprites/spark_01.png",
 		ALERT_01:	"./assets/sprites/alert.png",
+    */
 	}
 	static get Particles() { return Assets.#Particles; }
 	
 	static #Sounds = 
 	{
+    /*
 		JUMP_1:		"./assets/sfx/jump1.wav",
 		LAND_1:		"./assets/sfx/thud1.wav",
+    */
+    
 	}
 	static get Sounds() { return Assets.#Sounds; }
 	
 	static #Sprites = 
 	{
+    /*
 		TRIGGER:"./assets/sprites/trigger.png",
 		ANA_R: 	"./assets/sprites/ana_right.png",
 		ANA_L: 	"./assets/sprites/ana_left.png",
@@ -43,13 +53,16 @@ export default class Assets
 		TILE_1:	"./assets/sprites/tileset2.png",
 		SPARK_01:	"./assets/sprites/spark_01.png",
 		ALERT_01:	"./assets/sprites/alert.png"
+    */
 	}
 	static get Sprites() { return Assets.#Sprites; }
 	
 	static #Tiles = 
 	{
+    /*
 		DEMO_1:	"./assets/sprites/tileset1.png",
 		TILE_1:	"./assets/sprites/tileset2.png",
+    */
 	}
 	static get Tiles() { return Assets.#Tiles; }
 	
@@ -86,4 +99,25 @@ export default class Assets
 			resolve();
 		});
 	}
+  
+  /// 
+  /// 
+  /// 
+  static async CompileAssetList(root)
+  {
+    await ListAllFilesAsync(root, true).then((result) =>
+    {
+      for(let r of result)
+      {
+        //console.log("ASSET: " + r);
+        if(r.includes('.anim'))
+          this.#Anims['ANIM_'+Object.keys(this.#Anims).length] = r;
+        else if(r.includes('.png'))
+          this.#Sprites['SPRITE_'+Object.keys(this.#Sprites).length] = r;
+        else if(r.includes('.wav'))
+          this.#Sounds['SFX_'+Object.keys(this.#Sounds).length] = r;
+      }
+    });
+  }
+  
 }
